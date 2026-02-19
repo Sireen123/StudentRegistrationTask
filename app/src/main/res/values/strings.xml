@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Student Registration</string>
+    <string name="hint_gender">Gender</string>
+    <string name="hint_male">Male</string>
+    <string name="hint_female">Female</string>
+    <string name="hint_other">Other</string>
+    <string name="hint_semester">Semester</string>
+    <string name="hint_parentguardian">Parent/Guardian Name</string>
+    <string name="hint_Department">Department</string>
+
+    <string name="title_student_reg">Student Registration Form</string>
+
+    <string name="hint_name">Student Name</string>
+    <string name="hint_regno">Register Number</string>
+    <string name="hint_roll">Roll Number</string>
+    <string name="hint_address">Address</string>
+    <string name="hint_phone">Phone Number</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_dob">Date of Birth</string>
+
+    <string name="btn_register">Register</string>
+    <string name="hint_login">Login</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="label_phone_number">Phone number</string>
+    <string name="hint_emailaddress">Email Address</string>
+    <string name="hint_password">Password</string>
+
+    <string name="hint_coursename">Course Name</string>
+    <string name="hint_coursefees">Fees: -</string>
+    <string name="hint_description">Description</string>
+
+
+    <string name="hint_detailsname">Name:</string>
+    <string name="hint_detailsregister">Register No:</string>
+    <string name="hint_detailsroll">Roll No:</string>
+    <string name="hint_detailsaddress">Address:</string>
+    <string name="hint_detailsphone">Phone:</string>
+    <string name="hint_detailsemail">Email:</string>
+    <string name="hint_detailsdob">Date of Birth:</string>
+    <string name="hint_fees">Fees</string>
+    <string name="hint_course">Course</string>
+    <string name="hint_detailsfees">Fees</string>
+    <string name="hint_detailsCSE">BE CSE</string>
+    <string name="hint_detailsCSEFEES">₹1,25,000</string>
+    <string name="hint_detailsECE">BE ECE</string>
+    <string name="hint_detailsECEFEES">₹1,10,000</string>
+    <string name="hint_detailsCIVIL">BE CIVIL</string>
+    <string name="hint_detailsCIVILFEES">₹95,000</string>
+    <string name="hint_detailsMECH">BE MECH</string>
+    <string name="hint_detailsMECHFEES">₹1,00,000</string>
+    <string name="hint_detailsBTECH">BTECH</string>
+    <string name="hint_detailsBTECHFEES">₹1,30,000</string>
+    <string name="hint_detailsBARCH">BARCH</string>
+    <string name="hint_detailsBARCHFEES">₹1,50,000</string>
+    <string name="hint_detailsBCA">BCA</string>
+    <string name="hint_DetailsBCAFEES">₹80,000</string>
+
+
+
+    <string name="toast_msg">Registered: %1$s (%2$s)</string>
+</resources>
