@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
                 calendar.time = date
             }
         } catch (_: Exception) {
-
+            //Catch block
         }
     }
 }
