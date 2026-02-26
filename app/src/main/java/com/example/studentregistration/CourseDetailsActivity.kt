@@ -1,45 +1,56 @@
 package com.example.studentregistration
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.studentregistration.databinding.ActivityCourseDetailsBinding
 
 class CourseDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCourseDetailsBinding
+    private lateinit var session: SessionPrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         binding = ActivityCourseDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        session = SessionPrefs(this)
+
 
         val name = intent.getStringExtra("courseName").orEmpty()
         val fee  = intent.getStringExtra("courseFee").orEmpty()
 
+
         binding.tvCourseTitle.text = name
         binding.tvCourseFee.text = "Fees: $fee"
         binding.tvCourseDesc.text = courseDescription(name)
+
+        // Logout button
+        binding.btnLogout.setOnClickListener {
+            logoutNow()
+        }
+
+      val details =   FakeData.getStudents()
+    }
+
+    private fun logoutNow() {
+        session.logout()
+        val i = Intent(this, LoginActivity::class.java)
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(i)
+        finish()
     }
 
     private fun courseDescription(name: String): String = when (name) {
-        "BE CSE"   -> "Computer Science & Engineering focuses on algorithms, data structures, OS, DBMS, networks, AI/ML, and full‑stack development."
-        "BE ECE"   -> "Electronics & Communication Engineering covers circuits, embedded systems, VLSI, DSP, communications, and IoT."
-        "BE CIVIL" -> "Civil Engineering includes structural design, materials, surveying, geotechnical, transportation, and construction management."
-        "BE MECH"  -> "Mechanical Engineering spans thermodynamics, manufacturing, design, CAD/CAM, fluid mechanics, and robotics."
-        "BTECH"    -> "BTech (general) provides a broad engineering foundation with specializations based on institute curriculum."
-        "BARCH"    -> "Bachelor of Architecture blends design, planning, and structural fundamentals with studio projects and portfolios."
-        "BCA"      -> "Bachelor of Computer Applications focuses on programming, databases, networking, and software development fundamentals."
+        "BE CSE"   -> "Computer Science & Engineering focuses on algorithms, OS, DBMS, networks, and AI/ML."
+        "BE ECE"   -> "Electronics & Communication Engineering covers circuits, embedded systems and IoT."
+        "BE CIVIL" -> "Civil Engineering includes structural design and construction management."
+        "BE MECH"  -> "Mechanical Engineering covers design, thermodynamics and robotics."
+        "BTECH"    -> "General engineering foundation."
+        "BARCH"    -> "Architecture with design and planning."
+        "BCA"      -> "Computer Applications focusing on programming and database."
         else       -> "Course information not available."
     }
 }

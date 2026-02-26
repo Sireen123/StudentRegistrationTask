@@ -5,87 +5,105 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
+import com.example.studentregistration.data.AppDatabase
+import com.example.studentregistration.data.LoginViewModel
+import com.example.studentregistration.data.LoginViewModelFactory
+import com.example.studentregistration.data.UserRepository
 import com.example.studentregistration.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-
-
-    private companion object {
-        private const val STATIC_PASSWORD = "#Sireen123"
-        private const val PREFS_NAME = "auth_prefs"
-        private const val KEY_LAST_EMAIL = "last_email"
-    }
+    private lateinit var session: SessionPrefs
+    private lateinit var viewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        session = SessionPrefs(this)
 
 
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val dao = AppDatabase.getDatabase(this).userDao()
+        val repo = UserRepository(dao)
+        val factory = LoginViewModelFactory(repo)
+        viewModel = ViewModelProvider(this, factory)[LoginViewModel::class.java]
 
 
-        prefs.getString(KEY_LAST_EMAIL, "")?.let { last ->
-            if (last.isNotBlank()) {
-                binding.etEmail.setText(last)
-                binding.etEmail.setSelection(last.length)
+        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        binding.etEmail.setText(prefs.getString("last_email", ""))
+
+
+        viewModel.loginResult.observe(this) { user ->
+            if (user != null) {
+                session.currentUserEmail = user.email
+                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, DetailsActivity::class.java))
+                finish()
+            } else {
+                Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
             }
         }
 
 
         binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString()
+            val email = binding.etEmail.text.toString().trim().lowercase()
+            val pass = binding.etPassword.text.toString().trim()
 
-            // Email validation
-            if (email.isEmpty()) {
-                binding.etEmail.error = "Email is required"
-                binding.etEmail.requestFocus()
-                return@setOnClickListener
-            }
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                binding.etEmail.error = "Enter a valid email address"
-                binding.etEmail.requestFocus()
+                Toast.makeText(this, "Enter valid email", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (pass.isEmpty()) {
+                Toast.makeText(this, "Enter password", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            prefs.edit().putString("last_email", email).apply()
 
-            if (password.isEmpty()) {
-                binding.etPassword.error = "Password is required"
-                binding.etPassword.requestFocus()
-                return@setOnClickListener
-            }
-            if (password != STATIC_PASSWORD) {
-                binding.etPassword.error = "Incorrect password"
-                binding.etPassword.requestFocus()
-                Toast.makeText(this, "Login failed: wrong password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-
-            prefs.edit {
-                putString(KEY_LAST_EMAIL, email)
-            }
-
-
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
+            viewModel.login(email, pass)
         }
+
+
+        binding.btnRegister.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
+
+        binding.tvFeesList.setOnClickListener {
+            startActivity(Intent(this, FeesListActivity::class.java))
+        }
+        Toast.makeText(this,"oncreate", Toast.LENGTH_SHORT).show()
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        Toast.makeText(this,"onstart", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Toast.makeText(this,"onResume", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Toast.makeText(this,"onpause", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Toast.makeText(this,"onStop", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Toast.makeText(this,"onDestor", Toast.LENGTH_SHORT).show()
     }
 }

@@ -1,85 +1,94 @@
 package com.example.studentregistration
 
 import android.content.Intent
-import android.graphics.Paint
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.studentregistration.data.AppDatabase
+import com.example.studentregistration.data.User
 import com.example.studentregistration.databinding.ActivityDetailsBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
+    private lateinit var session: SessionPrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        session = SessionPrefs(this)
 
 
-        val b = intent.extras
-        binding.tvName.text = "Name: ${b?.getString("name").orEmpty()}"
-        binding.tvReg.text = "Register No: ${b?.getString("reg").orEmpty()}"
-        binding.tvRoll.text = "Roll No: ${b?.getString("roll").orEmpty()}"
-        binding.tvAddress.text = "Address: ${b?.getString("address").orEmpty()}"
-        binding.tvPhone.text = "Phone: ${b?.getString("phone").orEmpty()}"
-        binding.tvEmail.text = "Email: ${b?.getString("email").orEmpty()}"
-        binding.tvDob.text = "Date of Birth: ${b?.getString("dob").orEmpty()}"
+        session.currentUserEmail?.let { loadUserDetails(it) }
 
 
-        listOf(
-            binding.tvCourseCSE,
-            binding.tvCourseECE,
-            binding.tvCourseCIVIL,
-            binding.tvCourseMECH,
-            binding.tvCourseBTECH,
-            binding.tvCourseBARCH,
-            binding.tvCourseBCA
-        ).forEach { tv ->
-            tv.paintFlags = tv.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-            tv.isClickable = true
-            tv.isFocusable = true
-        }
+        setCourseClickListeners()
+    }
 
+    private fun loadUserDetails(email: String) {
+        val dao = AppDatabase.getDatabase(this).userDao()
 
-        binding.tvCourseCSE.setOnClickListener {
-            openCourse("BE CSE", binding.tvFeeCSE.text.toString())
-        }
-        binding.tvCourseECE.setOnClickListener {
-            openCourse("BE ECE", binding.tvFeeECE.text.toString())
-        }
-        binding.tvCourseCIVIL.setOnClickListener {
-            openCourse("BE CIVIL", binding.tvFeeCIVIL.text.toString())
-        }
-        binding.tvCourseMECH.setOnClickListener {
-            openCourse("BE MECH", binding.tvFeeMECH.text.toString())
-        }
-        binding.tvCourseBTECH.setOnClickListener {
-            openCourse("BTECH", binding.tvFeeBTECH.text.toString())
-        }
-        binding.tvCourseBARCH.setOnClickListener {
-            openCourse("BARCH", binding.tvFeeBARCH.text.toString())
-        }
-        binding.tvCourseBCA.setOnClickListener {
-            openCourse("BCA", binding.tvFeeBCA.text.toString())
+        lifecycleScope.launch(Dispatchers.IO) {
+            val user: User? = dao.getUserByEmail(email)
+
+            withContext(Dispatchers.Main) {
+                if (user != null) {
+                    binding.tvName.text = "Name: ${user.name}"
+                    binding.tvReg.text = "Register No: ${user.registerNo}"
+                    binding.tvRoll.text = "Roll No: ${user.rollNo}"
+                    binding.tvAddress.text = "Address: ${user.address}"
+                    binding.tvPhone.text = "Phone: ${user.phone}"
+                    binding.tvEmail.text = "Email: ${user.email}"
+                    binding.tvDob.text = "Date of Birth: ${user.dob}"
+                    binding.tvGender.text = "Gender: ${user.gender}"
+                    binding.tvParent.text = "Parent/Guardian: ${user.parentName}"
+                    binding.tvDept.text = "Department: ${user.department}"
+                    binding.tvSem.text = "Semester: ${user.semester}"
+                }
+            }
         }
     }
 
-    private fun openCourse(course: String, fee: String) {
-        val intent = Intent(this, CourseDetailsActivity::class.java).apply {
-            putExtra("courseName", course)
-            putExtra("courseFee", fee)
+    private fun setCourseClickListeners() {
+
+        binding.tvCourseCSE.setOnClickListener {
+            openCourse("BE CSE", "75,000")
         }
+
+        binding.tvCourseECE.setOnClickListener {
+            openCourse("BE ECE", "70,000")
+        }
+
+        binding.tvCourseCIVIL.setOnClickListener {
+            openCourse("BE CIVIL", "68,000")
+        }
+
+        binding.tvCourseMECH.setOnClickListener {
+            openCourse("BE MECH", "72,000")
+        }
+
+        binding.tvCourseBTECH.setOnClickListener {
+            openCourse("BTECH", "80,000")
+        }
+
+        binding.tvCourseBARCH.setOnClickListener {
+            openCourse("BARCH", "85,000")
+        }
+
+        binding.tvCourseBCA.setOnClickListener {
+            openCourse("BCA", "65,000")
+        }
+    }
+
+    private fun openCourse(name: String, fee: String) {
+        val intent = Intent(this, CourseDetailsActivity::class.java)
+        intent.putExtra("courseName", name)
+        intent.putExtra("courseFee", fee)
         startActivity(intent)
     }
 }

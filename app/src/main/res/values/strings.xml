@@ -6,8 +6,9 @@
     <string name="hint_female">Female</string>
     <string name="hint_other">Other</string>
     <string name="hint_semester">Semester</string>
-    <string name="hint_parentguardian">Parent/Guardian Name</string>
-    <string name="hint_Department">Department</string>
+    <string name="hint_parentguardian">Parent/Guardian Name:</string>
+    <string name="hint_Department">Department:</string>
+    <string name="hint_phonenumber">Phone Number</string>
 
     <string name="title_student_reg">Student Registration Form</string>
 
@@ -55,8 +56,19 @@
     <string name="hint_detailsBARCHFEES">₹1,50,000</string>
     <string name="hint_detailsBCA">BCA</string>
     <string name="hint_DetailsBCAFEES">₹80,000</string>
-
-
+    <string name="hint_Register">Register</string>
+    <string name="hint_Registered">Registered</string>
+    <string name="hint_Logout">Logout</string>
+    <string name="hint_NamePreview">Name Preview</string>
+    <string name="hint_PAID">PAID</string>
+    <string name="hint_IPaidFees">I Paid Fees</string>
+    <string name="hint_StudentsFeesList">Students Fees List</string>
+    <string name="text_Name">Name:</string>
+    <string name="text_RegisterNo">Register No:</string>
+    <string name="hint_detailGender">Gender:</string>
+    <string name="hint_Semester">Semester:</string>
+    <string name="hint_FeesStructure">Fees Structure</string>
 
     <string name="toast_msg">Registered: %1$s (%2$s)</string>
+
 </resources>
