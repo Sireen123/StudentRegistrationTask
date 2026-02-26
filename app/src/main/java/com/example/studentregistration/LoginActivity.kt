@@ -77,33 +77,8 @@ class LoginActivity : AppCompatActivity() {
         binding.tvFeesList.setOnClickListener {
             startActivity(Intent(this, FeesListActivity::class.java))
         }
-        Toast.makeText(this,"oncreate", Toast.LENGTH_SHORT).show()
 
     }
 
-    override fun onStart() {
-        super.onStart()
 
-        Toast.makeText(this,"onstart", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Toast.makeText(this,"onResume", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Toast.makeText(this,"onpause", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Toast.makeText(this,"onStop", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Toast.makeText(this,"onDestor", Toast.LENGTH_SHORT).show()
-    }
 }
