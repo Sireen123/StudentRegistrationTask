@@ -11,7 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentRegistration">
-
+        <activity
+            android:name=".StudentTaskActivity"
+            android:exported="true" />
         <activity
             android:name=".FeesListActivity"
             android:exported="false" />

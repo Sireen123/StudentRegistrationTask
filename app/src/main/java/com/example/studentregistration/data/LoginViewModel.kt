@@ -10,7 +10,7 @@ class LoginViewModel(private val repo: UserRepository) : ViewModel() {
     val loginResult = MutableLiveData<User?>()
     val message = MutableLiveData<String>()
 
-    // LOGIN ONLY (Registration moved to MainActivity)
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             val user = repo.loginUser(email, password)

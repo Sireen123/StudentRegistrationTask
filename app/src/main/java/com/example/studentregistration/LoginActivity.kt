@@ -27,12 +27,10 @@ class LoginActivity : AppCompatActivity() {
 
         session = SessionPrefs(this)
 
-
         val dao = AppDatabase.getDatabase(this).userDao()
         val repo = UserRepository(dao)
         val factory = LoginViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory)[LoginViewModel::class.java]
-
 
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         binding.etEmail.setText(prefs.getString("last_email", ""))
@@ -40,15 +38,26 @@ class LoginActivity : AppCompatActivity() {
 
         viewModel.loginResult.observe(this) { user ->
             if (user != null) {
-                session.currentUserEmail = user.email
-                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, DetailsActivity::class.java))
+
+                val email = user.email.trim().lowercase()
+
+                val dest = if (email == "management@gmail.com") {
+                    MainActivity::class.java
+                } else {
+                    StudentTaskActivity::class.java
+                }
+
+                val intent = Intent(this, dest).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+
+                startActivity(intent)
                 finish()
+
             } else {
                 Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
             }
         }
-
 
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim().lowercase()
@@ -64,21 +73,15 @@ class LoginActivity : AppCompatActivity() {
             }
 
             prefs.edit().putString("last_email", email).apply()
-
             viewModel.login(email, pass)
         }
-
 
         binding.btnRegister.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
 
-
         binding.tvFeesList.setOnClickListener {
             startActivity(Intent(this, FeesListActivity::class.java))
         }
-
     }
-
-
 }

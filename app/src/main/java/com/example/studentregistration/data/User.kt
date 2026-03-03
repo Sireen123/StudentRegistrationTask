@@ -20,6 +20,7 @@ data class User(
     val gender: String,
     val parentName: String,
     val department: String,
-    val semester: String
+    val semester: String,
+    val role: String
 )
 

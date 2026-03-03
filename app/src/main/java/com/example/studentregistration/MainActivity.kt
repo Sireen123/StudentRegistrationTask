@@ -108,6 +108,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Select Semester", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            val role = if (email == "management@gmail.com") {
+                "management"
+            } else {
+                "student"
+            }
 
 
             val user = User(
@@ -122,7 +127,8 @@ class MainActivity : AppCompatActivity() {
                 gender = gender,
                 parentName = parent,
                 department = department,
-                semester = semester
+                semester = semester,
+                role=role
             )
 
 

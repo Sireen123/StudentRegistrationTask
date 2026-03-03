@@ -71,4 +71,23 @@
 
     <string name="toast_msg">Registered: %1$s (%2$s)</string>
 
-</resources>
+
+
+        <!-- Headings / labels -->
+        <string name="heading_tasks">Tasks</string>
+        <string name="label_list">List</string>
+        <string name="empty_placeholder">(empty)</string>
+
+        <!-- EditText hints -->
+        <string name="hint_task_1">Task 1</string>
+        <string name="hint_task_2">Task 2</string>
+        <string name="hint_task_3">Task 3</string>
+
+        <!-- Content descriptions (for accessibility) -->
+        <string name="cd_toggle_edit">Toggle edit mode</string>
+        <string name="cd_clear_all">Clear all</string>
+        <string name="cd_row_edit">Edit this task</string>
+        <string name="cd_row_clear">Clear this task</string>
+    </resources>
+
+

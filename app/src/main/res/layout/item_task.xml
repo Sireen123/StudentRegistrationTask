@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/itemRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="48dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp">
+
+    <TextView
+        android:id="@+id/tvTask"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Sample Task"
+        android:textSize="16sp"
+        android:textColor="#222222" />
+
+    <!-- Row edit (✏️) -->
+    <ImageButton
+        android:id="@+id/btnRowEdit"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="6dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Edit this row"
+        android:padding="4dp"
+        android:src="@drawable/ic_edit_24"
+        android:visibility="gone"
+        app:tint="?attr/colorControlNormal" />
+
+    <!-- Row clear (❌) -->
+    <ImageButton
+        android:id="@+id/btnRowClear"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Clear this row"
+        android:padding="4dp"
+        android:src="@drawable/ic_cancel_24"
+        android:visibility="gone"
+        app:tint="?attr/colorControlNormal" />
+</LinearLayout>
