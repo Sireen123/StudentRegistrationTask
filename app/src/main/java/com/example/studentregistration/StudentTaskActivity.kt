@@ -17,17 +17,16 @@ class StudentTaskActivity : AppCompatActivity() {
     private val viewModel: StudentTaskViewModel by viewModels()
 
     private lateinit var tasksAdapter: TasksAdapter
-    private var editToolbarMode: Boolean = false
+    private var fieldsLocked: Boolean = false
 
-
-
+    // -------------------- Prefs --------------------
     private fun saveTasksToPrefs(task1: String, task2: String, task3: String) {
         val prefs = getSharedPreferences("tasks_prefs", MODE_PRIVATE)
-        prefs.edit().apply {
-            putString("task1", task1)
-            putString("task2", task2)
-            putString("task3", task3)
-        }.apply()
+        prefs.edit()
+            .putString("task1", task1)
+            .putString("task2", task2)
+            .putString("task3", task3)
+            .apply()
     }
 
     private fun loadTasksFromPrefs(): List<String> {
@@ -38,23 +37,22 @@ class StudentTaskActivity : AppCompatActivity() {
         return listOf(t1, t2, t3)
     }
 
-
+    // -------------------- Lifecycle --------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStudentTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-
+        // Load saved values into VM
         val saved = loadTasksFromPrefs()
         viewModel.setTask(0, saved[0])
         viewModel.setTask(1, saved[1])
         viewModel.setTask(2, saved[2])
 
-
-
+        // Adapter: pencil in list -> UNLOCK 3 edit texts and focus appropriate one
         tasksAdapter = TasksAdapter(
             onRowEditClick = { index, text ->
+                unlockFields()
                 when (index) {
                     0 -> setTextAndFocus(binding.etTask1, text)
                     1 -> setTextAndFocus(binding.etTask2, text)
@@ -63,71 +61,86 @@ class StudentTaskActivity : AppCompatActivity() {
             },
             onRowClearClick = { index ->
                 viewModel.clearTask(index)
-                saveTasksToPrefs(
-                    binding.etTask1.text.toString(),
-                    binding.etTask2.text.toString(),
-                    binding.etTask3.text.toString()
-
-                )
-
+                saveAllThree()
             }
         )
-
 
         binding.recyclerTasks.apply {
             layoutManager = LinearLayoutManager(this@StudentTaskActivity)
             adapter = tasksAdapter
-            addItemDecoration(
-                DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
-            )
+            addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-
-
-        viewModel.tasks.observe(this) { list ->
-            tasksAdapter.submitList(list)
-        }
-
+        // Observe VM -> UI
+        viewModel.tasks.observe(this) { list -> tasksAdapter.submitList(list) }
         viewModel.task1.observe(this) { setTextIfDifferent(binding.etTask1, it) }
         viewModel.task2.observe(this) { setTextIfDifferent(binding.etTask2, it) }
         viewModel.task3.observe(this) { setTextIfDifferent(binding.etTask3, it) }
 
-
-
+        // Text listeners -> VM + save
         binding.etTask1.addTextChangedListener(makeWatcher {
-            viewModel.setTask(0, it)
-            saveAllThree()
+            viewModel.setTask(0, it); saveAllThree()
         })
-
         binding.etTask2.addTextChangedListener(makeWatcher {
-            viewModel.setTask(1, it)
-            saveAllThree()
+            viewModel.setTask(1, it); saveAllThree()
         })
-
         binding.etTask3.addTextChangedListener(makeWatcher {
-            viewModel.setTask(2, it)
-            saveAllThree()
+            viewModel.setTask(2, it); saveAllThree()
         })
 
-
-
-        binding.btnToggleEdit.setOnClickListener {
-            editToolbarMode = !editToolbarMode
-            tasksAdapter.editMode = editToolbarMode
-            binding.btnToggleEdit.alpha = if (editToolbarMode) 1f else 0.6f
+        // SAVE: lock the three EditTexts (non-readable/non-editable)
+        binding.btnSave.setOnClickListener {
+            saveAllThree()
+            lockFields()
+            clearFocusAndHideKeyboard()
         }
 
+        // Optional toolbar toggle (kept): toggles lock/unlock
+        binding.btnToggleEdit.setOnClickListener {
+            if (fieldsLocked) unlockFields() else lockFields()
+        }
 
-
+        // CLEAR ALL
         binding.btnClearAll.setOnClickListener {
             viewModel.clearAll()
             saveTasksToPrefs("", "", "")
             clearFocusAndHideKeyboard()
         }
+
+        // Start UNLOCKED (editable)
+        unlockFields()
     }
 
+    // -------------------- Lock/Unlock helpers --------------------
+    private fun lockFields() {
+        fieldsLocked = true
+        binding.etTask1.setEditable(false)
+        binding.etTask2.setEditable(false)
+        binding.etTask3.setEditable(false)
+        binding.btnSave.isEnabled = false
+        binding.btnSave.text = "Saved"
+        setDimmed(true)
+    }
 
+    private fun unlockFields() {
+        fieldsLocked = false
+        binding.etTask1.setEditable(true)
+        binding.etTask2.setEditable(true)
+        binding.etTask3.setEditable(true)
+        binding.btnSave.isEnabled = true
+        binding.btnSave.text = "Save"
+        setDimmed(false)
+    }
 
+    private fun setDimmed(dim: Boolean) {
+        val a = if (dim) 0.6f else 1f
+        binding.etTask1.alpha = a
+        binding.etTask2.alpha = a
+        binding.etTask3.alpha = a
+        binding.btnToggleEdit.alpha = if (fieldsLocked) 0.9f else 0.9f
+    }
+
+    // -------------------- Small utilities --------------------
     private fun saveAllThree() {
         saveTasksToPrefs(
             binding.etTask1.text.toString(),
@@ -136,13 +149,8 @@ class StudentTaskActivity : AppCompatActivity() {
         )
     }
 
-
-
     private fun makeWatcher(onTextChanged: (String) -> Unit) = object : TextWatcher {
-        override fun afterTextChanged(s: Editable?) {
-            onTextChanged(s?.toString().orEmpty())
-        }
-
+        override fun afterTextChanged(s: Editable?) { onTextChanged(s?.toString().orEmpty()) }
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
     }
@@ -150,10 +158,8 @@ class StudentTaskActivity : AppCompatActivity() {
     private fun setTextIfDifferent(editText: EditText, newText: String) {
         val current = editText.text?.toString() ?: ""
         if (current == newText) return
-
         val oldCursor = editText.selectionStart
         editText.setText(newText)
-
         val safePos = when {
             oldCursor < 0 -> newText.length
             oldCursor <= newText.length -> oldCursor
@@ -166,7 +172,6 @@ class StudentTaskActivity : AppCompatActivity() {
         setTextIfDifferent(editText, newText)
         editText.requestFocus()
         editText.setSelection(editText.text?.length ?: 0)
-
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
     }
@@ -176,4 +181,12 @@ class StudentTaskActivity : AppCompatActivity() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
+}
+
+// -------------------- Extensions --------------------
+private fun EditText.setEditable(editable: Boolean) {
+    isEnabled = editable
+    isFocusable = editable
+    isFocusableInTouchMode = editable
+    if (!editable) clearFocus()
 }

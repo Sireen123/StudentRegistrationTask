@@ -15,7 +15,6 @@ class StudentTaskViewModel : ViewModel() {
     val task2: LiveData<String> = _task2
     val task3: LiveData<String> = _task3
 
-
     val tasks: MediatorLiveData<List<String>> = MediatorLiveData<List<String>>().apply {
         fun recompute() {
             value = listOf(
@@ -35,6 +34,7 @@ class StudentTaskViewModel : ViewModel() {
             0 -> _task1.value = text
             1 -> _task2.value = text
             2 -> _task3.value = text
+            else -> Unit
         }
     }
 

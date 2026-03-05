@@ -18,28 +18,26 @@
         android:textSize="16sp"
         android:textColor="#222222" />
 
-    <!-- Row edit (✏️) -->
+    <!-- Edit (always visible) -->
     <ImageButton
         android:id="@+id/btnRowEdit"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_marginEnd="6dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Edit this row"
         android:padding="4dp"
         android:src="@drawable/ic_edit_24"
-        android:visibility="gone"
         app:tint="?attr/colorControlNormal" />
 
-    <!-- Row clear (❌) -->
+    <!-- Clear (always visible) -->
     <ImageButton
         android:id="@+id/btnRowClear"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Clear this row"
         android:padding="4dp"
         android:src="@drawable/ic_cancel_24"
-        android:visibility="gone"
         app:tint="?attr/colorControlNormal" />
 </LinearLayout>
