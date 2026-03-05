@@ -1,178 +1,295 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:background="#FFFBFE">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
+
 
         <TextView
-            android:id="@+id/tvName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/text_Name"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvReg"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/text_RegisterNo"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvRoll"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailsroll"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailsaddress"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvPhone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailsphone"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvEmail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailsemail"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvDob"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailsdob"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvGender"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_detailGender"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvParent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_parentguardian"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvDept"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_Department"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp" />
-
-        <TextView
-            android:id="@+id/tvSem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_Semester"
-            android:textSize="18sp"
+            android:text="Student Details"
+            android:textStyle="bold"
+            android:textSize="22sp"
+            android:textColor="#000000"
             android:layout_marginBottom="16dp" />
 
 
-        <View
+        <TextView android:id="@+id/tvName"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="12dp" />
+            android:layout_height="wrap_content"
+            android:text="Name:" />
+
+        <TextView android:id="@+id/tvReg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Register No:" />
+
+        <TextView android:id="@+id/tvRoll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Roll No:" />
+
+        <TextView android:id="@+id/tvAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Address:" />
+
+        <TextView android:id="@+id/tvPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Phone:" />
+
+        <TextView android:id="@+id/tvEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Email:" />
+
+        <TextView android:id="@+id/tvDob"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Date of Birth:" />
+
+        <TextView android:id="@+id/tvGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gender:" />
+
+        <TextView android:id="@+id/tvParent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Parent/Guardian:" />
+
+        <TextView android:id="@+id/tvDept"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Department:" />
+
+        <TextView android:id="@+id/tvSem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Semester:" />
+
+
+        <LinearLayout
+            android:id="@+id/feesProgressLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="24dp">
+
+
+                <ProgressBar
+                    android:id="@+id/feesProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:progressDrawable="@drawable/fees_progress_drawable"
+                    android:max="100"
+                    android:progress="0" />
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/progress_dot_white"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:id="@+id/tvPaidAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="start"
+                    android:text="₹0"
+                    android:textStyle="bold"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/tvTotalAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="₹0"
+                    android:textStyle="bold"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvBalanceAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Balance: ₹0"
+            android:textStyle="bold"
+            android:textColor="#C62828"
+            android:layout_marginTop="4dp"/>
 
 
         <TextView
-            android:id="@+id/tvFeesHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hint_FeesStructure"
+            android:text="Fee Structure"
             android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="#000000"
-            android:layout_marginBottom="12dp" />
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"/>
 
-        <TableLayout
-            android:id="@+id/feesTable"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stretchColumns="0,1">
+            android:orientation="vertical"
+            android:divider="?android:attr/dividerHorizontal"
+            android:showDividers="middle"
+            android:paddingVertical="4dp">
 
+            <TextView
+                android:id="@+id/tvCourseCSE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BE CSE — ₹75,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
-            <TableRow android:background="#F2F2F2" android:padding="10dp">
-                <TextView android:id="@+id/tvHeaderCourse" android:layout_width="0dp" android:layout_weight="1" android:text="Course" android:textStyle="bold" />
-                <TextView android:id="@+id/tvHeaderFee" android:layout_width="0dp" android:layout_weight="1" android:text="Fees" android:textStyle="bold" />
-            </TableRow>
+            <TextView
+                android:id="@+id/tvCourseECE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BE ECE — ₹70,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
+            <TextView
+                android:id="@+id/tvCourseCIVIL"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BE CIVIL — ₹68,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseCSE" android:layout_width="0dp" android:layout_weight="1" android:text="BE CSE" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeCSE" android:layout_width="0dp" android:layout_weight="1" android:text="75,000"/>
-            </TableRow>
+            <TextView
+                android:id="@+id/tvCourseMECH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BE MECH — ₹72,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
+            <TextView
+                android:id="@+id/tvCourseBTECH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BTECH — ₹80,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseECE" android:layout_width="0dp" android:layout_weight="1" android:text="BE ECE" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeECE" android:layout_width="0dp" android:layout_weight="1" android:text="70,000"/>
-            </TableRow>
+            <TextView
+                android:id="@+id/tvCourseBARCH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BARCH — ₹85,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
 
-
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="0dp" android:layout_weight="1" android:text="BE CIVIL" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeCIVIL" android:layout_width="0dp" android:layout_weight="1" android:text="68,000"/>
-            </TableRow>
-
-
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseMECH" android:layout_width="0dp" android:layout_weight="1" android:text="BE MECH" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeMECH" android:layout_width="0dp" android:layout_weight="1" android:text="72,000"/>
-            </TableRow>
-
-
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseBTECH" android:layout_width="0dp" android:layout_weight="1" android:text="BTECH" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeBTECH" android:layout_width="0dp" android:layout_weight="1" android:text="80,000"/>
-            </TableRow>
-
-
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseBARCH" android:layout_width="0dp" android:layout_weight="1" android:text="BARCH" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeBARCH" android:layout_width="0dp" android:layout_weight="1" android:text="85,000"/>
-            </TableRow>
-
-
-            <TableRow android:padding="12dp">
-                <TextView android:id="@+id/tvCourseBCA" android:layout_width="0dp" android:layout_weight="1" android:text="BCA" android:textColor="#2962FF"/>
-                <TextView android:id="@+id/tvFeeBCA" android:layout_width="0dp" android:layout_weight="1" android:text="65,000"/>
-            </TableRow>
-
-        </TableLayout>
+            <TextView
+                android:id="@+id/tvCourseBCA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BCA — ₹65,000"
+                android:padding="8dp"
+                android:textColor="#3F51B5" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

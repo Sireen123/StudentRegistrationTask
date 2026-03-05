@@ -19,7 +19,7 @@ class StudentTaskActivity : AppCompatActivity() {
     private lateinit var tasksAdapter: TasksAdapter
     private var fieldsLocked: Boolean = false
 
-    // -------------------- Prefs --------------------
+
     private fun saveTasksToPrefs(task1: String, task2: String, task3: String) {
         val prefs = getSharedPreferences("tasks_prefs", MODE_PRIVATE)
         prefs.edit()
@@ -37,19 +37,19 @@ class StudentTaskActivity : AppCompatActivity() {
         return listOf(t1, t2, t3)
     }
 
-    // -------------------- Lifecycle --------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStudentTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Load saved values into VM
+
         val saved = loadTasksFromPrefs()
         viewModel.setTask(0, saved[0])
         viewModel.setTask(1, saved[1])
         viewModel.setTask(2, saved[2])
 
-        // Adapter: pencil in list -> UNLOCK 3 edit texts and focus appropriate one
+
         tasksAdapter = TasksAdapter(
             onRowEditClick = { index, text ->
                 unlockFields()
@@ -77,7 +77,6 @@ class StudentTaskActivity : AppCompatActivity() {
         viewModel.task2.observe(this) { setTextIfDifferent(binding.etTask2, it) }
         viewModel.task3.observe(this) { setTextIfDifferent(binding.etTask3, it) }
 
-        // Text listeners -> VM + save
         binding.etTask1.addTextChangedListener(makeWatcher {
             viewModel.setTask(0, it); saveAllThree()
         })
@@ -88,30 +87,30 @@ class StudentTaskActivity : AppCompatActivity() {
             viewModel.setTask(2, it); saveAllThree()
         })
 
-        // SAVE: lock the three EditTexts (non-readable/non-editable)
+
         binding.btnSave.setOnClickListener {
             saveAllThree()
             lockFields()
             clearFocusAndHideKeyboard()
         }
 
-        // Optional toolbar toggle (kept): toggles lock/unlock
+
         binding.btnToggleEdit.setOnClickListener {
             if (fieldsLocked) unlockFields() else lockFields()
         }
 
-        // CLEAR ALL
+
         binding.btnClearAll.setOnClickListener {
             viewModel.clearAll()
             saveTasksToPrefs("", "", "")
             clearFocusAndHideKeyboard()
         }
 
-        // Start UNLOCKED (editable)
+
         unlockFields()
     }
 
-    // -------------------- Lock/Unlock helpers --------------------
+
     private fun lockFields() {
         fieldsLocked = true
         binding.etTask1.setEditable(false)
@@ -183,7 +182,7 @@ class StudentTaskActivity : AppCompatActivity() {
     }
 }
 
-// -------------------- Extensions --------------------
+
 private fun EditText.setEditable(editable: Boolean) {
     isEnabled = editable
     isFocusable = editable

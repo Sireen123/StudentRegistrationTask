@@ -20,7 +20,7 @@ data class User(
     // store normalized: email.trim().lowercase()
     val email: String,
 
-    // store normalized: password.trim()  (do NOT lowercase)
+    // store normalized: password.trim()
     val password: String,
 
     val dob: String,
@@ -29,6 +29,8 @@ data class User(
     val department: String,
     val semester: String,
 
-    // e.g. "management" or "student"
-    val role: String
+    val role: String,
+
+    // NEW FIELD
+    val feesPaid: String = "0"
 )

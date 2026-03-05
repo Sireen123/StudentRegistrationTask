@@ -11,16 +11,10 @@ class LoginViewModel(private val repo: UserRepository) : ViewModel() {
     private val _loginResult = MutableLiveData<User?>()
     val loginResult: LiveData<User?> = _loginResult
 
-    private val _message = MutableLiveData<String>()
-    val message: LiveData<String> = _message
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             val user = repo.loginUser(email, password)
             _loginResult.postValue(user)
-            if (user == null) {
-                _message.postValue("Invalid credentials")
-            }
         }
     }
 }
