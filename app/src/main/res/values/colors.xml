@@ -2,4 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Loader background -->
+    <color name="splash_bg">#FFFBFE</color>
 </resources>

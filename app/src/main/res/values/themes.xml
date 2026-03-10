@@ -1,7 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Main app theme -->
     <style name="Theme.StudentRegistration" parent="Theme.Material3.Light.NoActionBar">
+        <!-- keep app-level customizations here if any -->
+    </style>
 
+    <!-- Splash theme -->
+    <style name="Theme.StudentReg.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/splash_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+
+
+    <style name="NoAnimTheme" parent="Theme.StudentRegistration">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowActivityTransitions">false</item>
     </style>
 
 </resources>

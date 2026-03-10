@@ -2,33 +2,136 @@ package com.example.studentregistration
 
 import android.animation.ObjectAnimator
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.view.View
 import android.view.animation.DecelerateInterpolator
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.studentregistration.data.AppDatabase
 import com.example.studentregistration.data.User
 import com.example.studentregistration.databinding.ActivityDetailsBinding
+import com.github.gcacace.signaturepad.views.SignaturePad
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var session: SessionPrefs
 
+    private var extraHasArrears: Boolean = false
+    private var extraArrearsCount: String = "0"
+    private var extraSelectedSem: String? = null
+    private var collegeName: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         session = SessionPrefs(this)
 
+        // ⭐ TOP LEFT BACK ARROW (from include_back_bar.xml)
+        binding.root.findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
+        binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Student Details"
+
+        // EMAIL passed from previous screen
+        val emailFromRegister = intent.getStringExtra("email")
+        if (emailFromRegister != null) session.currentUserEmail = emailFromRegister
+
+        // Incoming extras
+        extraHasArrears = intent.getBooleanExtra("hasArrears", false)
+        extraArrearsCount = intent.getStringExtra("arrearsCount") ?: "0"
+        extraSelectedSem = intent.getStringExtra("selectedSemester")
+        collegeName = SessionPrefs(this).collegeName ?: ""
+
+        // Arrears section
+        binding.groupArrears.visibility = View.VISIBLE
+        if (extraHasArrears) {
+            binding.tvHasArrears.text = "Arrears History: Yes"
+            binding.tvArrearsCount.text = "No. of arrears: $extraArrearsCount"
+        } else {
+            binding.tvHasArrears.text = "Arrears History: No"
+            binding.tvArrearsCount.text = "No. of arrears: 0"
+        }
+
+        // Load user data
         session.currentUserEmail?.let { loadUserDetails(it) }
 
         setCourseClickListeners()
+
+        // Show signature pad
+        binding.sectionSignature.visibility = View.VISIBLE
+
+        // Signature pad listeners
+        binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
+            override fun onStartSigning() {}
+            override fun onSigned() {
+                binding.tvSignDate.text = "Date: ${today()}"
+                binding.tvSignHash.text = computeShortHash()
+                updateSubmitEnabled()
+            }
+
+            override fun onClear() {
+                binding.tvSignDate.text = "Date:"
+                binding.tvSignHash.text = ""
+                updateSubmitEnabled()
+            }
+        })
+
+        binding.btnClearSign.setOnClickListener { binding.signPad.clear() }
+
+        // SUBMIT → AcknowledgementActivity
+        binding.btnSubmit.setOnClickListener {
+            if (binding.signPad.isEmpty) {
+                Toast.makeText(this, "Please add signature", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Save signature to cache
+            val file = File(cacheDir, "signature_${System.currentTimeMillis()}.png")
+            FileOutputStream(file).use {
+                binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
+            val uri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
+
+            // Go to acknowledgement
+            startActivity(
+                Intent(this, AcknowledgementActivity::class.java).apply {
+                    putExtra("name", binding.tvName.text.toString())
+                    putExtra("reg", binding.tvReg.text.toString())
+                    putExtra("roll", binding.tvRoll.text.toString())
+                    putExtra("dept", binding.tvDept.text.toString().replace("Department: ", "").trim())
+                    putExtra("sem", binding.tvSem.text.toString().replace("Semester: ", "").trim())
+                    putExtra("address", binding.tvAddress.text.toString())
+                    putExtra("phone", binding.tvPhone.text.toString())
+                    putExtra("email", binding.tvEmail.text.toString())
+                    putExtra("parent", binding.tvParent.text.toString())
+
+                    putExtra("signature_uri", uri)
+                    putExtra("signed_on", today())
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                    putExtra("hasArrears", extraHasArrears)
+                    putExtra("arrearsCount", extraArrearsCount)
+                    putExtra("collegeName", collegeName)
+                }
+            )
+        }
+
+        updateSubmitEnabled()
     }
 
     private fun loadUserDetails(email: String) {
@@ -40,7 +143,6 @@ class DetailsActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (user != null) {
 
-                    // Basic info
                     binding.tvName.text = "Name: ${user.name}"
                     binding.tvReg.text = "Register No: ${user.registerNo}"
                     binding.tvRoll.text = "Roll No: ${user.rollNo}"
@@ -51,11 +153,10 @@ class DetailsActivity : AppCompatActivity() {
                     binding.tvGender.text = "Gender: ${user.gender}"
                     binding.tvParent.text = "Parent/Guardian: ${user.parentName}"
                     binding.tvDept.text = "Department: ${user.department}"
-                    binding.tvSem.text = "Semester: ${user.semester}"
+                    binding.tvSem.text = "Semester: ${extraSelectedSem ?: user.semester}"
 
-                    // ------------------------------
-                    // FEES CALCULATION + PROGRESS
-                    // ------------------------------
+                    binding.tvSignedByLabel.text = "Signed by: ${user.name}"
+
                     val feeMap = mapOf(
                         "Computer Science" to 75000,
                         "Information Technology" to 75000,
@@ -72,17 +173,13 @@ class DetailsActivity : AppCompatActivity() {
                     val paid = user.feesPaid.toIntOrNull() ?: 0
                     val balance = (total - paid).coerceAtLeast(0)
 
-                    // Set labels
                     binding.tvPaidAmount.text = "₹$paid"
                     binding.tvTotalAmount.text = "₹$total"
                     binding.tvBalanceAmount.text = "Balance: ₹$balance"
 
-                    // Progress %
-                    val percent =
-                        if (total > 0) (paid * 100 / total).coerceIn(0, 100)
-                        else 0
+                    val percent = if (total > 0) (paid * 100 / total) else 0
 
-                    // Smooth animation
+                    // Animate progress bar
                     ObjectAnimator.ofInt(binding.feesProgress, "progress", percent).apply {
                         duration = 800
                         interpolator = DecelerateInterpolator()
@@ -94,34 +191,41 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     private fun setCourseClickListeners() {
-
-        binding.tvCourseCSE.setOnClickListener {
-            openCourse("BE CSE", "75,000")
-        }
-        binding.tvCourseECE.setOnClickListener {
-            openCourse("BE ECE", "70,000")
-        }
-        binding.tvCourseCIVIL.setOnClickListener {
-            openCourse("BE CIVIL", "68,000")
-        }
-        binding.tvCourseMECH.setOnClickListener {
-            openCourse("BE MECH", "72,000")
-        }
-        binding.tvCourseBTECH.setOnClickListener {
-            openCourse("BTECH", "80,000")
-        }
-        binding.tvCourseBARCH.setOnClickListener {
-            openCourse("BARCH", "85,000")
-        }
-        binding.tvCourseBCA.setOnClickListener {
-            openCourse("BCA", "65,000")
-        }
+        binding.tvCourseCSE.setOnClickListener { openCourse("BE CSE", "75,000") }
+        binding.tvCourseECE.setOnClickListener { openCourse("BE ECE", "70,000") }
+        binding.tvCourseCIVIL.setOnClickListener { openCourse("BE CIVIL", "68,000") }
+        binding.tvCourseMECH.setOnClickListener { openCourse("BE MECH", "72,000") }
+        binding.tvCourseBTECH.setOnClickListener { openCourse("BTECH", "80,000") }
+        binding.tvCourseBARCH.setOnClickListener { openCourse("BARCH", "85,000") }
+        binding.tvCourseBCA.setOnClickListener { openCourse("BCA", "65,000") }
     }
 
     private fun openCourse(name: String, fee: String) {
-        val intent = Intent(this, CourseDetailsActivity::class.java)
-        intent.putExtra("courseName", name)
-        intent.putExtra("courseFee", fee)
-        startActivity(intent)
+        startActivity(
+            Intent(this, CourseDetailsActivity::class.java).apply {
+                putExtra("courseName", name)
+                putExtra("courseFee", fee)
+            }
+        )
+    }
+
+    private fun updateSubmitEnabled() {
+        binding.btnSubmit.isEnabled = !binding.signPad.isEmpty
+    }
+
+    private fun today(): String =
+        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+
+    // ⭐ FIXED – No more Unicode dash crash
+    private fun computeShortHash(): String {
+        val bmp = binding.signPad.signatureBitmap
+        val baos = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        val bytes = baos.toByteArray()
+
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+            .uppercase()
+            .take(16)
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">Student Registration</string>
     <string name="hint_gender">Gender</string>
     <string name="hint_male">Male</string>
@@ -31,7 +32,6 @@
     <string name="hint_coursefees">Fees: -</string>
     <string name="hint_description">Description</string>
 
-
     <string name="hint_detailsname">Name:</string>
     <string name="hint_detailsregister">Register No:</string>
     <string name="hint_detailsroll">Roll No:</string>
@@ -42,6 +42,7 @@
     <string name="hint_fees">Fees</string>
     <string name="hint_course">Course</string>
     <string name="hint_detailsfees">Fees</string>
+
     <string name="hint_detailsCSE">BE CSE</string>
     <string name="hint_detailsCSEFEES">₹1,25,000</string>
     <string name="hint_detailsECE">BE ECE</string>
@@ -56,6 +57,7 @@
     <string name="hint_detailsBARCHFEES">₹1,50,000</string>
     <string name="hint_detailsBCA">BCA</string>
     <string name="hint_DetailsBCAFEES">₹80,000</string>
+
     <string name="hint_Register">Register</string>
     <string name="hint_Registered">Registered</string>
     <string name="hint_Logout">Logout</string>
@@ -63,6 +65,7 @@
     <string name="hint_PAID">PAID</string>
     <string name="hint_IPaidFees">I Paid Fees</string>
     <string name="hint_StudentsFeesList">Students Fees List</string>
+
     <string name="text_Name">Name:</string>
     <string name="text_RegisterNo">Register No:</string>
     <string name="hint_detailGender">Gender:</string>
@@ -71,23 +74,23 @@
 
     <string name="toast_msg">Registered: %1$s (%2$s)</string>
 
+    <!-- More UI strings -->
+    <string name="heading_tasks">Tasks</string>
+    <string name="label_list">List</string>
+    <string name="empty_placeholder">(empty)</string>
 
+    <string name="hint_task_1">Task 1</string>
+    <string name="hint_task_2">Task 2</string>
+    <string name="hint_task_3">Task 3</string>
 
-        <!-- Headings / labels -->
-        <string name="heading_tasks">Tasks</string>
-        <string name="label_list">List</string>
-        <string name="empty_placeholder">(empty)</string>
+    <!-- Accessibility descriptions -->
+    <string name="cd_toggle_edit">Toggle edit mode</string>
+    <string name="cd_clear_all">Clear all</string>
+    <string name="cd_row_edit">Edit this task</string>
+    <string name="cd_row_clear">Clear this task</string>
 
-        <!-- EditText hints -->
-        <string name="hint_task_1">Task 1</string>
-        <string name="hint_task_2">Task 2</string>
-        <string name="hint_task_3">Task 3</string>
+    <!-- Back button -->
+    <string name="back">Back</string>
+    <string name="navigate_back">Navigate back</string>
 
-        <!-- Content descriptions (for accessibility) -->
-        <string name="cd_toggle_edit">Toggle edit mode</string>
-        <string name="cd_clear_all">Clear all</string>
-        <string name="cd_row_edit">Edit this task</string>
-        <string name="cd_row_clear">Clear this task</string>
-    </resources>
-
-
+</resources>

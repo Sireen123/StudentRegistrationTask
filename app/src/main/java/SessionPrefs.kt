@@ -14,9 +14,16 @@ class SessionPrefs(context: Context) {
             else putString("current_user_email", value)
         }
 
+    var collegeName: String?
+        get() = prefs.getString("collegeName", "")
+        set(value) = prefs.edit {
+            putString("collegeName", value)
+        }
+
     fun logout() {
         prefs.edit {
             remove("current_user_email")
+            remove("collegeName")
         }
     }
 }

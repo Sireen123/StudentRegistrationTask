@@ -2,6 +2,9 @@ package com.example.studentregistration
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.ImageButton
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studentregistration.databinding.ActivityCourseDetailsBinding
 
@@ -18,21 +21,23 @@ class CourseDetailsActivity : AppCompatActivity() {
 
         session = SessionPrefs(this)
 
+        // ⭐ TOP-LEFT BACK ARROW
+        binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Course Details"
 
+        // RECEIVE COURSE DETAILS
         val name = intent.getStringExtra("courseName").orEmpty()
         val fee  = intent.getStringExtra("courseFee").orEmpty()
-
 
         binding.tvCourseTitle.text = name
         binding.tvCourseFee.text = "Fees: $fee"
         binding.tvCourseDesc.text = courseDescription(name)
 
-        // Logout button
-        binding.btnLogout.setOnClickListener {
-            logoutNow()
-        }
+        // LOGOUT
+        binding.btnLogout.setOnClickListener { logoutNow() }
 
-      val details =   FakeData.getStudents()
+        // Unused data - but keeping your original structure
+        val details = FakeData.getStudents()
     }
 
     private fun logoutNow() {

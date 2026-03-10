@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <!-- GOLD STRIP -->
+        <View
+            android:layout_width="12dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/gold_gradient" />
+
+        <!-- MAIN CERTIFICATE CARD -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:elevation="4dp"
+            android:padding="20dp">
+
+            <!-- LOGO (CORRECT IMAGEVIEW, NO ERRORS) -->
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:src="@drawable/logo_gold_seal"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/app_name" />
+
+            <!-- TITLE -->
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="COLLEGE CERTIFICATE"
+                android:textColor="#107E84"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="6dp"/>
+
+            <!-- DIVIDER -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#C2A14D"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- BODY TEXT -->
+            <TextView
+                android:id="@+id/tvBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="#333"/>
+
+            <!-- WARNING BOX -->
+            <TextView
+                android:id="@+id/tvWarn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="NOTE: You have arrears pending."
+                android:padding="12dp"
+                android:textColor="#B00020"
+                android:textStyle="bold"
+                android:background="#FFF0F0"
+                android:textSize="15sp"
+                android:layout_marginTop="16dp"/>
+
+            <!-- STEPS BOX -->
+            <TextView
+                android:id="@+id/tvSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="#FFF7F7"
+                android:textColor="#B00020"
+                android:textSize="14sp"
+                android:layout_marginTop="6dp"/>
+
+            <!-- DATE -->
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:text="Date:"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"/>
+
+            <!-- SIGNATURE -->
+            <ImageView
+                android:id="@+id/ivSignature"
+                android:layout_width="200dp"
+                android:layout_height="80dp"
+                android:adjustViewBounds="true" />
+
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:background="#888"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:id="@+id/tvStudentSig"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Student Signature"
+                android:textSize="12sp"
+                android:paddingTop="4dp"/>
+
+            <!-- SPACE -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="26dp" />
+
+            <!-- COLLEGE LINE -->
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:background="#888"
+                android:layout_gravity="center" />
+
+            <!-- COLLEGE NAME -->
+            <TextView
+                android:id="@+id/tvCollege"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="College Name"
+                android:textSize="13sp"
+                android:paddingTop="4dp"
+                android:layout_gravity="center"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

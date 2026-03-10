@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Allow saving PDFs, images, and files to Downloads/ -->
+    <external-path
+        name="external_files"
+        path="." />
+
+    <!-- Allow cached signature file (your signature PNG works here) -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- Allow access to app files if needed -->
+    <files-path
+        name="files"
+        path="." />
+
+</paths>

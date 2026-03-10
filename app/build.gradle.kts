@@ -66,7 +66,8 @@ dependencies {
 
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0") // <-- add this
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
+    implementation(libs.androidx.activity) // <-- add this
 
 
     val room_version = "2.8.4"
@@ -87,6 +88,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.36")
+    implementation("com.github.gcacace:signature-pad:1.3.1")
+
 }
 
 

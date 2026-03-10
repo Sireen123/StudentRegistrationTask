@@ -12,7 +12,12 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- ⭐ TOP BACK BUTTON BAR -->
+        <include
+            android:id="@+id/includeBack"
+            layout="@layout/include_back_bar" />
 
+        <!-- Student details heading -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -22,63 +27,32 @@
             android:textColor="#000000"
             android:layout_marginBottom="16dp" />
 
+        <!-- Student detail fields -->
+        <TextView android:id="@+id/tvName" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Name:" />
+        <TextView android:id="@+id/tvReg" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Register No:" />
+        <TextView android:id="@+id/tvRoll" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Roll No:" />
+        <TextView android:id="@+id/tvAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Address:" />
+        <TextView android:id="@+id/tvPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Phone:" />
+        <TextView android:id="@+id/tvEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Email:" />
+        <TextView android:id="@+id/tvDob" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Date of Birth:" />
+        <TextView android:id="@+id/tvGender" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gender:" />
+        <TextView android:id="@+id/tvParent" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent/Guardian:" />
+        <TextView android:id="@+id/tvDept" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Department:" />
+        <TextView android:id="@+id/tvSem" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Semester:" />
 
-        <TextView android:id="@+id/tvName"
+        <!-- Arrears -->
+        <LinearLayout
+            android:id="@+id/groupArrears"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Name:" />
+            android:orientation="vertical"
+            android:paddingTop="8dp">
 
-        <TextView android:id="@+id/tvReg"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Register No:" />
+            <TextView android:id="@+id/tvHasArrears" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Arrears History:" />
+            <TextView android:id="@+id/tvArrearsCount" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No. of arrears:" />
+        </LinearLayout>
 
-        <TextView android:id="@+id/tvRoll"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Roll No:" />
-
-        <TextView android:id="@+id/tvAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Address:" />
-
-        <TextView android:id="@+id/tvPhone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Phone:" />
-
-        <TextView android:id="@+id/tvEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Email:" />
-
-        <TextView android:id="@+id/tvDob"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Date of Birth:" />
-
-        <TextView android:id="@+id/tvGender"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Gender:" />
-
-        <TextView android:id="@+id/tvParent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Parent/Guardian:" />
-
-        <TextView android:id="@+id/tvDept"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Department:" />
-
-        <TextView android:id="@+id/tvSem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Semester:" />
-
-
+        <!-- Fees Progress -->
         <LinearLayout
             android:id="@+id/feesProgressLayout"
             android:layout_width="match_parent"
@@ -91,93 +65,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="24dp">
 
-
                 <ProgressBar
                     android:id="@+id/feesProgress"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="12dp"
-                    android:layout_gravity="center_vertical"
                     android:progressDrawable="@drawable/fees_progress_drawable"
                     android:max="100"
                     android:progress="0" />
-
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="24dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:background="@drawable/progress_dot_white"/>
-                    </LinearLayout>
-                </LinearLayout>
             </FrameLayout>
-
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -190,10 +86,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="start"
                     android:text="₹0"
-                    android:textStyle="bold"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvTotalAmount"
@@ -202,8 +97,8 @@
                     android:layout_weight="1"
                     android:gravity="end"
                     android:text="₹0"
-                    android:textStyle="bold"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
@@ -214,9 +109,9 @@
             android:text="Balance: ₹0"
             android:textStyle="bold"
             android:textColor="#C62828"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginTop="4dp" />
 
-
+        <!-- Fee Structure -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -224,7 +119,7 @@
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="6dp"/>
+            android:layout_marginBottom="6dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -234,62 +129,90 @@
             android:showDividers="middle"
             android:paddingVertical="4dp">
 
-            <TextView
-                android:id="@+id/tvCourseCSE"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BE CSE — ₹75,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseECE"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BE ECE — ₹70,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseCIVIL"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BE CIVIL — ₹68,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseMECH"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BE MECH — ₹72,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseBTECH"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BTECH — ₹80,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseBARCH"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BARCH — ₹85,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
-
-            <TextView
-                android:id="@+id/tvCourseBCA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="BCA — ₹65,000"
-                android:padding="8dp"
-                android:textColor="#3F51B5" />
+            <TextView android:id="@+id/tvCourseCSE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CSE — ₹75,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseECE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE ECE — ₹70,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CIVIL — ₹68,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseMECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE MECH — ₹72,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseBTECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTECH — ₹80,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseBARCH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BARCH — ₹85,000" android:padding="8dp" android:textColor="#3F51B5"/>
+            <TextView android:id="@+id/tvCourseBCA" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BCA — ₹65,000" android:padding="8dp" android:textColor="#3F51B5"/>
         </LinearLayout>
+
+        <!-- Signature Section -->
+        <LinearLayout
+            android:id="@+id/sectionSignature"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Signature:"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="170dp">
+
+                <com.github.gcacace.signaturepad.views.SignaturePad
+                    android:id="@+id/signPad"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp"
+                    android:background="@drawable/bg_signature_box"
+                    android:saveEnabled="false" /> <!-- ⭐ FIXED -->
+
+                <TextView
+                    android:id="@+id/tvSignedByLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Signed by:"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="#FFFBFE"
+                    android:textColor="#5B2EFF"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginTop="-8dp"
+                    android:layout_gravity="start|top" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvSignHash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="11sp"
+                android:textColor="#666666"
+                android:layout_marginTop="4dp"/>
+
+            <Button
+                android:id="@+id/btnClearSign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clear"
+                android:layout_marginTop="6dp"
+                android:layout_gravity="end"/>
+
+            <TextView
+                android:id="@+id/tvSignDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date: " />
+        </LinearLayout>
+
+        <!-- Submit -->
+        <Button
+            android:id="@+id/btnSubmit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            android:enabled="false"
+            android:layout_marginTop="12dp" />
 
     </LinearLayout>
 </ScrollView>
