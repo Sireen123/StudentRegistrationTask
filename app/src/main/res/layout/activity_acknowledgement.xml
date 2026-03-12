@@ -3,19 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#FFFBFE">
+    android:background="#FFFBFE"
+    android:fitsSystemWindows="true"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- ⭐ TOP BACK BAR (small arrow + title support) -->
+        <!-- ⭐ TOP BACK BAR -->
         <include
             android:id="@+id/includeBack"
             layout="@layout/include_back_bar" />
 
-        <!-- Clean heading -->
+        <!-- Screen Title -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
@@ -27,7 +29,7 @@
             android:paddingBottom="12dp"
             android:layout_marginTop="8dp" />
 
-        <!-- Verification box -->
+        <!-- Verification Box -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,56 +37,112 @@
             android:padding="14dp"
             android:background="#FFF7E6">
 
-            <TextView android:id="@+id/lblName" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Name:" android:textStyle="bold"/>
-            <TextView android:id="@+id/tvName" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/lblName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name:"
+                android:textStyle="bold" />
 
-            <TextView android:id="@+id/lblReg" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Register No:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvReg" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-            <TextView android:id="@+id/lblRoll" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Roll No:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvRoll" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/lblReg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Register No:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
 
-            <TextView android:id="@+id/lblDept" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Department:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvDept" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tvReg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-            <TextView android:id="@+id/lblSem" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Semester:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvSem" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/lblRoll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Roll No:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
 
-            <TextView android:id="@+id/lblParent" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Parent/Guardian:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvParent" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tvRoll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-            <TextView android:id="@+id/lblCollege" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="College:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvCollege" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/lblDept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Department:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
 
-            <TextView android:id="@+id/lblArrear" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Arrear Status:" android:textStyle="bold"
-                android:layout_marginTop="6dp"/>
-            <TextView android:id="@+id/tvArrearFlag" android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tvDept"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblSem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Semester:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvSem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblParent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parent/Guardian:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvParent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblCollege"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="College:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvCollege"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblArrear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Arrear Status:"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvArrearFlag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 
-        <!-- Confirm -->
+        <!-- Confirm Checkbox -->
         <CheckBox
             android:id="@+id/cbAcknowledge"
             android:layout_width="wrap_content"
@@ -92,7 +150,7 @@
             android:text="I confirm these details are correct."
             android:layout_marginTop="12dp" />
 
-        <!-- Buttons -->
+        <!-- Submit Button -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -100,14 +158,12 @@
             android:orientation="horizontal"
             android:paddingTop="8dp">
 
-
             <Button
                 android:id="@+id/btnSubmit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Submit"
                 android:layout_marginStart="12dp" />
-
         </LinearLayout>
 
     </LinearLayout>

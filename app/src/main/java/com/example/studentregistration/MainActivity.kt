@@ -39,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         session = SessionPrefs(this)
@@ -55,30 +54,48 @@ class MainActivity : AppCompatActivity() {
         setupDobPicker()
         setupArrearUI()
 
-        binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
-        applyPhoneMaxLengthForCountry()
-        binding.countryCodePicker.setOnCountryChangeListener { applyPhoneMaxLengthForCountry() }
-
-        binding.countryCodePicker.setPhoneNumberValidityChangeListener { isValid ->
-            binding.etPhone.error = if (!isValid && binding.etPhone.text!!.isNotEmpty())
-                "Invalid number" else null
+        // Auto-scroll when focused
+        val fields = listOf(
+            binding.etName, binding.etRegister, binding.etRoll, binding.etAddress,
+            binding.etPhone, binding.etEmail, binding.etPassword, binding.etDob,
+            binding.etParentName, binding.etCollege, binding.etArrearsCount
+        )
+        fields.forEach { et ->
+            et.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) v.post { binding.scrollRoot.smoothScrollTo(0, v.bottom) }
+            }
         }
 
+        // ---------- Phone: SAME LOGIC AS LoginActivity (no OTP) ----------
+        binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
+        applyPhoneMaxLengthForCountry()
+        binding.countryCodePicker.setOnCountryChangeListener {
+            applyPhoneMaxLengthForCountry()
+        }
+        // NOTE: Avoid setPhoneNumberValidityChangeListener; it can show false "Invalid" while typing.
+
+        // Fees switch & popup
         binding.swPaid.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) showFeesPopup() else feesPaidAmount = "0"
         }
 
         binding.btnRegister.setOnClickListener {
+            // Throttle: if already disabled, ignore extra taps
+            if (!binding.btnRegister.isEnabled) return@setOnClickListener
+
             if (!validateInputs()) return@setOnClickListener
 
+            // Disable & show lightweight progress via text
             binding.btnRegister.isEnabled = false
+            val originalText = binding.btnRegister.text
+            binding.btnRegister.text = "Please wait…"
 
             val collegeName = binding.etCollege.text.toString().trim()
             val name = binding.etName.text.toString().trim()
             val reg = binding.etRegister.text.toString().trim()
             val roll = binding.etRoll.text.toString().trim()
             val address = binding.etAddress.text.toString().trim()
-            val phone = binding.countryCodePicker.fullNumberWithPlus
+            val phone = binding.countryCodePicker.fullNumberWithPlus // E.164
             val email = binding.etEmail.text.toString().trim().lowercase()
             val password = binding.etPassword.text.toString().trim()
             val dob = binding.etDob.text.toString().trim()
@@ -95,8 +112,7 @@ class MainActivity : AppCompatActivity() {
             val role = if (email == "management@gmail.com") "management" else "student"
 
             val hasArrears = binding.swHasArrears.isChecked
-            val arrearsCount =
-                if (hasArrears) binding.etArrearsCount.text.toString().trim() else "0"
+            val arrearsCount = if (hasArrears) binding.etArrearsCount.text.toString().trim() else "0"
 
             val user = User(
                 name = name,
@@ -121,14 +137,8 @@ class MainActivity : AppCompatActivity() {
                     session.currentUserEmail = email
 
                     withContext(Dispatchers.Main) {
-
                         session.collegeName = collegeName
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Registered successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this@MainActivity, "Registered successfully", Toast.LENGTH_SHORT).show()
 
                         startActivity(
                             Intent(this@MainActivity, LoadingActivity::class.java).apply {
@@ -139,22 +149,38 @@ class MainActivity : AppCompatActivity() {
                                 putExtra("collegeName", collegeName)
                             }
                         )
-
+                        // ✅ Finish so user never returns to disabled button
+                        finish()
                     }
 
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "User already exists",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val msg = if (e.message?.contains("UNIQUE", ignoreCase = true) == true ||
+                            e.message?.contains("CONSTRAINT", ignoreCase = true) == true
+                        ) {
+                            "User already exists"
+                        } else {
+                            "Registration failed. Please try again."
+                        }
+                        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                         binding.btnRegister.isEnabled = true
+                        binding.btnRegister.text = originalText
                     }
                 }
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        // Safety net: if user returns here somehow, ensure button is usable
+        if (!binding.btnRegister.isEnabled) {
+            binding.btnRegister.isEnabled = true
+            binding.btnRegister.text = "Register"
+        }
+    }
+
+    // ---------------- Phone validation helpers (copied from LoginActivity approach) ----------------
 
     private fun validateInputs(): Boolean {
 
@@ -175,15 +201,47 @@ class MainActivity : AppCompatActivity() {
         if (binding.etDob.text!!.isEmpty()) return err(binding.etDob, "Required")
         if (binding.etParentName.text!!.isEmpty()) return err(binding.etParentName, "Required")
 
+        // Password length
         val pwd = binding.etPassword.text.toString().trim()
         if (pwd.length < 4) return err(binding.etPassword, "Min 4 characters")
 
+        // Email format (same as your original MainActivity)
         val email = binding.etEmail.text.toString().trim()
         val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$".toRegex()
         if (!emailRegex.matches(email)) return err(binding.etEmail, "Enter valid email")
 
-        if (!binding.countryCodePicker.isValidFullNumber)
-            return err(binding.etPhone, "Invalid phone number")
+        // -------- Phone checks (exactly like in LoginActivity) --------
+        binding.etPhone.error = null
+        val phoneText = binding.etPhone.text.toString().trim()
+
+        if (phoneText.isEmpty()) return err(binding.etPhone, "Phone required")
+        val digitsCount = phoneText.count { it.isDigit() }
+        if (digitsCount < 10) return err(binding.etPhone, "Phone must have minimum 10 digits")
+
+        val region = binding.countryCodePicker.selectedCountryNameCode
+        val national = phoneText.filter { it.isDigit() } // local digits (no +CC)
+
+        if (region == "IN") {
+            // Strict Indian rule: starts 6–9 and exactly 10 digits
+            if (!national.matches(Regex("^[6-9]\\d{9}$"))) {
+                return err(binding.etPhone, "Enter valid Indian number")
+            }
+            // libphonenumber check for India
+            val util = PhoneNumberUtil.getInstance()
+            try {
+                val proto = util.parse("+91$national", "IN")
+                if (!util.isValidNumberForRegion(proto, "IN")) {
+                    return err(binding.etPhone, "Enter valid Indian number")
+                }
+            } catch (_: Exception) {
+                return err(binding.etPhone, "Enter valid Indian number")
+            }
+        } else {
+            // Non-India → rely on CCP's full-number validation (same as LoginActivity)
+            if (!binding.countryCodePicker.isValidFullNumber) {
+                return err(binding.etPhone, "Invalid phone number")
+            }
+        }
 
         if (binding.spDepartment.selectedItem.toString().contains("--")) {
             Toast.makeText(this, "Select Department", Toast.LENGTH_SHORT).show()
@@ -197,31 +255,47 @@ class MainActivity : AppCompatActivity() {
 
         if (binding.swHasArrears.isChecked &&
             binding.etArrearsCount.text!!.isEmpty()
-        )
-            return err(binding.etArrearsCount, "Required")
+        ) return err(binding.etArrearsCount, "Required")
 
         if (binding.swPaid.isChecked && feesPaidAmount == "0") {
             Toast.makeText(this, "Enter fees amount", Toast.LENGTH_SHORT).show()
             return false
         }
 
+        // DOB cannot be future
+        run {
+            try {
+                val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                sdf.isLenient = false
+                val dob = sdf.parse(binding.etDob.text.toString().trim())
+                if (dob == null || dob.time > System.currentTimeMillis()) {
+                    return err(binding.etDob, "DOB cannot be future")
+                }
+            } catch (_: Exception) {
+                return err(binding.etDob, "Invalid date")
+            }
+        }
+
         return true
     }
 
+    // Same max-length logic as in LoginActivity (uses example number’s NSN length)
+    // + override India to 10 digits to avoid rare 9-digit samples
     private fun applyPhoneMaxLengthForCountry() {
         val phoneUtil = PhoneNumberUtil.getInstance()
         val region = binding.countryCodePicker.selectedCountryNameCode
-
-        val maxDigits = try {
+        val computed = try {
             val sample = phoneUtil.getExampleNumber(region)
-            val nsn = phoneUtil.getNationalSignificantNumber(sample)
-            nsn.length
+            val nsn = sample?.let { phoneUtil.getNationalSignificantNumber(it) }
+            nsn?.length ?: 10
         } catch (_: Exception) {
             10
         }
-
+        val maxDigits = if (region == "IN") 10 else computed
         binding.etPhone.filters = arrayOf(DigitMaxLengthFilter(maxDigits))
     }
+
+    // ---------------- UI Helpers ----------------
 
     private fun showFeesPopup() {
         val dept = binding.spDepartment.selectedItem.toString()
@@ -251,8 +325,13 @@ class MainActivity : AppCompatActivity() {
             .setView(view)
             .setPositiveButton("OK") { _, _ ->
                 val paid = etPaid.text.toString().trim()
-                if (paid.isEmpty()) binding.swPaid.isChecked = false
-                else feesPaidAmount = paid
+                if (paid.isEmpty()) {
+                    binding.swPaid.isChecked = false
+                    feesPaidAmount = "0"
+                    Toast.makeText(this, "Fees amount cleared", Toast.LENGTH_SHORT).show()
+                } else {
+                    feesPaidAmount = paid
+                }
             }
             .setNegativeButton("Cancel") { _, _ ->
                 binding.swPaid.isChecked = false
@@ -281,9 +360,13 @@ class MainActivity : AppCompatActivity() {
         )
 
         binding.spDepartment.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, departments)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, departments).apply {
+                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            }
         binding.spSemester.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, semesters)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, semesters).apply {
+                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            }
     }
 
     private fun setupDobPicker() {
@@ -296,7 +379,7 @@ class MainActivity : AppCompatActivity() {
         val m = calendar.get(Calendar.MONTH)
         val d = calendar.get(Calendar.DAY_OF_MONTH)
 
-        DatePickerDialog(
+        val dialog = DatePickerDialog(
             this,
             { _, yy, mm, dd ->
                 calendar.set(yy, mm, dd)
@@ -304,7 +387,10 @@ class MainActivity : AppCompatActivity() {
                 binding.etDob.setText(sdf.format(calendar.time))
             },
             y, m, d
-        ).show()
+        )
+
+        dialog.datePicker.maxDate = System.currentTimeMillis()
+        dialog.show()
     }
 
     private fun setupArrearUI() {

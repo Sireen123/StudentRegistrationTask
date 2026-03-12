@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.widget.TextView
 import android.widget.Toast
-import android.view.View
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -30,22 +29,22 @@ class CertificateActivity : AppCompatActivity() {
         binding = ActivityCertificateBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ⭐ TOP-LEFT BACK ARROW (from include_back_bar.xml)
+        // ⭐ TOP LEFT BACK BUTTON
         binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Certificate"
 
         // ============================
-        // LOGOUT
+        // ✅ LOGOUT → StartActivity
         // ============================
         binding.btnLogout.setOnClickListener {
-            val i = Intent(this, LoginActivity::class.java).apply {
+            val intent = Intent(this, StartActivity::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                             Intent.FLAG_ACTIVITY_CLEAR_TASK or
                             Intent.FLAG_ACTIVITY_NEW_TASK
                 )
             }
-            startActivity(i)
+            startActivity(intent)
             finish()
         }
 
@@ -55,6 +54,7 @@ class CertificateActivity : AppCompatActivity() {
         val hasArrears = intent.getBooleanExtra("hasArrears", false)
 
         val args = Bundle().apply {
+
             putString("name", intent.getStringExtra("name") ?: "")
             putString("reg", intent.getStringExtra("reg") ?: "")
             putString("roll", intent.getStringExtra("roll") ?: "")
@@ -62,14 +62,16 @@ class CertificateActivity : AppCompatActivity() {
             putString("sem", intent.getStringExtra("sem") ?: "")
             putString("parent", intent.getStringExtra("parent") ?: "")
 
-            // Always load saved college name
+            // Saved college name
             putString("collegeName", SessionPrefs(this@CertificateActivity).collegeName ?: "")
 
             putString("arrearsCount", intent.getStringExtra("arrearsCount") ?: "0")
 
             @Suppress("DEPRECATION")
-            putParcelable("signature_uri",
-                intent.getParcelableExtra<Uri>("signature_uri"))
+            putParcelable(
+                "signature_uri",
+                intent.getParcelableExtra<Uri>("signature_uri")
+            )
         }
 
         if (savedInstanceState == null) {
@@ -171,7 +173,7 @@ class CertificateActivity : AppCompatActivity() {
     }
 
     // ================================================================
-    // PROGRESS DIALOG
+    // LOADING DIALOG
     // ================================================================
     private fun showLoadingDialog(): AlertDialog {
         val view = layoutInflater.inflate(R.layout.dialog_loading, null)

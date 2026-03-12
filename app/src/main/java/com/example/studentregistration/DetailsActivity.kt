@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +26,7 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.ceil
 
 class DetailsActivity : AppCompatActivity() {
 
@@ -43,21 +45,21 @@ class DetailsActivity : AppCompatActivity() {
 
         session = SessionPrefs(this)
 
-        // ⭐ TOP LEFT BACK ARROW (from include_back_bar.xml)
+        // Back + title
         binding.root.findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Student Details"
 
-        // EMAIL passed from previous screen
+        // Email from previous screen
         val emailFromRegister = intent.getStringExtra("email")
         if (emailFromRegister != null) session.currentUserEmail = emailFromRegister
 
-        // Incoming extras
+        // Extras
         extraHasArrears = intent.getBooleanExtra("hasArrears", false)
         extraArrearsCount = intent.getStringExtra("arrearsCount") ?: "0"
         extraSelectedSem = intent.getStringExtra("selectedSemester")
-        collegeName = SessionPrefs(this).collegeName ?: ""
+        collegeName = session.collegeName ?: ""
 
-        // Arrears section
+        // Arrears UI
         binding.groupArrears.visibility = View.VISIBLE
         if (extraHasArrears) {
             binding.tvHasArrears.text = "Arrears History: Yes"
@@ -67,17 +69,24 @@ class DetailsActivity : AppCompatActivity() {
             binding.tvArrearsCount.text = "No. of arrears: 0"
         }
 
-        // Load user data
+        // Load user from DB
         session.currentUserEmail?.let { loadUserDetails(it) }
 
+        // Course listeners
         setCourseClickListeners()
 
-        // Show signature pad
+        // Signature
+        setupSignature()
+
+        updateSubmitEnabled()
+    }
+
+    private fun setupSignature() {
         binding.sectionSignature.visibility = View.VISIBLE
 
-        // Signature pad listeners
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
+
             override fun onSigned() {
                 binding.tvSignDate.text = "Date: ${today()}"
                 binding.tvSignHash.text = computeShortHash()
@@ -93,21 +102,18 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.btnClearSign.setOnClickListener { binding.signPad.clear() }
 
-        // SUBMIT → AcknowledgementActivity
         binding.btnSubmit.setOnClickListener {
             if (binding.signPad.isEmpty) {
                 Toast.makeText(this, "Please add signature", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Save signature to cache
             val file = File(cacheDir, "signature_${System.currentTimeMillis()}.png")
             FileOutputStream(file).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
             val uri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
 
-            // Go to acknowledgement
             startActivity(
                 Intent(this, AcknowledgementActivity::class.java).apply {
                     putExtra("name", binding.tvName.text.toString())
@@ -119,30 +125,26 @@ class DetailsActivity : AppCompatActivity() {
                     putExtra("phone", binding.tvPhone.text.toString())
                     putExtra("email", binding.tvEmail.text.toString())
                     putExtra("parent", binding.tvParent.text.toString())
-
                     putExtra("signature_uri", uri)
                     putExtra("signed_on", today())
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
                     putExtra("hasArrears", extraHasArrears)
                     putExtra("arrearsCount", extraArrearsCount)
                     putExtra("collegeName", collegeName)
                 }
             )
         }
-
-        updateSubmitEnabled()
     }
 
     private fun loadUserDetails(email: String) {
         val dao = AppDatabase.getDatabase(this).userDao()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val user: User? = dao.getUserByEmail(email)
+            val user = dao.getUserByEmail(email)
 
             withContext(Dispatchers.Main) {
                 if (user != null) {
 
+                    // Assign user values to UI
                     binding.tvName.text = "Name: ${user.name}"
                     binding.tvReg.text = "Register No: ${user.registerNo}"
                     binding.tvRoll.text = "Roll No: ${user.rollNo}"
@@ -154,9 +156,9 @@ class DetailsActivity : AppCompatActivity() {
                     binding.tvParent.text = "Parent/Guardian: ${user.parentName}"
                     binding.tvDept.text = "Department: ${user.department}"
                     binding.tvSem.text = "Semester: ${extraSelectedSem ?: user.semester}"
-
                     binding.tvSignedByLabel.text = "Signed by: ${user.name}"
 
+                    // Fee structure
                     val feeMap = mapOf(
                         "Computer Science" to 75000,
                         "Information Technology" to 75000,
@@ -177,17 +179,67 @@ class DetailsActivity : AppCompatActivity() {
                     binding.tvTotalAmount.text = "₹$total"
                     binding.tvBalanceAmount.text = "Balance: ₹$balance"
 
+                    // Progress bar percentage
                     val percent = if (total > 0) (paid * 100 / total) else 0
 
-                    // Animate progress bar
                     ObjectAnimator.ofInt(binding.feesProgress, "progress", percent).apply {
                         duration = 800
                         interpolator = DecelerateInterpolator()
                         start()
                     }
+
+                    // ✅ DOTS FIX — final correct logic
+                    loadDots(total, paid)
                 }
             }
         }
+    }
+
+    // ✅ FINAL DOT GENERATION (works 100%)
+    private fun loadDots(total: Int, paid: Int) {
+
+        val step = 25000
+        val totalDots = if (total <= 0) 1 else ceil(total / step.toDouble()).toInt()
+        val filledDots = (paid / step).coerceAtMost(totalDots)
+
+        val container = binding.dotsContainer
+        container.removeAllViews()
+
+        repeat(totalDots) { index ->
+
+            val dot = View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(10), dp(10)).apply {
+                    setMargins(dp(6), 0, dp(6), 0)
+                }
+
+                if (index < filledDots)
+                    setBackgroundResource(R.drawable.progress_dot_paid)
+                else
+                    setBackgroundResource(R.drawable.progress_dot_future)
+            }
+
+            container.addView(dot)
+        }
+    }
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+    private fun updateSubmitEnabled() {
+        binding.btnSubmit.isEnabled = !binding.signPad.isEmpty
+    }
+
+    private fun today(): String =
+        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+
+    private fun computeShortHash(): String {
+        val bmp = binding.signPad.signatureBitmap
+        val baos = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        val bytes = baos.toByteArray()
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+            .uppercase()
+            .take(16)
     }
 
     private fun setCourseClickListeners() {
@@ -207,25 +259,5 @@ class DetailsActivity : AppCompatActivity() {
                 putExtra("courseFee", fee)
             }
         )
-    }
-
-    private fun updateSubmitEnabled() {
-        binding.btnSubmit.isEnabled = !binding.signPad.isEmpty
-    }
-
-    private fun today(): String =
-        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
-
-    // ⭐ FIXED – No more Unicode dash crash
-    private fun computeShortHash(): String {
-        val bmp = binding.signPad.signatureBitmap
-        val baos = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
-        val bytes = baos.toByteArray()
-
-        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
-        return digest.joinToString("") { "%02x".format(it) }
-            .uppercase()
-            .take(16)
     }
 }

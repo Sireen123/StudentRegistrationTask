@@ -1,63 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F6FA">
+    android:background="#F5F6FA"
+    android:fitsSystemWindows="true"
+    android:fillViewport="true">
 
-    <!-- ⭐ TOP BACK BUTTON BAR -->
-    <include
-        android:id="@+id/includeBack"
-        layout="@layout/include_back_bar" />
-
-    <!-- Top bar (Logout) -->
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:gravity="end">
+        android:paddingTop="16dp">
 
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="wrap_content"
+        <!-- ⭐ TOP BACK BUTTON BAR -->
+        <include
+            android:id="@+id/includeBack"
+            layout="@layout/include_back_bar" />
+
+        <!-- Logout Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Logout"
+            android:padding="16dp"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Logout"
+                android:textAllCaps="false"
+                android:backgroundTint="#D32F2F"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
+
+        <!-- Certificate Fragment Container -->
+        <FrameLayout
+            android:id="@+id/fragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="16dp"
+            android:foregroundGravity="center" />
+
+        <!-- Download PDF -->
+        <Button
+            android:id="@+id/btnDownloadPdf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Download as PDF"
             android:textAllCaps="false"
-            android:backgroundTint="#D32F2F"
-            android:textColor="#FFFFFF"/>
+            android:padding="16dp"
+            android:layout_margin="16dp"
+            android:backgroundTint="#1976D2"
+            android:textColor="#FFFFFF" />
+
+        <!-- Share PDF -->
+        <Button
+            android:id="@+id/btnSharePdf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Share Certificate PDF"
+            android:textAllCaps="false"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            android:padding="16dp"
+            android:backgroundTint="#2E7D32"
+            android:textColor="#FFFFFF" />
+
     </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/fragmentContainer"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="16dp"
-        android:foregroundGravity="center"/>
-
-    <!-- Download PDF -->
-    <Button
-        android:id="@+id/btnDownloadPdf"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Download as PDF"
-        android:textAllCaps="false"
-        android:padding="16dp"
-        android:layout_margin="16dp"
-        android:backgroundTint="#1976D2"
-        android:textColor="#FFFFFF"/>
-
-    <!-- Share PDF -->
-    <Button
-        android:id="@+id/btnSharePdf"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Share Certificate PDF"
-        android:textAllCaps="false"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
-        android:padding="16dp"
-        android:backgroundTint="#2E7D32"
-        android:textColor="#FFFFFF"/>
-
-</LinearLayout>
+</ScrollView>

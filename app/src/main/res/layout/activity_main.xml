@@ -7,24 +7,24 @@
     android:fitsSystemWindows="true"
     android:background="#FFFBFE">
 
-
     <include
         android:id="@+id/includeBack"
         layout="@layout/include_back_bar" />
 
-
     <ScrollView
+        android:id="@+id/scrollRoot"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
+            android:padding="16dp"
+            android:paddingBottom="96dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -34,7 +34,6 @@
                 android:textColor="#000000"
                 android:textSize="22sp"
                 android:textStyle="bold" />
-
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilName"
@@ -46,9 +45,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRegister"
@@ -62,9 +62,10 @@
                     android:id="@+id/etRegister"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRoll"
@@ -78,9 +79,10 @@
                     android:id="@+id/etRoll"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <TextView
                 android:layout_width="wrap_content"
@@ -133,7 +135,8 @@
                     android:layout_height="wrap_content"
                     android:minLines="2"
                     android:gravity="top"
-                    android:inputType="textMultiLine" />
+                    android:inputType="textMultiLine"
+                    android:imeOptions="actionNext" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Phone -->
@@ -163,7 +166,9 @@
                         android:id="@+id/etPhone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="phone" />
+                        android:inputType="phone"
+                        android:imeOptions="actionNext"
+                        android:singleLine="true" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
@@ -180,7 +185,9 @@
                     android:id="@+id/etEmail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textEmailAddress"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Password -->
@@ -197,7 +204,9 @@
                     android:id="@+id/etPassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- DOB -->
@@ -214,7 +223,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:focusable="false"
-                    android:clickable="true" />
+                    android:clickable="true"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Parent -->
@@ -229,7 +240,9 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etParentName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- College -->
@@ -245,7 +258,9 @@
                     android:id="@+id/etCollege"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textCapWords" />
+                    android:inputType="textCapWords"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Department -->
@@ -306,7 +321,9 @@
                         android:id="@+id/etArrearsCount"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="number" />
+                        android:inputType="number"
+                        android:imeOptions="actionDone"
+                        android:singleLine="true" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
