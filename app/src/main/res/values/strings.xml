@@ -92,5 +92,7 @@
     <!-- Back button -->
     <string name="back">Back</string>
     <string name="navigate_back">Navigate back</string>
+    <string name="cd_faq">Help and FAQs</string>
+
 
 </resources>

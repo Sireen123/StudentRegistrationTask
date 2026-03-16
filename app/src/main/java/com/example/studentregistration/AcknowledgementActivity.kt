@@ -3,7 +3,6 @@ package com.example.studentregistration
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -14,7 +13,6 @@ class AcknowledgementActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAcknowledgementBinding
 
-    // Raw incoming values
     private var name = ""
     private var reg = ""
     private var roll = ""
@@ -27,19 +25,21 @@ class AcknowledgementActivity : AppCompatActivity() {
     private var signatureUri: Uri? = null
     private var signedOn = ""
 
+    // ✅ THIS WAS MISSING
+    private var profilePhotoUri: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAcknowledgementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ⭐ CUSTOM BACK ARROW (from include_back_bar.xml)
+        // Back & Title
         binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Acknowledgement"
 
-        // Title
         binding.tvTitle.text = "ACKNOWLEDGEMENT"
 
-        // Read extras
+        // ✅ Read values from DetailsActivity
         intent.extras?.let { b ->
             name         = b.getString("name", "")
             reg          = b.getString("reg", "")
@@ -52,37 +52,33 @@ class AcknowledgementActivity : AppCompatActivity() {
             arrearsCount = b.getString("arrearsCount", "0") ?: "0"
             signedOn     = b.getString("signed_on", "")
             signatureUri = b.getParcelable("signature_uri")
+
+            // ✅ MOST IMPORTANT → RECEIVE PHOTO FROM DETAILS ACTIVITY
+            profilePhotoUri = b.getString("profile_photo_uri")
         }
 
-        // Clean labels like "Name:" etc
-        fun clean(v: String): String = v
-            .replace(Regex("(?i)^\\s*name:\\s*"), "")
-            .replace(Regex("(?i)^\\s*register\\s*no:\\s*"), "")
-            .replace(Regex("(?i)^\\s*roll\\s*no:\\s*"), "")
-            .replace(Regex("(?i)^\\s*department:\\s*"), "")
-            .replace(Regex("(?i)^\\s*semester:\\s*"), "")
-            .replace(Regex("(?i)^\\s*parent/?guardian:\\s*"), "")
-            .trim()
+        // Clean text
+        fun clean(v: String) = v.replace(Regex("(?i)^\\s*[a-z ]+:\\s*"), "").trim()
 
-        val cName    = clean(name)
-        val cReg     = clean(reg)
-        val cRoll    = clean(roll)
-        val cDept    = clean(dept)
-        val cSem     = clean(sem)
-        val cParent  = clean(parent)
+        val cName = clean(name)
+        val cReg = clean(reg)
+        val cRoll = clean(roll)
+        val cDept = clean(dept)
+        val cSem = clean(sem)
+        val cParent = clean(parent)
         val cCollege = clean(collegeName)
 
-        // Fill details
-        binding.tvName.text     = cName
-        binding.tvReg.text      = cReg
-        binding.tvRoll.text     = cRoll
-        binding.tvDept.text     = cDept
-        binding.tvSem.text      = cSem
-        binding.tvParent.text   = cParent
-        binding.tvCollege.text  = cCollege
+        // Fill summary UI
+        binding.tvName.text = cName
+        binding.tvReg.text = cReg
+        binding.tvRoll.text = cRoll
+        binding.tvDept.text = cDept
+        binding.tvSem.text = cSem
+        binding.tvParent.text = cParent
+        binding.tvCollege.text = cCollege
         binding.tvArrearFlag.text = if (hasArrears) "Yes ($arrearsCount)" else "No"
 
-        // SUBMIT → CertificateActivity
+        // ✅ SUBMIT → GO TO CERTIFICATE ACTIVITY
         binding.btnSubmit.setOnClickListener {
 
             if (!binding.cbAcknowledge.isChecked) {
@@ -91,6 +87,7 @@ class AcknowledgementActivity : AppCompatActivity() {
             }
 
             val i = Intent(this, CertificateActivity::class.java).apply {
+
                 putExtra("name", cName)
                 putExtra("reg", cReg)
                 putExtra("roll", cRoll)
@@ -104,8 +101,13 @@ class AcknowledgementActivity : AppCompatActivity() {
 
                 putExtra("signature_uri", signatureUri)
                 putExtra("signed_on", signedOn)
+
+                // ✅ SEND PHOTO TO CERTIFICATE ACTIVITY
+                putExtra("profile_photo_uri", profilePhotoUri)
+
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+
             startActivity(i)
         }
     }

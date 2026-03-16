@@ -9,9 +9,9 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -22,20 +22,18 @@ import java.io.FileOutputStream
 class CertificateActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCertificateBinding
-    private var lastSavedPdf: File? = null   // reuse for share feature
+    private var lastSavedPdf: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCertificateBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ⭐ TOP LEFT BACK BUTTON
+        // BACK + TITLE
         binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Certificate"
 
-        // ============================
-        // ✅ LOGOUT → StartActivity
-        // ============================
+        // LOGOUT
         binding.btnLogout.setOnClickListener {
             val intent = Intent(this, StartActivity::class.java).apply {
                 addFlags(
@@ -48,29 +46,32 @@ class CertificateActivity : AppCompatActivity() {
             finish()
         }
 
-        // ============================
-        // LOAD FRAGMENT
-        // ============================
+        // LOAD FRAGMENT DATA
         val hasArrears = intent.getBooleanExtra("hasArrears", false)
 
         val args = Bundle().apply {
-
             putString("name", intent.getStringExtra("name") ?: "")
             putString("reg", intent.getStringExtra("reg") ?: "")
             putString("roll", intent.getStringExtra("roll") ?: "")
             putString("dept", intent.getStringExtra("dept") ?: "")
             putString("sem", intent.getStringExtra("sem") ?: "")
             putString("parent", intent.getStringExtra("parent") ?: "")
-
-            // Saved college name
             putString("collegeName", SessionPrefs(this@CertificateActivity).collegeName ?: "")
-
             putString("arrearsCount", intent.getStringExtra("arrearsCount") ?: "0")
 
             @Suppress("DEPRECATION")
-            putParcelable(
-                "signature_uri",
-                intent.getParcelableExtra<Uri>("signature_uri")
+            putParcelable("signature_uri", intent.getParcelableExtra<Uri>("signature_uri"))
+
+            // ✅ NEW: pass student photo
+            putString("profile_photo_uri", intent.getStringExtra("profile_photo_uri"))
+
+            // QR SHORT DATA
+            putString(
+                "qr_data",
+                "Name: ${intent.getStringExtra("name") ?: ""}\n" +
+                        "Reg: ${intent.getStringExtra("reg") ?: ""}\n" +
+                        "Dept: ${intent.getStringExtra("dept") ?: ""}\n" +
+                        "Sem: ${intent.getStringExtra("sem") ?: ""}"
             )
         }
 
@@ -78,7 +79,6 @@ class CertificateActivity : AppCompatActivity() {
             val frag: Fragment =
                 if (hasArrears) ArrearCertificateFragment()
                 else FinalCertificateFragment()
-
             frag.arguments = args
 
             supportFragmentManager.beginTransaction()
@@ -86,12 +86,9 @@ class CertificateActivity : AppCompatActivity() {
                 .commit()
         }
 
-        // ============================
         // DOWNLOAD PDF
-        // ============================
         binding.btnDownloadPdf.setOnClickListener {
             val dialog = showLoadingDialog()
-
             lastSavedPdf = generatePdfOrNull(dialog)
 
             if (lastSavedPdf != null) {
@@ -99,9 +96,7 @@ class CertificateActivity : AppCompatActivity() {
             }
         }
 
-        // ============================
         // SHARE PDF
-        // ============================
         binding.btnSharePdf.setOnClickListener {
             val dialog = showLoadingDialog()
 
@@ -130,9 +125,7 @@ class CertificateActivity : AppCompatActivity() {
         }
     }
 
-    // ================================================================
     // PDF CREATION
-    // ================================================================
     private fun generatePdfOrNull(dialog: AlertDialog): File? {
         val view = binding.fragmentContainer
 
@@ -152,11 +145,12 @@ class CertificateActivity : AppCompatActivity() {
         page.canvas.drawBitmap(bitmap, 0f, 0f, null)
         pdfDoc.finishPage(page)
 
-        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloads =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         if (!downloads.exists()) downloads.mkdirs()
 
-        val studentName = (intent.getStringExtra("name") ?: "Student")
-            .trim().replace("\\s+".toRegex(), "_")
+        val studentName =
+            (intent.getStringExtra("name") ?: "Student").trim().replace("\\s+".toRegex(), "_")
 
         val file = File(downloads, "Certificate_${studentName}_${System.currentTimeMillis()}.pdf")
 
@@ -172,9 +166,6 @@ class CertificateActivity : AppCompatActivity() {
         }
     }
 
-    // ================================================================
-    // LOADING DIALOG
-    // ================================================================
     private fun showLoadingDialog(): AlertDialog {
         val view = layoutInflater.inflate(R.layout.dialog_loading, null)
         val dialog = AlertDialog.Builder(this)

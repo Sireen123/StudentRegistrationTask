@@ -1,2 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources/>
+<resources>
+
+    <!-- ✅ Circle Image Style -->
+    <style name="CircleImage">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+</resources>

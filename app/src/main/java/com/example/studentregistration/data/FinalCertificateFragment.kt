@@ -1,5 +1,6 @@
 package com.example.studentregistration
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -8,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.studentregistration.databinding.FragmentFinalCertificateBinding
+import com.google.zxing.BarcodeFormat
+import com.journeyapps.barcodescanner.BarcodeEncoder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,9 +27,32 @@ class FinalCertificateFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val b = requireArguments()
 
+        // ✅ FIXED — Load photo using Bitmap decoding
+        val photoUriStr = b.getString("profile_photo_uri")
+        if (!photoUriStr.isNullOrBlank()) {
+            try {
+                val uri = Uri.parse(photoUriStr)
+                val bmp = loadBitmapFromUri(uri)
+                if (bmp != null) {
+                    binding.imgProfile.setImageBitmap(bmp)
+                    binding.imgProfile.visibility = View.VISIBLE
+                } else {
+                    binding.imgProfile.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                binding.imgProfile.visibility = View.GONE
+            }
+        } else {
+            binding.imgProfile.visibility = View.GONE
+        }
+
+        // ================================
+        // ✅ Basic details
+        // ================================
         val name = b.getString("name", "")
         val parent = b.getString("parent", "")
         val roll = b.getString("roll", "")
@@ -41,12 +67,13 @@ class FinalCertificateFragment : Fragment() {
                 @Suppress("DEPRECATION")
                 b.getParcelable("signature_uri")
 
+        // Certificate Content
         binding.tvTitle.text = "COLLEGE CERTIFICATE"
 
         binding.tvBody.text = """
             This is to certify that Mr./Ms. $name — S/O or D/O of Mr./Ms. $parent —
             bearing roll no $roll — is a student of $sem — $dept —
-            for the academic year ${academicYear()}. 
+            for the academic year ${academicYear()}.
             He/She is a bonafide student of $college.
         """.trimIndent()
 
@@ -55,6 +82,42 @@ class FinalCertificateFragment : Fragment() {
         signatureUri?.let { binding.ivSignature.setImageURI(it) }
 
         binding.tvCollege.text = college
+
+        // ================================
+        // ✅ QR Code Generation
+        // ================================
+        val qrData = b.getString("qr_data") ?: ""
+
+        if (qrData.isNotBlank()) {
+            try {
+                val encoder = BarcodeEncoder()
+                val bmp: Bitmap = encoder.encodeBitmap(
+                    qrData, BarcodeFormat.QR_CODE, 800, 800
+                )
+                binding.imgQr.setImageBitmap(bmp)
+                binding.tvScanToVerify.text = "Scan to verify"
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // ✅ FIX — Proper SAF Bitmap Loading
+    private fun loadBitmapFromUri(uri: Uri, maxSizePx: Int = 512): Bitmap? {
+        return try {
+            requireContext().contentResolver.openInputStream(uri).use { input ->
+                if (input == null) return null
+                val original = android.graphics.BitmapFactory.decodeStream(input) ?: return null
+                val w = original.width
+                val h = original.height
+                val scale = (maxOf(w, h).toFloat() / maxSizePx).coerceAtLeast(1f)
+                val newW = (w / scale).toInt()
+                val newH = (h / scale).toInt()
+                Bitmap.createScaledBitmap(original, newW, newH, true)
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun academicYear(): String {

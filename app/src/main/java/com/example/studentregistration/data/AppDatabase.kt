@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,15 +30,14 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "student_db"
                 )
+                    // ✅ IMPORTANT: this fixes registration failure
                     .fallbackToDestructiveMigration()
-                    .addCallback(object : RoomDatabase.Callback() {
 
+                    // ✅ Insert admin on first creation
+                    .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-
-                            // FIXED: INSTANCE is used here (NOT tempInstance)
                             CoroutineScope(Dispatchers.IO).launch {
-
                                 INSTANCE?.userDao()?.insertUser(
                                     User(
                                         name = "Admin",
@@ -54,7 +53,8 @@ abstract class AppDatabase : RoomDatabase() {
                                         department = "",
                                         semester = "",
                                         role = "management",
-                                        feesPaid = "0"
+                                        feesPaid = "0",
+                                        profilePhoto = null         // ✅ added for safety
                                     )
                                 )
                             }
