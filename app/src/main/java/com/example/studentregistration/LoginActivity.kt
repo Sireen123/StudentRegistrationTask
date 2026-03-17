@@ -20,6 +20,7 @@ import com.example.studentregistration.data.LoginViewModel
 import com.example.studentregistration.data.LoginViewModelFactory
 import com.example.studentregistration.data.UserRepository
 import com.example.studentregistration.databinding.ActivityLoginBinding
+import com.example.studentregistration.StartActivity
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth

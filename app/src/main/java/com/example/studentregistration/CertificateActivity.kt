@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.example.studentregistration.databinding.ActivityCertificateBinding
+import com.example.studentregistration.StartActivity
 import java.io.File
 import java.io.FileOutputStream
 
