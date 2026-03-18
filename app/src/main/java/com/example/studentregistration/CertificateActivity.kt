@@ -16,14 +16,27 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.example.studentregistration.databinding.ActivityCertificateBinding
-import com.example.studentregistration.StartActivity
 import java.io.File
 import java.io.FileOutputStream
+
+// ✅ Firebase
+import com.example.studentregistration.data.FirebaseRepo
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.storage.FirebaseStorage
 
 class CertificateActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCertificateBinding
     private var lastSavedPdf: File? = null
+
+    // (Optional) quick access to fields for metadata
+    private val studentName by lazy { intent.getStringExtra("name") ?: "Student" }
+    private val regNo by lazy { intent.getStringExtra("reg") ?: "" }
+    private val dept by lazy { intent.getStringExtra("dept") ?: "" }
+    private val sem by lazy { intent.getStringExtra("sem") ?: "" }
+
+    // ✅ Firebase Storage
+    private val storage by lazy { FirebaseStorage.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,8 +47,9 @@ class CertificateActivity : AppCompatActivity() {
         binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Certificate"
 
-        // LOGOUT
+        // ✅ LOGOUT (also sign out from Firebase)
         binding.btnLogout.setOnClickListener {
+            FirebaseRepo.auth.signOut() // <— important so StartActivity won't auto-redirect back
             val intent = Intent(this, StartActivity::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
@@ -63,7 +77,7 @@ class CertificateActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             putParcelable("signature_uri", intent.getParcelableExtra<Uri>("signature_uri"))
 
-            // ✅ NEW: pass student photo
+            // student photo
             putString("profile_photo_uri", intent.getStringExtra("profile_photo_uri"))
 
             // QR SHORT DATA
@@ -77,11 +91,8 @@ class CertificateActivity : AppCompatActivity() {
         }
 
         if (savedInstanceState == null) {
-            val frag: Fragment =
-                if (hasArrears) ArrearCertificateFragment()
-                else FinalCertificateFragment()
+            val frag: Fragment = if (hasArrears) ArrearCertificateFragment() else FinalCertificateFragment()
             frag.arguments = args
-
             supportFragmentManager.beginTransaction()
                 .replace(binding.fragmentContainer.id, frag)
                 .commit()
@@ -92,8 +103,10 @@ class CertificateActivity : AppCompatActivity() {
             val dialog = showLoadingDialog()
             lastSavedPdf = generatePdfOrNull(dialog)
 
-            if (lastSavedPdf != null) {
+            lastSavedPdf?.let { file ->
                 Toast.makeText(this, "PDF saved successfully!", Toast.LENGTH_LONG).show()
+                // ✅ Fire-and-forget upload to Firebase
+                uploadCertificateToFirebase(file)
             }
         }
 
@@ -109,6 +122,9 @@ class CertificateActivity : AppCompatActivity() {
             }
 
             dialog.dismiss()
+
+            // ✅ Ensure it's uploaded at least once
+            uploadCertificateToFirebase(pdf)
 
             val uri = FileProvider.getUriForFile(
                 this,
@@ -146,14 +162,11 @@ class CertificateActivity : AppCompatActivity() {
         page.canvas.drawBitmap(bitmap, 0f, 0f, null)
         pdfDoc.finishPage(page)
 
-        val downloads =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         if (!downloads.exists()) downloads.mkdirs()
 
-        val studentName =
-            (intent.getStringExtra("name") ?: "Student").trim().replace("\\s+".toRegex(), "_")
-
-        val file = File(downloads, "Certificate_${studentName}_${System.currentTimeMillis()}.pdf")
+        val nameForFile = studentName.trim().replace("\\s+".toRegex(), "_")
+        val file = File(downloads, "Certificate_${nameForFile}_${System.currentTimeMillis()}.pdf")
 
         return try {
             FileOutputStream(file).use { fos -> pdfDoc.writeTo(fos) }
@@ -177,5 +190,38 @@ class CertificateActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(0x00000000))
         dialog.show()
         return dialog
+    }
+
+    // =================== FIREBASE UPLOAD + SAVE ===================
+    private fun uploadCertificateToFirebase(file: File) {
+        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
+
+        val ref = storage.reference.child("users/$uid/certificates/${file.name}")
+        val fileUri = Uri.fromFile(file)
+
+        ref.putFile(fileUri)
+            .continueWithTask { ref.downloadUrl }
+            .addOnSuccessListener { url ->
+                // Save metadata to Firestore
+                val data = hashMapOf(
+                    "title" to "Certificate",
+                    "fileUrl" to url.toString(),
+                    "fileName" to file.name,
+                    "name" to studentName,
+                    "registerNo" to regNo,
+                    "department" to dept,
+                    "semester" to sem,
+                    "createdAt" to FieldValue.serverTimestamp()
+                )
+                FirebaseRepo.db.collection("users")
+                    .document(uid)
+                    .collection("certificates")
+                    .add(data)
+                    .addOnSuccessListener { /* no-op */ }
+                    .addOnFailureListener { /* ignore - file is already uploaded */ }
+            }
+            .addOnFailureListener {
+                // ignore failures silently; user still has local PDF
+            }
     }
 }

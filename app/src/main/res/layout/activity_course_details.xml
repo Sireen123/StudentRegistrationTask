@@ -23,7 +23,7 @@
             android:id="@+id/tvCourseTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hint_coursename"
+            android:text="Course Name"
             android:textStyle="bold"
             android:textSize="22sp"
             android:textColor="#000000"
@@ -34,7 +34,7 @@
             android:id="@+id/tvCourseFee"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hint_coursefees"
+            android:text="Fees:"
             android:textSize="18sp"
             android:layout_marginBottom="14dp" />
 
@@ -50,18 +50,8 @@
             android:id="@+id/tvCourseDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/hint_description"
+            android:text="Course description will appear here."
             android:textSize="16sp" />
-
-        <!-- Logout button -->
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_Logout"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="#2962FF"
-            android:textColor="#FFFFFF" />
 
     </LinearLayout>
 </ScrollView>

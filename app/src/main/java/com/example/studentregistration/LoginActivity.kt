@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.ImageButton
@@ -20,13 +21,16 @@ import com.example.studentregistration.data.LoginViewModel
 import com.example.studentregistration.data.LoginViewModelFactory
 import com.example.studentregistration.data.UserRepository
 import com.example.studentregistration.databinding.ActivityLoginBinding
-import com.example.studentregistration.StartActivity
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+
+// Firebase
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -39,7 +43,10 @@ class LoginActivity : AppCompatActivity() {
     private var hasNavigated = false
     private var otpVerified = false
 
+    // Firebase instances
     private lateinit var auth: FirebaseAuth
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+
     private var verificationId: String? = null
     private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
@@ -50,41 +57,39 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ include_back_bar setup
+        // Back Bar
         val backBtn = findViewById<ImageButton>(R.id.btnBack)
         val title = findViewById<TextView>(R.id.tvScreenTitle)
         title?.text = "Login"
         backBtn?.setOnClickListener { navigateUpToStart() }
+        onBackPressedDispatcher.addCallback(this) { navigateUpToStart() }
 
-        // ✅ Modern Android back press
-        onBackPressedDispatcher.addCallback(this) {
-            navigateUpToStart()
-        }
-
-        // ✅ ViewModel + DB
+        // DB + ViewModel
         val dao = AppDatabase.getDatabase(this).userDao()
         val repo = UserRepository(dao)
         val factory = LoginViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory)[LoginViewModel::class.java]
 
-        // ✅ Firebase
+        // Firebase
         auth = FirebaseAuth.getInstance()
 
-        // ✅ Prefill last email
+        // Prefill email
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         binding.etEmail.setText(prefs.getString("last_email", ""))
 
-        // ✅ Phone number setup
+        // Phone number — digits only
+        binding.etPhone.inputType = InputType.TYPE_CLASS_NUMBER
+
+        // Country picker setup
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
-
         binding.countryCodePicker.setOnCountryChangeListener {
             applyPhoneMaxLengthForCountry()
             updatePhoneCounter()
             otpVerified = false
         }
 
-        // ✅ FULL TextWatcher
+        // TextWatcher
         binding.etPhone.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -94,7 +99,7 @@ class LoginActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // ✅ SEND OTP
+        // SEND OTP
         binding.btnSendOtp.setOnClickListener {
             if (!validatePhoneForOtp()) return@setOnClickListener
 
@@ -115,7 +120,7 @@ class LoginActivity : AppCompatActivity() {
             )
         }
 
-        // ✅ LOGIN BUTTON
+        // LOGIN BUTTON (kept same)
         binding.btnLogin.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
 
@@ -135,7 +140,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ LOGIN RESULT
+        // LOGIN RESULT (add Firestore prefetch; navigation unchanged)
         viewModel.loginResult.observe(this) { user ->
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return@observe
 
@@ -143,13 +148,18 @@ class LoginActivity : AppCompatActivity() {
                 if (hasNavigated) return@observe
                 hasNavigated = true
 
-                // ✅ ✅ ✅ FINAL NAVIGATION → ALWAYS GO TO DASHBOARD
-                val intent = Intent(this, DashboardActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("email_from_login", user.email)
-                }
+                // Fire-and-forget: sign in to Firebase with email/pass and prefetch Firestore
+                val emailNow = binding.etEmail.text.toString().trim().lowercase()
+                val passwordNow = binding.etPassword.text.toString().trim()
+                signInAndPrefetchFirestore(emailNow, passwordNow)
 
-                startActivity(intent)
+                // Original navigation
+                startActivity(
+                    Intent(this, DashboardActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        putExtra("email_from_login", user.email)
+                    }
+                )
                 finish()
 
             } else {
@@ -157,13 +167,9 @@ class LoginActivity : AppCompatActivity() {
                 binding.btnLogin.isEnabled = true
             }
         }
-
-        binding.tvFeesList.setOnClickListener {
-            startActivity(Intent(this, FeesListActivity::class.java))
-        }
     }
 
-    // ✅ BACK NAVIGATION
+    // BACK
     private fun navigateUpToStart() {
         startActivity(
             Intent(this, StartActivity::class.java).apply {
@@ -177,7 +183,7 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    // ✅ VALIDATION (unchanged)
+    // VALIDATION (same)
     private fun validateInputs(): Boolean {
         val email = binding.etEmail.text.toString().trim()
         val phoneText = binding.etPhone.text.toString().trim()
@@ -264,14 +270,13 @@ class LoginActivity : AppCompatActivity() {
         binding.tvPhoneCounter.text = "$digits / $lastAppliedMax"
     }
 
+    // OTP send & verify
     private fun sendOtp(
         e164: String,
         onVerified: () -> Unit,
         onFailed: () -> Unit
     ) {
-
         val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                 signInWithPhoneCredential(credential, onVerified, onFailed)
             }
@@ -331,7 +336,7 @@ class LoginActivity : AppCompatActivity() {
     ) {
         val et = EditText(this).apply {
             hint = "Enter OTP"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            inputType = InputType.TYPE_CLASS_NUMBER
             maxLines = 1
         }
 
@@ -348,5 +353,30 @@ class LoginActivity : AppCompatActivity() {
             .setNegativeButton("Cancel") { _, _ -> onCancel() }
             .setCancelable(false)
             .show()
+    }
+
+    // Email/Password sign-in + Firestore prefetch (doesn't block navigation)
+    private fun signInAndPrefetchFirestore(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) return
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener { res ->
+                val uid = res.user?.uid ?: return@addOnSuccessListener
+                db.collection("users").document(uid).get()
+                    .addOnSuccessListener { doc ->
+                        val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
+                        sp.edit()
+                            .putString("uid", uid)
+                            .putString("name", doc.getString("name"))
+                            .putString("email", doc.getString("email"))
+                            .putString("phone", doc.getString("phone"))
+                            .putString("department", doc.getString("department"))
+                            .putString("semester", doc.getString("semester"))
+                            .putString("role", doc.getString("role"))
+                            .apply()
+                    }
+                    .addOnFailureListener { /* ignore */ }
+            }
+            .addOnFailureListener { /* user may not exist in Firebase yet */ }
     }
 }

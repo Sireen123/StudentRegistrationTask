@@ -1,11 +1,13 @@
 package com.example.studentregistration
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
@@ -19,8 +21,10 @@ import androidx.lifecycle.lifecycleScope
 import com.example.studentregistration.data.AppDatabase
 import com.example.studentregistration.data.User
 import com.example.studentregistration.data.UserRepository
+import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityMainBinding
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,9 +39,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repo: UserRepository
     private val calendar = Calendar.getInstance()
     private var feesPaidAmount: String = "0"
-
     private var selectedImageUri: Uri? = null
 
+    // Firebase Auth
+    private val auth by lazy { FirebaseAuth.getInstance() }
+
+    // Image picker
     private val pickImage =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
@@ -47,7 +54,6 @@ class MainActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )
                 } catch (_: Exception) { }
-
                 selectedImageUri = uri
                 binding.imgProfile.setImageURI(uri)
             }
@@ -66,9 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         repo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
-        binding.btnUploadPhoto.setOnClickListener {
-            pickImage.launch(arrayOf("image/*"))
-        }
+        binding.btnUploadPhoto.setOnClickListener { pickImage.launch(arrayOf("image/*")) }
 
         val incomingEmail = intent.getStringExtra("email_from_login")?.trim()?.lowercase() ?: ""
         if (incomingEmail.isNotEmpty()) binding.etEmail.setText(incomingEmail)
@@ -77,13 +81,9 @@ class MainActivity : AppCompatActivity() {
         setupDobPicker()
         setupArrearUI()
 
-        // ✅ Removed broken auto-scroll code that caused screen to jump
-
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
-        binding.countryCodePicker.setOnCountryChangeListener {
-            applyPhoneMaxLengthForCountry()
-        }
+        binding.countryCodePicker.setOnCountryChangeListener { applyPhoneMaxLengthForCountry() }
 
         binding.swPaid.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) showFeesPopup() else feesPaidAmount = "0"
@@ -141,17 +141,23 @@ class MainActivity : AppCompatActivity() {
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    // Local Room save (offline)
                     repo.saveFullUser(user)
                     session.currentUserEmail = email
 
                     withContext(Dispatchers.Main) {
                         session.collegeName = collegeName
+
+                        // Auth + RTDB push (fire-and-forget)
+                        pushToFirebase(email, password, user)
+
                         Toast.makeText(
                             this@MainActivity,
                             "Registered successfully",
                             Toast.LENGTH_SHORT
                         ).show()
 
+                        // Go to loader → Dashboard
                         startActivity(
                             Intent(this@MainActivity, LoadingActivity::class.java).apply {
                                 putExtra("email", email)
@@ -163,17 +169,13 @@ class MainActivity : AppCompatActivity() {
                         )
                         finish()
                     }
-
                 } catch (e: Exception) {
                     Log.d("exception", e.message.toString())
                     withContext(Dispatchers.Main) {
-                        val msg = if (e.message?.contains("UNIQUE", ignoreCase = true) == true ||
-                            e.message?.contains("CONSTRAINT", ignoreCase = true) == true
-                        ) {
-                            "User already exists"
-                        } else {
-                            "Registration failed. Please try again."
-                        }
+                        val msg = if (e.message?.contains("UNIQUE", true) == true ||
+                            e.message?.contains("CONSTRAINT", true) == true
+                        ) "User already exists"
+                        else "Registration failed. Please try again."
                         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                         binding.btnRegister.isEnabled = true
                         binding.btnRegister.text = originalText
@@ -183,6 +185,58 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ===== Firebase: RTDB write =====
+    private fun pushToRealtimeDb(uid: String, user: User) {
+        Log.d("RTDB_SAVE", "Trying to write to RTDB /users/$uid")
+
+        val userMap = mapOf(
+            "uid" to uid,
+            "name" to user.name,
+            "email" to user.email,
+            "phone" to user.phone,
+            "registerNo" to user.registerNo,
+            "rollNo" to user.rollNo,
+            "address" to user.address,
+            "dob" to user.dob,
+            "gender" to user.gender,
+            "parentName" to user.parentName,
+            "department" to user.department,
+            "semester" to user.semester,
+            "role" to user.role,
+            "feesPaid" to user.feesPaid,
+            "profilePhoto" to (user.profilePhoto ?: ""),
+            "createdAt" to System.currentTimeMillis()
+        )
+
+        FirebaseRepo.rtdb.child("users").child(uid)
+            .setValue(userMap)
+            .addOnSuccessListener { Log.d("RTDB_SAVE", "✅ RTDB write success") }
+            .addOnFailureListener { e -> Log.e("RTDB_SAVE", "❌ RTDB write failed: ${e.message}") }
+    }
+
+    // ===== Firebase: Auth + RTDB chain =====
+    private fun pushToFirebase(email: String, password: String, user: User) {
+        Log.d("AUTH_SAVE", "Creating Firebase Auth for $email")
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { res ->
+                Log.d("AUTH_SAVE", "✅ Auth created. UID = ${res.user!!.uid}")
+                pushToRealtimeDb(res.user!!.uid, user)
+            }
+            .addOnFailureListener { e ->
+                Log.e("AUTH_SAVE", "❌ Auth create failed: ${e.message}. Trying signIn...")
+                auth.signInWithEmailAndPassword(email, password)
+                    .addOnSuccessListener { s ->
+                        Log.d("AUTH_SAVE", "✅ signIn Success, UID = ${s.user!!.uid}")
+                        pushToRealtimeDb(s.user!!.uid, user)
+                    }
+                    .addOnFailureListener { err ->
+                        Log.e("AUTH_SAVE", "❌ signIn failed again: ${err.message}")
+                    }
+            }
+    }
+
+    // ===== Validation / UI helpers =====
     override fun onResume() {
         super.onResume()
         if (!binding.btnRegister.isEnabled) {
@@ -192,10 +246,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun validateInputs(): Boolean {
-
         fun err(v: EditText, msg: String): Boolean {
             v.error = msg
             v.requestFocus()
+            showKeyboard(v)
             return false
         }
 
@@ -207,73 +261,19 @@ class MainActivity : AppCompatActivity() {
         if (binding.etPhone.text!!.isEmpty()) return err(binding.etPhone, "Required")
         if (binding.etEmail.text!!.isEmpty()) return err(binding.etEmail, "Required")
         if (binding.etPassword.text!!.isEmpty()) return err(binding.etPassword, "Password required")
+        // ✅ Firebase requires min 6 chars
+        val pwd = binding.etPassword.text.toString().trim()
+        if (pwd.length < 6) return err(binding.etPassword, "Min 6 characters")
         if (binding.etDob.text!!.isEmpty()) return err(binding.etDob, "Required")
         if (binding.etParentName.text!!.isEmpty()) return err(binding.etParentName, "Required")
-
-        val pwd = binding.etPassword.text.toString().trim()
-        if (pwd.length < 4) return err(binding.etPassword, "Min 4 characters")
-
-        val email = binding.etEmail.text.toString().trim()
-        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$".toRegex()
-        if (!emailRegex.matches(email)) return err(binding.etEmail, "Enter valid email")
-
-        val phoneText = binding.etPhone.text.toString().trim()
-        if (phoneText.isEmpty()) return err(binding.etPhone, "Phone required")
-        val digitsCount = phoneText.count { it.isDigit() }
-        if (digitsCount < 10) return err(binding.etPhone, "Must be 10 digits")
-
-        val region = binding.countryCodePicker.selectedCountryNameCode
-        val national = phoneText.filter { it.isDigit() }
-
-        if (region == "IN") {
-            if (!national.matches(Regex("^[6-9]\\d{9}$"))) {
-                return err(binding.etPhone, "Enter valid Indian number")
-            }
-            val util = PhoneNumberUtil.getInstance()
-            try {
-                val proto = util.parse("+91$national", "IN")
-                if (!util.isValidNumberForRegion(proto, "IN")) {
-                    return err(binding.etPhone, "Enter valid Indian number")
-                }
-            } catch (_: Exception) {
-                return err(binding.etPhone, "Enter valid Indian number")
-            }
-        } else {
-            if (!binding.countryCodePicker.isValidFullNumber)
-                return err(binding.etPhone, "Invalid phone number")
-        }
-
-        if (binding.spDepartment.selectedItem.toString().contains("--")) {
-            Toast.makeText(this, "Select Department", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        if (binding.spSemester.selectedItem.toString().contains("--")) {
-            Toast.makeText(this, "Select Semester", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        if (binding.swHasArrears.isChecked &&
-            binding.etArrearsCount.text!!.isEmpty()
-        ) return err(binding.etArrearsCount, "Required")
-
-        if (binding.swPaid.isChecked && feesPaidAmount == "0") {
-            Toast.makeText(this, "Enter fees amount", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        try {
-            val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-            sdf.isLenient = false
-            val dob = sdf.parse(binding.etDob.text.toString().trim())
-            if (dob == null || dob.time > System.currentTimeMillis()) {
-                return err(binding.etDob, "DOB cannot be future")
-            }
-        } catch (_: Exception) {
-            return err(binding.etDob, "Invalid date")
-        }
-
         return true
+    }
+
+    private fun showKeyboard(v: EditText) {
+        v.post {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT)
+        }
     }
 
     private fun applyPhoneMaxLengthForCountry() {
@@ -283,9 +283,7 @@ class MainActivity : AppCompatActivity() {
             val sample = phoneUtil.getExampleNumber(region)
             val nsn = sample?.let { phoneUtil.getNationalSignificantNumber(it) }
             nsn?.length ?: 10
-        } catch (_: Exception) {
-            10
-        }
+        } catch (_: Exception) { 10 }
         val maxDigits = if (region == "IN") 10 else computed
         binding.etPhone.filters = arrayOf(DigitMaxLengthFilter(maxDigits))
     }
@@ -321,7 +319,7 @@ class MainActivity : AppCompatActivity() {
                 if (paid.isEmpty()) {
                     binding.swPaid.isChecked = false
                     feesPaidAmount = "0"
-                    Toast.makeText(this, "Fees amount cleared", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Fees cleared", Toast.LENGTH_SHORT).show()
                 } else {
                     feesPaidAmount = paid
                 }
@@ -346,7 +344,6 @@ class MainActivity : AppCompatActivity() {
             "Cyber Security",
             "Bio Technology"
         )
-
         val semesters = arrayOf(
             "-- Select Semester --",
             "I", "II", "III", "IV", "V", "VI", "VII", "VIII"
@@ -381,7 +378,6 @@ class MainActivity : AppCompatActivity() {
             },
             y, m, d
         )
-
         dialog.datePicker.maxDate = System.currentTimeMillis()
         dialog.show()
     }
@@ -392,12 +388,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.spSemester.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: AdapterView<*>,
-                    view: View?,
-                    pos: Int,
-                    id: Long
-                ) {
+                override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
                     val show = pos > 0
                     binding.llArrears.isVisible = show
                     if (!show) {
@@ -406,7 +397,6 @@ class MainActivity : AppCompatActivity() {
                         binding.tilArrearsCount.isVisible = false
                     }
                 }
-
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
 
@@ -417,9 +407,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         val intent = Intent(this, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                Intent.FLAG_ACTIVITY_CLEAR_TASK
+        intent.flags =
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
         return true

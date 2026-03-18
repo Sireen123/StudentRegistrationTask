@@ -9,6 +9,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studentregistration.databinding.ActivityAcknowledgementBinding
 
+// ✅ Firebase
+import com.example.studentregistration.data.FirebaseRepo
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.storage.FirebaseStorage
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 class AcknowledgementActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAcknowledgementBinding
@@ -25,8 +33,11 @@ class AcknowledgementActivity : AppCompatActivity() {
     private var signatureUri: Uri? = null
     private var signedOn = ""
 
-    // ✅ THIS WAS MISSING
+    // ✅ from DetailsActivity (may be local uri string)
     private var profilePhotoUri: String? = null
+
+    // ✅ Firebase Storage
+    private val storage by lazy { FirebaseStorage.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,12 +63,10 @@ class AcknowledgementActivity : AppCompatActivity() {
             arrearsCount = b.getString("arrearsCount", "0") ?: "0"
             signedOn     = b.getString("signed_on", "")
             signatureUri = b.getParcelable("signature_uri")
-
-            // ✅ MOST IMPORTANT → RECEIVE PHOTO FROM DETAILS ACTIVITY
             profilePhotoUri = b.getString("profile_photo_uri")
         }
 
-        // Clean text
+        // Clean text (remove any "Label: " prefixes passed from previous screens)
         fun clean(v: String) = v.replace(Regex("(?i)^\\s*[a-z ]+:\\s*"), "").trim()
 
         val cName = clean(name)
@@ -78,16 +87,29 @@ class AcknowledgementActivity : AppCompatActivity() {
         binding.tvCollege.text = cCollege
         binding.tvArrearFlag.text = if (hasArrears) "Yes ($arrearsCount)" else "No"
 
-        // ✅ SUBMIT → GO TO CERTIFICATE ACTIVITY
+        // ✅ SUBMIT → (1) fire-and-forget save to Firebase, (2) navigate to Certificate
         binding.btnSubmit.setOnClickListener {
-
             if (!binding.cbAcknowledge.isChecked) {
                 Toast.makeText(this, "Please confirm these details.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val i = Intent(this, CertificateActivity::class.java).apply {
+            // (1) Save to Firebase (non-blocking)
+            saveAcknowledgementToFirebase(
+                name = cName,
+                reg = cReg,
+                roll = cRoll,
+                dept = cDept,
+                sem = cSem,
+                parent = cParent,
+                college = cCollege,
+                hasArrears = hasArrears,
+                arrearsCount = arrearsCount,
+                signatureUri = signatureUri
+            )
 
+            // (2) Go to Certificate screen
+            val i = Intent(this, CertificateActivity::class.java).apply {
                 putExtra("name", cName)
                 putExtra("reg", cReg)
                 putExtra("roll", cRoll)
@@ -95,20 +117,107 @@ class AcknowledgementActivity : AppCompatActivity() {
                 putExtra("sem", cSem)
                 putExtra("parent", cParent)
                 putExtra("collegeName", cCollege)
-
                 putExtra("hasArrears", hasArrears)
                 putExtra("arrearsCount", arrearsCount)
-
                 putExtra("signature_uri", signatureUri)
                 putExtra("signed_on", signedOn)
-
-
                 putExtra("profile_photo_uri", profilePhotoUri)
-
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-
             startActivity(i)
         }
+    }
+
+    // =================== FIREBASE SAVE ===================
+    private fun saveAcknowledgementToFirebase(
+        name: String,
+        reg: String,
+        roll: String,
+        dept: String,
+        sem: String,
+        parent: String,
+        college: String,
+        hasArrears: Boolean,
+        arrearsCount: String,
+        signatureUri: Uri?
+    ) {
+        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
+
+        // 1) If we have a signature image, upload to Storage → then write doc
+        if (signatureUri != null) {
+            val fileName = "ack_${System.currentTimeMillis()}.png"
+            val ref = storage.reference.child("users/$uid/acknowledgements/$fileName")
+
+            ref.putFile(signatureUri)
+                .continueWithTask { ref.downloadUrl }
+                .addOnSuccessListener { url ->
+                    writeAckDoc(
+                        uid = uid,
+                        name = name, reg = reg, roll = roll,
+                        dept = dept, sem = sem, parent = parent, college = college,
+                        hasArrears = hasArrears, arrearsCount = arrearsCount,
+                        signatureUrl = url.toString()
+                    )
+                }
+                .addOnFailureListener {
+                    // upload failed → still write doc without URL
+                    writeAckDoc(
+                        uid = uid,
+                        name = name, reg = reg, roll = roll,
+                        dept = dept, sem = sem, parent = parent, college = college,
+                        hasArrears = hasArrears, arrearsCount = arrearsCount,
+                        signatureUrl = ""
+                    )
+                }
+        } else {
+            // No signature image → just write doc
+            writeAckDoc(
+                uid = uid,
+                name = name, reg = reg, roll = roll,
+                dept = dept, sem = sem, parent = parent, college = college,
+                hasArrears = hasArrears, arrearsCount = arrearsCount,
+                signatureUrl = ""
+            )
+        }
+    }
+
+    private fun writeAckDoc(
+        uid: String,
+        name: String,
+        reg: String,
+        roll: String,
+        dept: String,
+        sem: String,
+        parent: String,
+        college: String,
+        hasArrears: Boolean,
+        arrearsCount: String,
+        signatureUrl: String
+    ) {
+        val fallbackSignedOn = if (signedOn.isNotBlank()) signedOn
+        else SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+
+        val data = hashMapOf(
+            "name" to name,
+            "registerNo" to reg,
+            "rollNo" to roll,
+            "department" to dept,
+            "semester" to sem,
+            "parentName" to parent,
+            "collegeName" to college,
+            "hasArrears" to hasArrears,
+            "arrearsCount" to arrearsCount,
+            "signatureUrl" to signatureUrl,          // Firebase Storage URL (may be empty on failure)
+            "profilePhotoUri" to (profilePhotoUri ?: ""), // whatever was passed (may be local uri)
+            "signedOn" to fallbackSignedOn,
+            "createdAt" to FieldValue.serverTimestamp()
+        )
+
+        FirebaseRepo.db.collection("users")
+            .document(uid)
+            .collection("acknowledgements")
+            .add(data)
+            .addOnSuccessListener { /* no-op */ }
+            .addOnFailureListener { /* no-op */ }
     }
 }

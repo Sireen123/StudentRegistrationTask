@@ -21,6 +21,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlin.math.roundToInt
 
+// ✅ Firebase repo (for auth + firestore)
+import com.example.studentregistration.data.FirebaseRepo
+
 class DashboardActivity : AppCompatActivity() {
 
     private val items = listOf(
@@ -37,13 +40,12 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-
         val toolbar = findViewById<MaterialToolbar?>(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
             supportActionBar?.title = "Student Dashboard"
 
-            // ✅ Ensure title NEVER hides under the status bar (adds exact inset as top padding)
+            // ✅ Avoid overlap with status bar
             ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
                 val status = insets.getInsets(WindowInsetsCompat.Type.statusBars())
                 v.updatePadding(top = status.top)
@@ -51,18 +53,33 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Header (Welcome or Email)
-        val email = intent.getStringExtra("email_from_login")
-        findViewById<TextView?>(R.id.tvSubtitle)?.text = email ?: "Welcome"
+        // ✅ Header (email from intent, then update from Firestore if available)
+        val tvSubtitle = findViewById<TextView?>(R.id.tvSubtitle)
+        val emailFromIntent = intent.getStringExtra("email_from_login")
+        tvSubtitle?.text = emailFromIntent ?: "Welcome"
 
-        // ✅ RecyclerView: 2 columns for wider, cleaner tiles
+        val uid = FirebaseRepo.auth.currentUser?.uid
+        if (uid != null) {
+            FirebaseRepo.db.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    val name = doc.getString("name")
+                    val emailDb = doc.getString("email")
+                    val display = name?.takeIf { it.isNotBlank() } ?: emailDb ?: tvSubtitle?.text
+                    tvSubtitle?.text = display?.toString() ?: "Welcome"
+                }
+                .addOnFailureListener {
+                    // ignore; keep existing subtitle
+                }
+        }
+
+        // ✅ RecyclerView: 2 columns
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         val span = 2
         rv.layoutManager = GridLayoutManager(this, span)
         rv.adapter = DashboardAdapter(items) { handleClick(it) }
         rv.setHasFixedSize(true)
 
-        // ✅ Even spacing for a professional grid
+        // ✅ Grid spacing
         val spacingPx = dpToPx(12)
         rv.addItemDecoration(GridSpacingItemDecoration(span, spacingPx, includeEdge = true))
     }
@@ -76,7 +93,6 @@ class DashboardActivity : AppCompatActivity() {
             else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     private fun showFaqBottomSheet() {
         val dialog = BottomSheetDialog(this)
@@ -109,10 +125,8 @@ class DashboardActivity : AppCompatActivity() {
         dialog.show()
     }
 
-
     private fun dpToPx(dp: Int): Int =
         (dp * resources.displayMetrics.density).roundToInt()
-
 
     private class GridSpacingItemDecoration(
         private val spanCount: Int,

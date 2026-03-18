@@ -1,17 +1,16 @@
 package com.example.studentregistration
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageButton
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studentregistration.databinding.ActivityCourseDetailsBinding
+
+// ✅ Firebase (optional usage)
+import com.example.studentregistration.data.FirebaseRepo
+import com.google.firebase.firestore.FieldValue
 
 class CourseDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCourseDetailsBinding
-    private lateinit var session: SessionPrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,43 +18,50 @@ class CourseDetailsActivity : AppCompatActivity() {
         binding = ActivityCourseDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        session = SessionPrefs(this)
+        // ✅ Top bar
+        binding.includeBack.btnBack.setOnClickListener { finish() }
+        binding.includeBack.tvScreenTitle.text = "Course Details"
 
+        // ✅ Correct keys
+        val courseName = intent.getStringExtra("course_name").orEmpty()
+        val courseFee  = intent.getStringExtra("course_fee").orEmpty()
 
-        binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Course Details"
+        // ✅ Set UI
+        binding.tvCourseTitle.text = courseName
+        binding.tvCourseFee.text = "Fees: ₹$courseFee"
+        binding.tvCourseDesc.text = getDescription(courseName)
 
-
-        val name = intent.getStringExtra("courseName").orEmpty()
-        val fee  = intent.getStringExtra("courseFee").orEmpty()
-
-        binding.tvCourseTitle.text = name
-        binding.tvCourseFee.text = "Fees: $fee"
-        binding.tvCourseDesc.text = courseDescription(name)
-
-
-        binding.btnLogout.setOnClickListener { logoutNow() }
-
-
-        val details = FakeData.getStudents()
+        // ✅ OPTIONAL: Save selection to Firebase (only if you want)
+        // saveCourseToFirebase(courseName, courseFee)
     }
 
-    private fun logoutNow() {
-        session.logout()
-        val i = Intent(this, LoginActivity::class.java)
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(i)
-        finish()
+    // ✅ OPTIONAL Firebase save
+    private fun saveCourseToFirebase(name: String, fee: String) {
+        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
+
+        val data = mapOf(
+            "course" to name,
+            "fee" to fee,
+            "selectedAt" to FieldValue.serverTimestamp()
+        )
+
+        FirebaseRepo.db.collection("users")
+            .document(uid)
+            .collection("courseSelections")
+            .add(data)
     }
 
-    private fun courseDescription(name: String): String = when (name) {
-        "BE CSE"   -> "Computer Science & Engineering focuses on algorithms, OS, DBMS, networks, and AI/ML."
-        "BE ECE"   -> "Electronics & Communication Engineering covers circuits, embedded systems and IoT."
-        "BE CIVIL" -> "Civil Engineering includes structural design and construction management."
-        "BE MECH"  -> "Mechanical Engineering covers design, thermodynamics and robotics."
-        "BTECH"    -> "General engineering foundation."
-        "BARCH"    -> "Architecture with design and planning."
-        "BCA"      -> "Computer Applications focusing on programming and database."
-        else       -> "Course information not available."
+    // ✅ Course descriptions
+    private fun getDescription(name: String): String {
+        return when (name) {
+            "BE CSE"   -> "Computer Science Engineering focuses on algorithms, OS, DBMS, networks, AI/ML."
+            "BE ECE"   -> "Electronics & Communication Engineering covers circuits, embedded systems, IoT."
+            "BE CIVIL" -> "Civil Engineering includes structural design and construction management."
+            "BE MECH"  -> "Mechanical Engineering covers thermodynamics, robotics, and design."
+            "BTECH"    -> "General engineering foundation with multiple technical subjects."
+            "BARCH"    -> "Architecture focusing on design, drawing, construction and planning."
+            "BCA"      -> "Computer Applications focusing on programming, database, and networking."
+            else       -> "Course information not available."
+        }
     }
 }
