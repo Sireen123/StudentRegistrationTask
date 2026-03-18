@@ -22,11 +22,19 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
+// ✅ Works on API 24+ (no desugaring needed)
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var session: SessionPrefs
     private var profilePhotoUri: Uri? = null   // ✅ Profile image holder
+
+    // ✅ Change the pattern if you prefer ("dd-MM-yyyy", etc.)
+    private val dateFormatter by lazy { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,13 +43,18 @@ class DetailsActivity : AppCompatActivity() {
 
         session = SessionPrefs(this)
 
-        // ✅ Fix includeBack layout
+        // ✅ Auto-fill today's date in the "Date:" text above Submit
+        setCurrentDate()
+
+        // ✅ Top bar
         binding.includeBack.btnBack.setOnClickListener { finish() }
         binding.includeBack.tvScreenTitle.text = "Student Details"
 
+        // ✅ Email from Register flow (if any)
         val emailFromRegister = intent.getStringExtra("email")
         if (emailFromRegister != null) session.currentUserEmail = emailFromRegister
 
+        // ✅ Read extras
         val hasArrears = intent.getBooleanExtra("hasArrears", false)
         val arrearsCount = intent.getStringExtra("arrearsCount") ?: "0"
         val selectedSem = intent.getStringExtra("selectedSemester")
@@ -57,6 +70,15 @@ class DetailsActivity : AppCompatActivity() {
         setupSignature(hasArrears, arrearsCount, collegeName)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // ✅ In case the app returns another day
+        setCurrentDate()
+    }
+
+    // =========================
+    // Data Load & UI Binding
+    // =========================
     private fun loadUserDetails(
         email: String,
         selectedSem: String?,
@@ -64,13 +86,10 @@ class DetailsActivity : AppCompatActivity() {
         arrearsCount: String,
         college: String
     ) {
-
         val dao = AppDatabase.getDatabase(this).userDao()
 
         lifecycleScope.launch(Dispatchers.IO) {
-
             val user = dao.getUserByEmail(email)
-
             withContext(Dispatchers.Main) {
                 if (user != null) {
 
@@ -107,17 +126,19 @@ class DetailsActivity : AppCompatActivity() {
         binding.signPad.isEnabled = !isLoading
     }
 
-    // ✅ FEES CALCULATION + PROGRESS BAR
+    // =========================
+    // Fees Calculation + Dots
+    // =========================
     private fun updateFeesUI(user: User) {
 
         val feeMap = mapOf(
             "Computer Science" to 75000,
             "Information Technology" to 75000,
-            "Electronics & Communication" to 70000,
-            "Electrical & Electronics" to 72000,
+            "Electronics &amp; Communication" to 70000,
+            "Electrical &amp; Electronics" to 72000,
             "Mechanical" to 72000,
             "Civil" to 68000,
-            "AI & Data Science" to 75000,
+            "AI &amp; Data Science" to 75000,
             "Cyber Security" to 75000,
             "Bio Technology" to 80000
         )
@@ -160,7 +181,9 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ SIGNATURE / SUBMIT LOGIC
+    // =========================
+    // Signature / Submit Logic
+    // =========================
     private fun setupSignature(hasArrears: Boolean, arrearCount: String, college: String) {
 
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
@@ -182,6 +205,7 @@ class DetailsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // ✅ Save signature to cache and pass via FileProvider
             val file = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
             FileOutputStream(file).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
@@ -211,7 +235,19 @@ class DetailsActivity : AppCompatActivity() {
                 putExtra("collegeName", college)
 
                 putExtra("profile_photo_uri", profilePhotoUri?.toString())
+
+                // Optional: pass the shown date too (if you want it on the next screen)
+                // putExtra("signed_date", binding.tvSignDate.text.toString())
             })
         }
+    }
+
+    // =========================
+    // Date Helpers (API 24+)
+    // =========================
+    private fun setCurrentDate() {
+        val today = dateFormatter.format(Date())
+        // Your XML `tvSignDate` already has "Date:" as text, so set the full line:
+        binding.tvSignDate.text = "Date: $today"
     }
 }

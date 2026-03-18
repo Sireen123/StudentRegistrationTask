@@ -18,34 +18,23 @@ class LoadingActivity : AppCompatActivity() {
         binding = ActivityLoadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Disable back
+        // ✅ Disable system back while loading
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { /* no-op */ }
         })
 
-        val extras = intent.extras
+        // (Optional) read extras if you need them later
+        // val email = intent.getStringExtra("email") ?: intent.getStringExtra("email_from_login") ?: ""
 
+        // ✅ Simulate brief loading, then go straight to Dashboard
         lifecycleScope.launch {
-            delay(900)
+            delay(900) // you can change the duration
 
-            // Normalize keys (email may come as "email" or "email_from_login")
-            val email =
-                extras?.getString("email")
-                    ?: extras?.getString("email_from_login")
-                    ?: ""
-
-            val hasArrears = extras?.getBoolean("hasArrears", false) ?: false
-            val arrearsCount = extras?.getString("arrearsCount") ?: "0"
-            val selectedSemester = extras?.getString("selectedSemester")
-            val collegeName = extras?.getString("collegeName") ?: ""
-
-            startActivity(Intent(this@LoadingActivity, DetailsActivity::class.java).apply {
-                putExtra("email", email)
-                putExtra("hasArrears", hasArrears)
-                putExtra("arrearsCount", arrearsCount)
-                putExtra("selectedSemester", selectedSemester)
-                putExtra("collegeName", collegeName)
-            })
+            val intent = Intent(this@LoadingActivity, DashboardActivity::class.java).apply {
+                // ✅ Make Dashboard the new root so back won’t return to Loading
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
             finish()
         }
     }

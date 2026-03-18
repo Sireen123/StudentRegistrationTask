@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- API 29+ additions for the main theme -->
+    <style name="Theme.StudentRegistration" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Disable forced dark mode on Android 10+ -->
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+
+</resources>

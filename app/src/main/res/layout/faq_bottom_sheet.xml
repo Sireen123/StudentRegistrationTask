@@ -21,17 +21,16 @@
             android:alpha="0.3"
             android:layout_gravity="center_horizontal" />
 
-        <!-- HEADER with Blue FAQ Button -->
-        <LinearLayout
+        <!-- ✅ HEADER with FAQ Left + Close Right -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="4dp"
             android:paddingBottom="8dp">
 
-            <!-- ✅ Blue FAQ Tile -->
+            <!-- ✅ Blue FAQ tile LEFT -->
             <LinearLayout
                 android:id="@+id/faqButton"
                 android:layout_width="wrap_content"
@@ -41,7 +40,9 @@
                 android:orientation="horizontal"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:layout_marginEnd="12dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -56,18 +57,20 @@
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
-
             </LinearLayout>
 
-            <!-- Close button -->
+            <!-- ✅ Close Button RIGHT -->
             <ImageView
                 android:id="@+id/btnClose"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_gravity="end"
                 android:src="@drawable/ic_close"
-                app:tint="@android:color/black" />
-        </LinearLayout>
+                app:tint="@android:color/black"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Divider -->
         <View
@@ -91,6 +94,7 @@
             android:text="Need more help? Contact your college admin."
             android:textSize="12sp"
             android:textColor="#777" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

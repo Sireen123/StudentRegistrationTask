@@ -21,11 +21,11 @@ class CourseDetailsActivity : AppCompatActivity() {
 
         session = SessionPrefs(this)
 
-        // ⭐ TOP-LEFT BACK ARROW
+
         binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Course Details"
 
-        // RECEIVE COURSE DETAILS
+
         val name = intent.getStringExtra("courseName").orEmpty()
         val fee  = intent.getStringExtra("courseFee").orEmpty()
 
@@ -33,10 +33,10 @@ class CourseDetailsActivity : AppCompatActivity() {
         binding.tvCourseFee.text = "Fees: $fee"
         binding.tvCourseDesc.text = courseDescription(name)
 
-        // LOGOUT
+
         binding.btnLogout.setOnClickListener { logoutNow() }
 
-        // Unused data - but keeping your original structure
+
         val details = FakeData.getStudents()
     }
 

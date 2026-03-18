@@ -102,7 +102,7 @@ class AcknowledgementActivity : AppCompatActivity() {
                 putExtra("signature_uri", signatureUri)
                 putExtra("signed_on", signedOn)
 
-                // ✅ SEND PHOTO TO CERTIFICATE ACTIVITY
+
                 putExtra("profile_photo_uri", profilePhotoUri)
 
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

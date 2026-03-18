@@ -84,25 +84,14 @@ class LoginActivity : AppCompatActivity() {
             otpVerified = false
         }
 
-        // ✅ FULL TextWatcher (no missing methods)
+        // ✅ FULL TextWatcher
         binding.etPhone.addTextChangedListener(object : TextWatcher {
-
-            override fun beforeTextChanged(
-                s: CharSequence?, start: Int, count: Int, after: Int
-            ) {
-                // required override
-            }
-
-            override fun onTextChanged(
-                s: CharSequence?, start: Int, before: Int, count: Int
-            ) {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 updatePhoneCounter()
                 otpVerified = false
             }
-
-            override fun afterTextChanged(s: Editable?) {
-                // required override
-            }
+            override fun afterTextChanged(s: Editable?) {}
         })
 
         // ✅ SEND OTP
@@ -126,7 +115,7 @@ class LoginActivity : AppCompatActivity() {
             )
         }
 
-        // ✅ LOGIN
+        // ✅ LOGIN BUTTON
         binding.btnLogin.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
 
@@ -154,17 +143,15 @@ class LoginActivity : AppCompatActivity() {
                 if (hasNavigated) return@observe
                 hasNavigated = true
 
-                val nextScreen =
-                    if (user.role == "management") DetailsActivity::class.java
-                    else LoadingActivity::class.java
+                // ✅ ✅ ✅ FINAL NAVIGATION → ALWAYS GO TO DASHBOARD
+                val intent = Intent(this, DashboardActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("email_from_login", user.email)
+                }
 
-                startActivity(
-                    Intent(this, nextScreen).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra("email_from_login", user.email)
-                    }
-                )
+                startActivity(intent)
                 finish()
+
             } else {
                 Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
                 binding.btnLogin.isEnabled = true
@@ -190,7 +177,7 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    // ✅ VALIDATION
+    // ✅ VALIDATION (unchanged)
     private fun validateInputs(): Boolean {
         val email = binding.etEmail.text.toString().trim()
         val phoneText = binding.etPhone.text.toString().trim()

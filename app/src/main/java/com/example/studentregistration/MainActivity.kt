@@ -36,15 +36,11 @@ class MainActivity : AppCompatActivity() {
     private val calendar = Calendar.getInstance()
     private var feesPaidAmount: String = "0"
 
-    // ✅ Hold selected photo
     private var selectedImageUri: Uri? = null
 
-    // ✅ FIXED: Persistable permission image picker
     private val pickImage =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
-
-                // ✅ Persist permission so DetailsActivity can load image anytime
                 try {
                     contentResolver.takePersistableUriPermission(
                         uri,
@@ -53,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                 } catch (_: Exception) { }
 
                 selectedImageUri = uri
-                binding.imgProfile.setImageURI(uri)   // preview in registration
+                binding.imgProfile.setImageURI(uri)
             }
         }
 
@@ -70,12 +66,10 @@ class MainActivity : AppCompatActivity() {
 
         repo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
-        // ✅ Upload photo button
         binding.btnUploadPhoto.setOnClickListener {
             pickImage.launch(arrayOf("image/*"))
         }
 
-        // Prefill email if coming from LoginActivity
         val incomingEmail = intent.getStringExtra("email_from_login")?.trim()?.lowercase() ?: ""
         if (incomingEmail.isNotEmpty()) binding.etEmail.setText(incomingEmail)
 
@@ -83,17 +77,7 @@ class MainActivity : AppCompatActivity() {
         setupDobPicker()
         setupArrearUI()
 
-        // Auto-scroll when focused
-        val fields = listOf(
-            binding.etName, binding.etRegister, binding.etRoll, binding.etAddress,
-            binding.etPhone, binding.etEmail, binding.etPassword, binding.etDob,
-            binding.etParentName, binding.etCollege, binding.etArrearsCount
-        )
-        fields.forEach { et ->
-            et.setOnFocusChangeListener { v, hasFocus ->
-                if (hasFocus) v.post { binding.scrollRoot.smoothScrollTo(0, v.bottom) }
-            }
-        }
+        // ✅ Removed broken auto-scroll code that caused screen to jump
 
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
@@ -137,7 +121,6 @@ class MainActivity : AppCompatActivity() {
             val hasArrears = binding.swHasArrears.isChecked
             val arrearsCount = if (hasArrears) binding.etArrearsCount.text.toString().trim() else "0"
 
-            // ✅ User object including photo URI
             val user = User(
                 name = name,
                 registerNo = reg,
@@ -153,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                 semester = semester,
                 role = role,
                 feesPaid = feesPaidAmount,
-                profilePhoto = selectedImageUri?.toString()   // ✅ THIS SAVES PHOTO
+                profilePhoto = selectedImageUri?.toString()
             )
 
             lifecycleScope.launch(Dispatchers.IO) {

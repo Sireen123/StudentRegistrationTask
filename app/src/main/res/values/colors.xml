@@ -5,4 +5,25 @@
 
     <!-- Loader background -->
     <color name="splash_bg">#FFFBFE</color>
+
+
+
+
+        <!-- New brand -->
+        <color name="clg_primary">#3F51B5</color>      <!-- Indigo 500 -->
+        <color name="clg_on_primary">#FFFFFFFF</color> <!-- White -->
+        <color name="clg_bg">#FFF7F7F7</color>         <!-- Very light gray -->
+
+        <!-- Pastel tiles -->
+        <color name="tile_pink">#FFF7BDC6</color>
+        <color name="tile_green">#FFD6F5D6</color>
+        <color name="tile_blue">#FFD7E7FF</color>
+        <color name="tile_purple">#FFE6D8FF</color>
+        <color name="tile_orange">#FFFFE1C2</color>
+        <color name="tile_yellow">#FFFFF1B8</color>
+        <color name="tile_lavender">#FFE6E6FF</color>
+        <color name="tile_mint">#FFD9FFF2</color>
+        <color name="tile_beige">#FFF3EDDD</color>
+
+
 </resources>

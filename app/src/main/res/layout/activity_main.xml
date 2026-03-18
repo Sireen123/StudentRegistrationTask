@@ -34,7 +34,8 @@
                 android:textColor="#000000"
                 android:textSize="22sp"
                 android:textStyle="bold" />
-            <!-- ✅ PASSPORT PHOTO SECTION -->
+
+            <!-- ✅ PHOTO SECTION -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -43,7 +44,6 @@
                 android:paddingTop="10dp"
                 android:paddingBottom="20dp">
 
-                <!-- Circular Image box -->
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgProfile"
                     android:layout_width="120dp"
@@ -54,7 +54,6 @@
                     app:shapeAppearanceOverlay="@style/CircleImage"
                     android:contentDescription="profile_photo" />
 
-                <!-- Upload button -->
                 <Button
                     android:id="@+id/btnUploadPhoto"
                     android:layout_width="wrap_content"
@@ -63,8 +62,8 @@
                     android:text="Upload Photo" />
 
             </LinearLayout>
-            <!-- ✅ END PHOTO SECTION -->
 
+            <!-- ✅ NAME -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilName"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -80,6 +79,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- ✅ REGISTER NUMBER (Digits only) -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRegister"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -93,10 +93,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number"
+                    android:digits="0123456789"
                     android:imeOptions="actionNext"
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- ✅ ROLL NUMBER -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRoll"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -110,10 +112,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number"
+                    android:digits="0123456789"
                     android:imeOptions="actionNext"
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- ✅ Gender -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -150,7 +154,7 @@
                     android:text="Other" />
             </RadioGroup>
 
-            <!-- Address -->
+            <!-- ✅ Address -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilAddress"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -169,7 +173,7 @@
                     android:imeOptions="actionNext" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Phone -->
+            <!-- ✅ Phone -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -196,13 +200,14 @@
                         android:id="@+id/etPhone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="phone"
+                        android:inputType="number"
+                        android:digits="0123456789"
                         android:imeOptions="actionNext"
                         android:singleLine="true" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Email -->
+            <!-- ✅ Email -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilEmail"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -220,7 +225,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Password -->
+            <!-- ✅ Password -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPassword"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -239,7 +244,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- DOB -->
+            <!-- ✅ DOB -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilDob"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -258,7 +263,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Parent -->
+            <!-- ✅ Parent -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilParent"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -275,7 +280,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- College -->
+            <!-- ✅ College -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilCollege"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -293,7 +298,7 @@
                     android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Department -->
+            <!-- ✅ Department -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -308,7 +313,7 @@
                 android:layout_height="55dp"
                 android:background="@android:drawable/btn_dropdown" />
 
-            <!-- Semester -->
+            <!-- ✅ Semester -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -323,7 +328,7 @@
                 android:layout_height="55dp"
                 android:background="@android:drawable/btn_dropdown" />
 
-            <!-- Arrears -->
+            <!-- ✅ Arrears Section -->
             <LinearLayout
                 android:id="@+id/llArrears"
                 android:layout_width="match_parent"
@@ -352,12 +357,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:digits="0123456789"
                         android:imeOptions="actionDone"
                         android:singleLine="true" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Fees -->
+            <!-- ✅ Fees Switch -->
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/swPaid"
                 android:layout_width="match_parent"
@@ -368,7 +374,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Register Button -->
+    <!-- ✅ Register Button -->
     <Button
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
@@ -380,3 +386,4 @@
         android:elevation="10dp" />
 
 </LinearLayout>
+

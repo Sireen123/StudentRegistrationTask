@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Main app theme -->
+    <!-- Main App Theme (base for all API levels) -->
     <style name="Theme.StudentRegistration" parent="Theme.Material3.Light.NoActionBar">
-        <!-- keep app-level customizations here if any -->
+        <!-- Keep content below status bar via layout/window flags (handled in activity/layout) -->
+        <!-- Status bar / nav bar colors (API 21+, safe in base) -->
+        <item name="android:statusBarColor">@color/clg_primary</item>
+        <item name="android:navigationBarColor">@color/clg_primary</item>
     </style>
 
     <!-- Splash theme -->
@@ -13,7 +16,7 @@
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 
-
+    <!-- No Animation Theme -->
     <style name="NoAnimTheme" parent="Theme.StudentRegistration">
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowIsTranslucent">false</item>
