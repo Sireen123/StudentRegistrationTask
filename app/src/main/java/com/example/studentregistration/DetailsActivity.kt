@@ -25,7 +25,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ✅ Firebase
+// ✅ Firebase RTDB
 import com.example.studentregistration.data.FirebaseRepo
 
 class DetailsActivity : AppCompatActivity() {
@@ -58,7 +58,7 @@ class DetailsActivity : AppCompatActivity() {
 
         setLoading(true)
 
-        // ✅ Try Cloud first, then fallback to local Room
+        // ✅ Try cloud (RTDB) first, then fallback to local Room
         val uid = FirebaseRepo.auth.currentUser?.uid
         if (uid != null) {
             loadUserDetailsFromFirebase(
@@ -89,7 +89,7 @@ class DetailsActivity : AppCompatActivity() {
         setCurrentDate()
     }
 
-    // ===================== FIREBASE LOAD =====================
+    // ===================== RTDB LOAD (no toast on failure) =====================
     private fun loadUserDetailsFromFirebase(
         uid: String,
         selectedSem: String?,
@@ -97,25 +97,25 @@ class DetailsActivity : AppCompatActivity() {
         arrearsCount: String,
         college: String
     ) {
-        FirebaseRepo.db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                if (doc != null && doc.exists()) {
-                    val name = doc.getString("name") ?: ""
-                    val registerNo = doc.getString("registerNo") ?: ""
-                    val rollNo = doc.getString("rollNo") ?: ""
-                    val address = doc.getString("address") ?: ""
-                    val phone = doc.getString("phone") ?: ""
-                    val email = doc.getString("email") ?: ""
-                    val dob = doc.getString("dob") ?: ""
-                    val gender = doc.getString("gender") ?: ""
-                    val parentName = doc.getString("parentName") ?: ""
-                    val department = doc.getString("department") ?: ""
-                    val semester = doc.getString("semester") ?: ""
-                    val role = doc.getString("role") ?: "student"
-                    val feesPaid = doc.getString("feesPaid") ?: "0"
-                    val profilePhoto = doc.getString("profilePhoto").orEmpty()
+        FirebaseRepo.rtdb.child("users").child(uid).get()
+            .addOnSuccessListener { snap ->
+                if (snap.exists()) {
+                    val name        = snap.child("name").getValue(String::class.java) ?: ""
+                    val registerNo  = snap.child("registerNo").getValue(String::class.java) ?: ""
+                    val rollNo      = snap.child("rollNo").getValue(String::class.java) ?: ""
+                    val address     = snap.child("address").getValue(String::class.java) ?: ""
+                    val phone       = snap.child("phone").getValue(String::class.java) ?: ""
+                    val email       = snap.child("email").getValue(String::class.java) ?: ""
+                    val dob         = snap.child("dob").getValue(String::class.java) ?: ""
+                    val gender      = snap.child("gender").getValue(String::class.java) ?: ""
+                    val parentName  = snap.child("parentName").getValue(String::class.java) ?: ""
+                    val department  = snap.child("department").getValue(String::class.java) ?: ""
+                    val semester    = snap.child("semester").getValue(String::class.java) ?: ""
+                    val role        = snap.child("role").getValue(String::class.java) ?: "student"
+                    val feesPaid    = snap.child("feesPaid").getValue(String::class.java) ?: "0"
+                    val profilePhoto= snap.child("profilePhoto").getValue(String::class.java).orEmpty()
 
-                    // ✅ Bind to UI
+                    // Bind to UI
                     binding.tvName.text = "Name: $name"
                     binding.tvReg.text = "Register No: $registerNo"
                     binding.tvRoll.text = "Roll No: $rollNo"
@@ -134,7 +134,7 @@ class DetailsActivity : AppCompatActivity() {
                         binding.imgProfile.setImageURI(profilePhotoUri)
                     }
 
-                    // ✅ Reuse existing fees UI using temp User
+                    // Reuse existing fees UI using temp User
                     updateFeesUI(
                         User(
                             name = name,
@@ -156,20 +156,20 @@ class DetailsActivity : AppCompatActivity() {
                     )
                     setLoading(false)
                 } else {
-                    // fallback to local
-                    val email = session.currentUserEmail
-                    if (email != null) {
-                        loadUserDetailsLocal(email, selectedSem, hasArrears, arrearsCount, college)
+                    // Fallback to local silently
+                    val emailLocal = session.currentUserEmail
+                    if (emailLocal != null) {
+                        loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount, college)
                     } else {
                         setLoading(false)
                     }
                 }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed to load from cloud", Toast.LENGTH_SHORT).show()
-                val email = session.currentUserEmail
-                if (email != null) {
-                    loadUserDetailsLocal(email, selectedSem, hasArrears, arrearsCount, college)
+                // No toast; fallback silently
+                val emailLocal = session.currentUserEmail
+                if (emailLocal != null) {
+                    loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount, college)
                 } else {
                     setLoading(false)
                 }
@@ -269,7 +269,7 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    // ====== COURSE CLICK LISTENERS (open CourseDetailsActivity) ======
+    // ====== COURSE CLICK LISTENERS ======
     private fun setupCourseClickListeners() {
 
         fun setClick(view: View, courseName: String, fee: String) {

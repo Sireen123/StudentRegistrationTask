@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -15,14 +16,16 @@ import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregistration.adapter.FaqAdapter
+import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.model.FaqItem
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import kotlin.math.roundToInt
-
-// ✅ Firebase repo (for auth + firestore)
-import com.example.studentregistration.data.FirebaseRepo
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -33,76 +36,111 @@ class DashboardActivity : AppCompatActivity() {
         "Library", "Time Table", "Transport", "Outing"
     )
 
+    private var userRef: DatabaseReference? = null
+    private var userListener: ValueEventListener? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
-
         WindowCompat.setDecorFitsSystemWindows(window, true)
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
         val toolbar = findViewById<MaterialToolbar?>(R.id.toolbar)
-        if (toolbar != null) {
-            setSupportActionBar(toolbar)
+        toolbar?.let {
+            setSupportActionBar(it)
             supportActionBar?.title = "Student Dashboard"
 
-            // ✅ Avoid overlap with status bar
-            ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
-                val status = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-                v.updatePadding(top = status.top)
+            ViewCompat.setOnApplyWindowInsetsListener(it) { v, insets ->
+                val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+                v.updatePadding(top = statusBars.top)
                 insets
             }
         }
 
-        // ✅ Header (email from intent, then update from Firestore if available)
-        val tvSubtitle = findViewById<TextView?>(R.id.tvSubtitle)
-        val emailFromIntent = intent.getStringExtra("email_from_login")
-        tvSubtitle?.text = emailFromIntent ?: "Welcome"
+        findViewById<TextView?>(R.id.tvSubtitle)?.text =
+            intent.getStringExtra("email_from_login") ?: "Welcome..."
 
-        val uid = FirebaseRepo.auth.currentUser?.uid
-        if (uid != null) {
-            FirebaseRepo.db.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    val name = doc.getString("name")
-                    val emailDb = doc.getString("email")
-                    val display = name?.takeIf { it.isNotBlank() } ?: emailDb ?: tvSubtitle?.text
-                    tvSubtitle?.text = display?.toString() ?: "Welcome"
-                }
-                .addOnFailureListener {
-                    // ignore; keep existing subtitle
-                }
+        // Logout
+        findViewById<Button?>(R.id.btnLogout)?.setOnClickListener {
+            userListener?.let { listener -> userRef?.removeEventListener(listener) }
+            FirebaseRepo.auth.signOut()
+
+            val intent = Intent(this, StartActivity::class.java)
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+            )
+            startActivity(intent)
+            finish()
         }
 
-        // ✅ RecyclerView: 2 columns
+        // Recycler Grid
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         val span = 2
         rv.layoutManager = GridLayoutManager(this, span)
         rv.adapter = DashboardAdapter(items) { handleClick(it) }
         rv.setHasFixedSize(true)
+        rv.addItemDecoration(GridSpacingItemDecoration(span, dpToPx(12), true))
+    }
 
-        // ✅ Grid spacing
-        val spacingPx = dpToPx(12)
-        rv.addItemDecoration(GridSpacingItemDecoration(span, spacingPx, includeEdge = true))
+    override fun onStart() {
+        super.onStart()
+
+        val tv = findViewById<TextView?>(R.id.tvSubtitle)
+        tv?.text = "Welcome..."
+
+        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
+        val ref = FirebaseRepo.rtdb.child("users").child(uid)
+
+        userListener?.let { listener -> userRef?.removeEventListener(listener) }
+        userRef = ref
+
+        userListener = object : ValueEventListener {
+            override fun onDataChange(snap: DataSnapshot) {
+                val name = snap.child("name").getValue(String::class.java)
+                val email = snap.child("email").getValue(String::class.java)
+
+                tv?.text = when {
+                    !name.isNullOrBlank() -> name
+                    !email.isNullOrBlank() -> email
+                    else -> "Welcome"
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                tv?.text = "Welcome"
+            }
+        }
+
+        ref.addValueEventListener(userListener!!)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        userListener?.let { listener -> userRef?.removeEventListener(listener) }
+        userListener = null
+        userRef = null
     }
 
     private fun handleClick(position: Int) {
         when (position) {
-            0 -> startActivity(Intent(this, FeesListActivity::class.java))      // Fees
-            1 -> showFaqBottomSheet()                                           // FAQ
-            2 -> startActivity(Intent(this, DetailsActivity::class.java))       // My Details
-            3 -> startActivity(Intent(this, ReferStudentActivity::class.java))  // Refer Student
+            0 -> startActivity(Intent(this, FeesListActivity::class.java))
+            1 -> showFaqBottomSheet()
+            2 -> startActivity(Intent(this, DetailsActivity::class.java))
+            3 -> startActivity(Intent(this, ReferStudentActivity::class.java))
             else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showFaqBottomSheet() {
         val dialog = BottomSheetDialog(this)
-        val view = LayoutInflater.from(this).inflate(R.layout.faq_bottom_sheet, null)
+        val view = LayoutInflater.from(this).inflate(R.layout.faq_bottom_sheet, null, false)
         dialog.setContentView(view)
 
         dialog.setOnShowListener {
             val sheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-            if (sheet != null) {
-                val behavior = BottomSheetBehavior.from(sheet)
+            sheet?.let {
+                val behavior = BottomSheetBehavior.from(it)
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 behavior.peekHeight = (resources.displayMetrics.heightPixels * 0.65f).toInt()
             }

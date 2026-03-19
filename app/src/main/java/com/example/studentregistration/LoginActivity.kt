@@ -20,16 +20,16 @@ import com.example.studentregistration.data.AppDatabase
 import com.example.studentregistration.data.LoginViewModel
 import com.example.studentregistration.data.LoginViewModelFactory
 import com.example.studentregistration.data.UserRepository
+import com.example.studentregistration.data.FirebaseRepo            // ✅ RTDB + Auth
 import com.example.studentregistration.databinding.ActivityLoginBinding
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 
-// Firebase
+// Firebase (OTP + Email/Password)
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.firestore.FirebaseFirestore
 
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -43,9 +43,8 @@ class LoginActivity : AppCompatActivity() {
     private var hasNavigated = false
     private var otpVerified = false
 
-    // Firebase instances
+    // Firebase
     private lateinit var auth: FirebaseAuth
-    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
     private var verificationId: String? = null
     private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
@@ -120,40 +119,38 @@ class LoginActivity : AppCompatActivity() {
             )
         }
 
-        // LOGIN BUTTON (kept same)
+        // LOGIN BUTTON
         binding.btnLogin.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
-
             if (!otpVerified) {
                 Toast.makeText(this, "Verify phone via OTP first", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val email = binding.etEmail.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim().lowercase()
             val password = binding.etPassword.text.toString().trim()
 
             prefs.edit().putString("last_email", email).apply()
             binding.btnLogin.isEnabled = false
 
             lifecycleScope.launch {
-                viewModel.login(email.lowercase(), password)
+                // Try local Room first (existing behavior)
+                viewModel.login(email, password)
             }
         }
 
-        // LOGIN RESULT (add Firestore prefetch; navigation unchanged)
+        // LOGIN RESULT
         viewModel.loginResult.observe(this) { user ->
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return@observe
+
+            val emailNow = binding.etEmail.text.toString().trim().lowercase()
+            val passwordNow = binding.etPassword.text.toString().trim()
 
             if (user != null) {
                 if (hasNavigated) return@observe
                 hasNavigated = true
 
-                // Fire-and-forget: sign in to Firebase with email/pass and prefetch Firestore
-                val emailNow = binding.etEmail.text.toString().trim().lowercase()
-                val passwordNow = binding.etPassword.text.toString().trim()
-                signInAndPrefetchFirestore(emailNow, passwordNow)
-
-                // Original navigation
+                // Local success → go
                 startActivity(
                     Intent(this, DashboardActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -161,10 +158,38 @@ class LoginActivity : AppCompatActivity() {
                     }
                 )
                 finish()
-
             } else {
-                Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
-                binding.btnLogin.isEnabled = true
+                // 🔁 NEW: If local fails, try Firebase Auth (cloud) login
+                auth.signInWithEmailAndPassword(emailNow, passwordNow)
+                    .addOnSuccessListener { res ->
+                        val uid = res.user?.uid ?: ""
+
+                        // Prefetch from RTDB (non-blocking)
+                        FirebaseRepo.rtdb.child("users").child(uid).get()
+                            .addOnSuccessListener { snap ->
+                                val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
+                                sp.edit()
+                                    .putString("uid", uid)
+                                    .putString("name", snap.child("name").getValue(String::class.java))
+                                    .putString("email", snap.child("email").getValue(String::class.java))
+                                    .putString("phone", snap.child("phone").getValue(String::class.java))
+                                    .apply()
+                            }
+
+                        if (hasNavigated) return@addOnSuccessListener
+                        hasNavigated = true
+                        startActivity(
+                            Intent(this, DashboardActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                putExtra("email_from_login", emailNow)
+                            }
+                        )
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
+                        binding.btnLogin.isEnabled = true
+                    }
             }
         }
     }
@@ -183,7 +208,7 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    // VALIDATION (same)
+    // VALIDATION
     private fun validateInputs(): Boolean {
         val email = binding.etEmail.text.toString().trim()
         val phoneText = binding.etPhone.text.toString().trim()
@@ -215,6 +240,8 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if (password.isEmpty()) return err(binding.etPassword, "Password required")
+        // (Optional) If you want strict check here too:
+        // if (password.length < 6) return err(binding.etPassword, "Min 6 characters")
         return true
     }
 
@@ -353,30 +380,5 @@ class LoginActivity : AppCompatActivity() {
             .setNegativeButton("Cancel") { _, _ -> onCancel() }
             .setCancelable(false)
             .show()
-    }
-
-    // Email/Password sign-in + Firestore prefetch (doesn't block navigation)
-    private fun signInAndPrefetchFirestore(email: String, password: String) {
-        if (email.isBlank() || password.isBlank()) return
-
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { res ->
-                val uid = res.user?.uid ?: return@addOnSuccessListener
-                db.collection("users").document(uid).get()
-                    .addOnSuccessListener { doc ->
-                        val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
-                        sp.edit()
-                            .putString("uid", uid)
-                            .putString("name", doc.getString("name"))
-                            .putString("email", doc.getString("email"))
-                            .putString("phone", doc.getString("phone"))
-                            .putString("department", doc.getString("department"))
-                            .putString("semester", doc.getString("semester"))
-                            .putString("role", doc.getString("role"))
-                            .apply()
-                    }
-                    .addOnFailureListener { /* ignore */ }
-            }
-            .addOnFailureListener { /* user may not exist in Firebase yet */ }
     }
 }

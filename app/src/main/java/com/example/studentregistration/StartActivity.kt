@@ -2,15 +2,12 @@ package com.example.studentregistration
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregistration.adapter.FaqAdapter
-import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityStartBinding
 import com.example.studentregistration.model.FaqItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -23,46 +20,26 @@ class StartActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ 0.5 sec delay for RTDB sync
-        Handler(Looper.getMainLooper()).postDelayed({
-
-            val current = FirebaseRepo.auth.currentUser
-
-            if (current != null) {
-                // ✅ Check RTDB after delay
-                FirebaseRepo.rtdb.child("users").child(current.uid).get()
-                    .addOnSuccessListener { snap ->
-                        if (snap.exists()) {
-                            startActivity(Intent(this, DashboardActivity::class.java))
-                            finish()
-                        } else {
-                            FirebaseRepo.auth.signOut()
-                            initUi()
-                        }
-                    }
-                    .addOnFailureListener {
-                        initUi()
-                    }
-            } else {
-                initUi()
-            }
-
-        }, 500) // ✅ 500ms delay
+        // ✅ Always show Start screen with two choices (no auto-redirect)
+        initUi()
     }
 
     private fun initUi() {
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Existing user ➜ LoginActivity
         binding.btnExistingUser.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
 
+        // New user ➜ MainActivity (registration)
         binding.btnNewUser.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
 
-        findViewById<View>(R.id.faqTileOutside).setOnClickListener {
+        // FAQ bottom sheet
+        binding.faqTileOutside.setOnClickListener {
             showFaqBottomSheet()
         }
     }
@@ -81,8 +58,10 @@ class StartActivity : AppCompatActivity() {
             }
         }
 
+        // Close button
         view.findViewById<ImageView>(R.id.btnClose)?.setOnClickListener { dialog.dismiss() }
 
+        // FAQ list
         val rv = view.findViewById<RecyclerView>(R.id.rvFaq)
         rv.layoutManager = LinearLayoutManager(this)
         rv.adapter = FaqAdapter(

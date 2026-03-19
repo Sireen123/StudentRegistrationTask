@@ -17,22 +17,8 @@
             android:id="@+id/includeBack"
             layout="@layout/include_back_bar" />
 
-        <!-- Logout Bar -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:gravity="end">
+        <!-- ❌ LOGOUT BAR REMOVED -->
 
-            <Button
-                android:id="@+id/btnLogout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Logout"
-                android:textAllCaps="false"
-                android:backgroundTint="#D32F2F"
-                android:textColor="#FFFFFF"/>
-        </LinearLayout>
 
         <!-- Certificate Fragment Container -->
         <FrameLayout

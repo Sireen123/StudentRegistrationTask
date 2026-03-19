@@ -17,14 +17,17 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import com.example.studentregistration.api.DatasetNetworkModule
 import com.example.studentregistration.data.AppDatabase
+import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
 import com.example.studentregistration.data.UserRepository
-import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityMainBinding
-import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.example.studentregistration.model.University
 import com.google.firebase.auth.FirebaseAuth
+import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,15 +39,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var session: SessionPrefs
-    private lateinit var repo: UserRepository
+    private lateinit var userRepo: UserRepository
     private val calendar = Calendar.getInstance()
     private var feesPaidAmount: String = "0"
     private var selectedImageUri: Uri? = null
 
-    // Firebase Auth
     private val auth by lazy { FirebaseAuth.getInstance() }
 
-    // Image picker
+    // College picker
+    private lateinit var collegeAdapter: ArrayAdapter<String>
+    private val collegeNames = mutableListOf<String>()
+    private var allUniversities: List<University> = emptyList()
+    private var selectedCollegeName: String = ""
+
     private val pickImage =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
@@ -70,13 +77,11 @@ class MainActivity : AppCompatActivity() {
         session = SessionPrefs(this)
         binding.root.findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
 
-        repo = UserRepository(AppDatabase.getDatabase(this).userDao())
+        userRepo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
         binding.btnUploadPhoto.setOnClickListener { pickImage.launch(arrayOf("image/*")) }
 
-        val incomingEmail = intent.getStringExtra("email_from_login")?.trim()?.lowercase() ?: ""
-        if (incomingEmail.isNotEmpty()) binding.etEmail.setText(incomingEmail)
-
+        setupCollegePicker()     // ✅ Dataset + manual colleges
         setupSpinners()
         setupDobPicker()
         setupArrearUI()
@@ -90,14 +95,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnRegister.setOnClickListener {
-            if (!binding.btnRegister.isEnabled) return@setOnClickListener
             if (!validateInputs()) return@setOnClickListener
 
-            binding.btnRegister.isEnabled = false
             val originalText = binding.btnRegister.text
+            binding.btnRegister.isEnabled = false
             binding.btnRegister.text = "Please wait…"
 
-            val collegeName = binding.etCollege.text.toString().trim()
+            val collegeName = selectedCollegeName.trim()
             val name = binding.etName.text.toString().trim()
             val reg = binding.etRegister.text.toString().trim()
             val roll = binding.etRoll.text.toString().trim()
@@ -141,111 +145,163 @@ class MainActivity : AppCompatActivity() {
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    // Local Room save (offline)
-                    repo.saveFullUser(user)
+                    userRepo.saveFullUser(user)
                     session.currentUserEmail = email
-
+                    session.collegeName = collegeName  // ✅ Save selected college to session
                     withContext(Dispatchers.Main) {
-                        session.collegeName = collegeName
-
-                        // Auth + RTDB push (fire-and-forget)
                         pushToFirebase(email, password, user)
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Registered successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        // Go to loader → Dashboard
-                        startActivity(
-                            Intent(this@MainActivity, LoadingActivity::class.java).apply {
-                                putExtra("email", email)
-                                putExtra("hasArrears", hasArrears)
-                                putExtra("arrearsCount", arrearsCount)
-                                putExtra("selectedSemester", semester)
-                                putExtra("collegeName", collegeName)
-                            }
-                        )
-                        finish()
                     }
                 } catch (e: Exception) {
-                    Log.d("exception", e.message.toString())
                     withContext(Dispatchers.Main) {
-                        val msg = if (e.message?.contains("UNIQUE", true) == true ||
-                            e.message?.contains("CONSTRAINT", true) == true
-                        ) "User already exists"
-                        else "Registration failed. Please try again."
-                        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                         binding.btnRegister.isEnabled = true
                         binding.btnRegister.text = originalText
+                        Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
     }
 
-    // ===== Firebase: RTDB write =====
-    private fun pushToRealtimeDb(uid: String, user: User) {
-        Log.d("RTDB_SAVE", "Trying to write to RTDB /users/$uid")
+    /** ✅ Dataset + your manual colleges added */
+    private fun setupCollegePicker() {
 
-        val userMap = mapOf(
-            "uid" to uid,
-            "name" to user.name,
-            "email" to user.email,
-            "phone" to user.phone,
-            "registerNo" to user.registerNo,
-            "rollNo" to user.rollNo,
-            "address" to user.address,
-            "dob" to user.dob,
-            "gender" to user.gender,
-            "parentName" to user.parentName,
-            "department" to user.department,
-            "semester" to user.semester,
-            "role" to user.role,
-            "feesPaid" to user.feesPaid,
-            "profilePhoto" to (user.profilePhoto ?: ""),
-            "createdAt" to System.currentTimeMillis()
+        collegeAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            collegeNames
         )
+        binding.spCollege.adapter = collegeAdapter
 
-        FirebaseRepo.rtdb.child("users").child(uid)
-            .setValue(userMap)
-            .addOnSuccessListener { Log.d("RTDB_SAVE", "✅ RTDB write success") }
-            .addOnFailureListener { e -> Log.e("RTDB_SAVE", "❌ RTDB write failed: ${e.message}") }
-    }
+        lifecycleScope.launch {
+            try {
+                val list = withContext(Dispatchers.IO) {
+                    DatasetNetworkModule.api.getAll(DatasetNetworkModule.DATASET_URL)
+                }
 
-    // ===== Firebase: Auth + RTDB chain =====
-    private fun pushToFirebase(email: String, password: String, user: User) {
-        Log.d("AUTH_SAVE", "Creating Firebase Auth for $email")
+                allUniversities = list
+                    .filter { it.name.isNotBlank() }
+                    .distinctBy { it.name.lowercase(Locale.getDefault()) }
+                    .sortedBy { it.name }
 
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { res ->
-                Log.d("AUTH_SAVE", "✅ Auth created. UID = ${res.user!!.uid}")
-                pushToRealtimeDb(res.user!!.uid, user)
+                // ✅ YOUR MANUAL COLLEGES
+                val manualColleges = listOf(
+                    University("Stella Maris College", "India"),
+                    University("Madras Christian College (MCC)", "India"),
+                    University("Vels Institute of Science and Technology", "India"),
+                    University("Vellore Institute of Technology (VIT)", "India"),
+                    University("Women's Christian College", "India"),
+                    University("SSN College of Engineering and Technology", "India"),
+                    University("Anna University MIT Campus", "India"),
+                )
+
+                // ✅ Merge both
+                allUniversities = (allUniversities + manualColleges)
+                    .distinctBy { it.name.lowercase(Locale.getDefault()) }
+                    .sortedBy { it.name }
+
+                collegeNames.clear()
+                collegeNames.addAll(allUniversities.map { it.name })
+                collegeAdapter.notifyDataSetChanged()
+
+                if (collegeNames.isNotEmpty()) {
+                    binding.spCollege.setSelection(0)
+                    selectedCollegeName = collegeNames[0]
+                }
+
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
-            .addOnFailureListener { e ->
-                Log.e("AUTH_SAVE", "❌ Auth create failed: ${e.message}. Trying signIn...")
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnSuccessListener { s ->
-                        Log.d("AUTH_SAVE", "✅ signIn Success, UID = ${s.user!!.uid}")
-                        pushToRealtimeDb(s.user!!.uid, user)
-                    }
-                    .addOnFailureListener { err ->
-                        Log.e("AUTH_SAVE", "❌ signIn failed again: ${err.message}")
-                    }
-            }
-    }
+        }
 
-    // ===== Validation / UI helpers =====
-    override fun onResume() {
-        super.onResume()
-        if (!binding.btnRegister.isEnabled) {
-            binding.btnRegister.isEnabled = true
-            binding.btnRegister.text = "Register"
+        binding.spCollege.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>, v: View?, pos: Int, id: Long
+                ) {
+                    selectedCollegeName = collegeNames.getOrNull(pos).orEmpty()
+                }
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+            }
+
+        // ✅ Local search
+        binding.etCollegeSearch.addTextChangedListener { text ->
+            val q = text?.toString()?.trim()?.lowercase(Locale.getDefault()).orEmpty()
+            val filtered = if (q.isEmpty()) {
+                allUniversities
+            } else {
+                allUniversities.filter {
+                    it.name.lowercase(Locale.getDefault()).contains(q)
+                }
+            }
+
+            collegeNames.clear()
+            collegeNames.addAll(filtered.map { it.name })
+            collegeAdapter.notifyDataSetChanged()
+
+            selectedCollegeName =
+                if (collegeNames.isNotEmpty()) collegeNames[0] else ""
         }
     }
 
+    // ✅ Save to Firebase
+    private fun pushToFirebase(email: String, password: String, user: User) {
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { res ->
+                val uid = res.user!!.uid
+
+                val userMap = mapOf(
+                    "uid" to uid,
+                    "name" to user.name,
+                    "email" to user.email,
+                    "phone" to user.phone,
+                    "registerNo" to user.registerNo,
+                    "rollNo" to user.rollNo,
+                    "address" to user.address,
+                    "dob" to user.dob,
+                    "gender" to user.gender,
+                    "parentName" to user.parentName,
+                    "department" to user.department,
+                    "semester" to user.semester,
+                    "role" to user.role,
+                    "feesPaid" to user.feesPaid,
+                    "profilePhoto" to (user.profilePhoto ?: ""),
+                    "collegeName" to (session.collegeName ?: ""),   // ✅ now saved
+                    "createdAt" to System.currentTimeMillis()
+                )
+
+                FirebaseRepo.rtdb.child("users").child(uid)
+                    .setValue(userMap)
+                    .addOnSuccessListener {
+
+                        // ✅ MOVE TO DETAILS SCREEN
+                        val intent = Intent(this, DetailsActivity::class.java)
+                        intent.putExtra("collegeName", session.collegeName)
+                        startActivity(intent)
+
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Save failed!", Toast.LENGTH_LONG).show()
+                        binding.btnRegister.isEnabled = true
+                        binding.btnRegister.text = "Register"
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Auth failed: ${it.message}", Toast.LENGTH_LONG).show()
+                binding.btnRegister.isEnabled = true
+                binding.btnRegister.text = "Register"
+            }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.btnRegister.isEnabled = true
+        binding.btnRegister.text = "Register"
+    }
+
     private fun validateInputs(): Boolean {
+
         fun err(v: EditText, msg: String): Boolean {
             v.error = msg
             v.requestFocus()
@@ -253,19 +309,47 @@ class MainActivity : AppCompatActivity() {
             return false
         }
 
-        if (binding.etCollege.text!!.isEmpty()) return err(binding.etCollege, "Required")
+        if (selectedCollegeName.isBlank()) {
+            Toast.makeText(this, "Please select College", Toast.LENGTH_SHORT).show()
+            binding.spCollege.performClick()
+            return false
+        }
+
         if (binding.etName.text!!.isEmpty()) return err(binding.etName, "Required")
         if (binding.etRegister.text!!.isEmpty()) return err(binding.etRegister, "Required")
         if (binding.etRoll.text!!.isEmpty()) return err(binding.etRoll, "Required")
         if (binding.etAddress.text!!.isEmpty()) return err(binding.etAddress, "Required")
         if (binding.etPhone.text!!.isEmpty()) return err(binding.etPhone, "Required")
         if (binding.etEmail.text!!.isEmpty()) return err(binding.etEmail, "Required")
-        if (binding.etPassword.text!!.isEmpty()) return err(binding.etPassword, "Password required")
-        // ✅ Firebase requires min 6 chars
+
         val pwd = binding.etPassword.text.toString().trim()
-        if (pwd.length < 6) return err(binding.etPassword, "Min 6 characters")
+        if (pwd.isEmpty()) return err(binding.etPassword, "Required")
+        if (pwd.length < 6) return err(binding.etPassword, "Min 6 chars")
+
         if (binding.etDob.text!!.isEmpty()) return err(binding.etDob, "Required")
         if (binding.etParentName.text!!.isEmpty()) return err(binding.etParentName, "Required")
+
+        if (binding.rgGender.checkedRadioButtonId == -1) {
+            Toast.makeText(this, "Select Gender", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (binding.spDepartment.selectedItemPosition == 0) {
+            Toast.makeText(this, "Select Department", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (binding.spSemester.selectedItemPosition == 0) {
+            Toast.makeText(this, "Select Semester", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (binding.swHasArrears.isChecked) {
+            val ac = binding.etArrearsCount.text.toString()
+            val acNum = ac.toIntOrNull()
+            if (acNum == null || acNum < 1) return err(binding.etArrearsCount, "Invalid")
+        }
+
         return true
     }
 
@@ -279,29 +363,13 @@ class MainActivity : AppCompatActivity() {
     private fun applyPhoneMaxLengthForCountry() {
         val phoneUtil = PhoneNumberUtil.getInstance()
         val region = binding.countryCodePicker.selectedCountryNameCode
-        val computed = try {
-            val sample = phoneUtil.getExampleNumber(region)
-            val nsn = sample?.let { phoneUtil.getNationalSignificantNumber(it) }
-            nsn?.length ?: 10
-        } catch (_: Exception) { 10 }
-        val maxDigits = if (region == "IN") 10 else computed
+        val maxDigits = if (region == "IN") 10 else 10
         binding.etPhone.filters = arrayOf(DigitMaxLengthFilter(maxDigits))
     }
 
     private fun showFeesPopup() {
         val dept = binding.spDepartment.selectedItem.toString()
-        val feeMap = mapOf(
-            "Computer Science" to 75000,
-            "Information Technology" to 75000,
-            "Electronics & Communication" to 70000,
-            "Electrical & Electronics" to 72000,
-            "Mechanical" to 72000,
-            "Civil" to 68000,
-            "AI & Data Science" to 75000,
-            "Cyber Security" to 75000,
-            "Bio Technology" to 80000
-        )
-        val total = feeMap[dept] ?: 0
+        val total = departmentTotalFee(dept)
 
         val view = layoutInflater.inflate(R.layout.dialog_fees, null)
         val tvDept = view.findViewById<TextView>(R.id.tvDeptName)
@@ -316,13 +384,7 @@ class MainActivity : AppCompatActivity() {
             .setView(view)
             .setPositiveButton("OK") { _, _ ->
                 val paid = etPaid.text.toString().trim()
-                if (paid.isEmpty()) {
-                    binding.swPaid.isChecked = false
-                    feesPaidAmount = "0"
-                    Toast.makeText(this, "Fees cleared", Toast.LENGTH_SHORT).show()
-                } else {
-                    feesPaidAmount = paid
-                }
+                feesPaidAmount = if (paid.isEmpty()) "0" else paid
             }
             .setNegativeButton("Cancel") { _, _ ->
                 binding.swPaid.isChecked = false
@@ -331,8 +393,23 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun departmentTotalFee(dept: String): Int {
+        return when (dept) {
+            "Computer Science" -> 75000
+            "Information Technology" -> 75000
+            "Electronics & Communication" -> 70000
+            "Electrical & Electronics" -> 72000
+            "Mechanical" -> 72000
+            "Civil" -> 68000
+            "AI & Data Science" -> 75000
+            "Cyber Security" -> 75000
+            "Bio Technology" -> 80000
+            else -> 0
+        }
+    }
+
     private fun setupSpinners() {
-        val departments = arrayOf(
+        val depts = arrayOf(
             "-- Select Department --",
             "Computer Science",
             "Information Technology",
@@ -344,17 +421,17 @@ class MainActivity : AppCompatActivity() {
             "Cyber Security",
             "Bio Technology"
         )
-        val semesters = arrayOf(
-            "-- Select Semester --",
-            "I", "II", "III", "IV", "V", "VI", "VII", "VIII"
+        val sems = arrayOf(
+            "-- Select Semester --", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"
         )
 
         binding.spDepartment.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, departments).apply {
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, depts).apply {
                 setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             }
+
         binding.spSemester.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, semesters).apply {
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, sems).apply {
                 setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             }
     }
@@ -388,7 +465,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.spSemester.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                override fun onItemSelected(
+                    parent: AdapterView<*>, view: View?, pos: Int, id: Long
+                ) {
                     val show = pos > 0
                     binding.llArrears.isVisible = show
                     if (!show) {
@@ -397,22 +476,12 @@ class MainActivity : AppCompatActivity() {
                         binding.tilArrearsCount.isVisible = false
                     }
                 }
+
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
 
         binding.swHasArrears.setOnCheckedChangeListener { _, isChecked ->
             binding.tilArrearsCount.isVisible = isChecked
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        val intent = Intent(this, LoginActivity::class.java)
-        intent.flags =
-            Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-        return true
     }
 }
