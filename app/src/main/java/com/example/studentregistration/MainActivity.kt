@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
@@ -81,7 +80,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnUploadPhoto.setOnClickListener { pickImage.launch(arrayOf("image/*")) }
 
-        setupCollegePicker()     // ✅ Dataset + manual colleges
+        setupCollegePicker()
         setupSpinners()
         setupDobPicker()
         setupArrearUI()
@@ -147,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     userRepo.saveFullUser(user)
                     session.currentUserEmail = email
-                    session.collegeName = collegeName  // ✅ Save selected college to session
+                    session.collegeName = collegeName
                     withContext(Dispatchers.Main) {
                         pushToFirebase(email, password, user)
                     }
@@ -162,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** ✅ Dataset + your manual colleges added */
+    /** Colleges: dataset + manual merge */
     private fun setupCollegePicker() {
 
         collegeAdapter = ArrayAdapter(
@@ -183,7 +182,6 @@ class MainActivity : AppCompatActivity() {
                     .distinctBy { it.name.lowercase(Locale.getDefault()) }
                     .sortedBy { it.name }
 
-                // ✅ YOUR MANUAL COLLEGES
                 val manualColleges = listOf(
                     University("Stella Maris College", "India"),
                     University("Madras Christian College (MCC)", "India"),
@@ -194,7 +192,6 @@ class MainActivity : AppCompatActivity() {
                     University("Anna University MIT Campus", "India"),
                 )
 
-                // ✅ Merge both
                 allUniversities = (allUniversities + manualColleges)
                     .distinctBy { it.name.lowercase(Locale.getDefault()) }
                     .sortedBy { it.name }
@@ -223,7 +220,6 @@ class MainActivity : AppCompatActivity() {
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
 
-        // ✅ Local search
         binding.etCollegeSearch.addTextChangedListener { text ->
             val q = text?.toString()?.trim()?.lowercase(Locale.getDefault()).orEmpty()
             val filtered = if (q.isEmpty()) {
@@ -243,7 +239,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Save to Firebase
+    /** Save to Firebase Auth + RTDB, then go loader */
     private fun pushToFirebase(email: String, password: String, user: User) {
 
         auth.createUserWithEmailAndPassword(email, password)
@@ -266,19 +262,19 @@ class MainActivity : AppCompatActivity() {
                     "role" to user.role,
                     "feesPaid" to user.feesPaid,
                     "profilePhoto" to (user.profilePhoto ?: ""),
-                    "collegeName" to (session.collegeName ?: ""),   // ✅ now saved
+                    "collegeName" to (session.collegeName ?: ""),
                     "createdAt" to System.currentTimeMillis()
                 )
 
                 FirebaseRepo.rtdb.child("users").child(uid)
                     .setValue(userMap)
                     .addOnSuccessListener {
-
-                        // ✅ MOVE TO DETAILS SCREEN
-                        val intent = Intent(this, DetailsActivity::class.java)
-                        intent.putExtra("collegeName", session.collegeName)
+                        // → LoadingActivity (then Dashboard deterministically)
+                        val intent = Intent(this, LoadingActivity::class.java).apply {
+                            putExtra("NAV_TARGET", "DASHBOARD")
+                            putExtra("FORCE_DASHBOARD", true) // force direct to Dashboard
+                        }
                         startActivity(intent)
-
                         finish()
                     }
                     .addOnFailureListener {

@@ -101,6 +101,13 @@
             android:text="Parent/Guardian:" />
 
         <TextView
+            android:id="@+id/tvCollege"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="College: "/>
+
+
+        <TextView
             android:id="@+id/tvDept"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

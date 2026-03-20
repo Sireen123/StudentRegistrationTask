@@ -122,6 +122,19 @@
 
     <string name="faq_question_8">Why are there different certificates?</string>
     <string name="faq_answer_8">The app shows a normal or arrear certificate based on arrear status.</string>
+    <string name="splash_subtitle">Create profiles, manage
+fees &amp; attendance—fast.</string>
+
+
+
+
+        <!-- Accessibility -->
+        <string name="get_started">Get Started</string>
+        <string name="splash_image_desc">Student Registration splash illustration</string>
 
 
 </resources>
+
+
+
+

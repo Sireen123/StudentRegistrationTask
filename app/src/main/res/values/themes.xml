@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Main App Theme (base for all API levels) -->
-    <style name="Theme.StudentRegistration" parent="Theme.Material3.Light.NoActionBar">
-        <!-- Keep content below status bar via layout/window flags (handled in activity/layout) -->
-        <!-- Status bar / nav bar colors (API 21+, safe in base) -->
+    <!-- ✅ Main App Theme (Material3, AppCompat-compatible) -->
+    <style name="Theme.StudentRegistration" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Status + Nav colors -->
         <item name="android:statusBarColor">@color/clg_primary</item>
         <item name="android:navigationBarColor">@color/clg_primary</item>
+
+        <!-- Material color roles -->
+        <item name="colorPrimary">@color/clg_primary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <item name="android:windowContentTransitions">true</item>
     </style>
 
-    <!-- Splash theme -->
-    <style name="Theme.StudentReg.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+
+    <!-- ✅ Base Splash Theme (Material3 parent so app won't crash) -->
+    <style name="Theme.StudentReg.Splash.Legacy" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/splash_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 
-    <!-- No Animation Theme -->
-    <style name="NoAnimTheme" parent="Theme.StudentRegistration">
+    <!-- ✅ Final Splash Theme used in Manifest -->
+    <style name="Theme.StudentReg.Splash" parent="Theme.StudentReg.Splash.Legacy" />
+
+
+    <!-- ✅ No Animation Theme (used by CertificateActivity) -->
+    <style name="NoAnimTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowIsTranslucent">false</item>
         <item name="android:windowActivityTransitions">false</item>

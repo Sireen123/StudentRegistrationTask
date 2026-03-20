@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Android 12+ Splash Screen Theme -->
+    <style name="Theme.StudentReg.Splash" parent="Theme.SplashScreen">
+
+        <!-- Splash background -->
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+
+        <!-- Center icon -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_edu_logo</item>
+
+        <!-- Duration (optional) -->
+        <item name="windowSplashScreenAnimationDuration">1500</item>
+
+        <!-- After splash, go to normal theme -->
+        <item name="postSplashScreenTheme">@style/Theme.StudentRegistration</item>
+
+    </style>
+
+</resources>

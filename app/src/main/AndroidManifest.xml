@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <!-- Permissions -->
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.studentregistration">
+
+    <!-- Permissions (keep only what you use) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <!-- For Android 13+ images access you may also add:
+         <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+         and keep READ_EXTERNAL_STORAGE for <= Android 12 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission
-        android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -20,54 +24,53 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentRegistration">
+
+        <!-- LAUNCHER: Splash -->
         <activity
-            android:name=".ReferStudentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".DashboardActivity"
-            android:exported="false" /> <!-- ✅ NEW Launcher Activity -->
-        <activity
-            android:name=".StartActivity"
-            android:exported="true">
+            android:name=".ui.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.StudentReg.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Other Activities (unchanged) -->
-        <!-- 1. Acknowledgement Screen -->
+        </activity>
+
+        <!-- Target opened from Splash (internal only) -->
         <activity
-            android:name=".AcknowledgementActivity"
-            android:exported="false" /> <!-- 2. Certificate Activity -->
+            android:name=".StartActivity"
+            android:exported="false" />
+
+        <!-- Other activities -->
+        <activity android:name=".ReferStudentActivity" android:exported="false" />
+        <activity android:name=".DashboardActivity" android:exported="false" />
+        <activity android:name=".AcknowledgementActivity" android:exported="false" />
         <activity
             android:name=".CertificateActivity"
             android:exported="false"
-            android:theme="@style/NoAnimTheme" /> <!-- 3. Loading Screen -->
+            android:theme="@style/NoAnimTheme" />
+
+        <!-- ✅ IMPORTANT: use an AppCompat/Material theme here (or inherit app theme) -->
         <activity
             android:name=".LoadingActivity"
             android:exported="false"
-            android:theme="@style/Theme.StudentReg.Splash" /> <!-- 4. Student Tasks Screen -->
-        <activity
-            android:name=".StudentTaskActivity"
-            android:exported="true" /> <!-- 5. Fees List -->
-        <activity
-            android:name=".FeesListActivity"
-            android:exported="false" /> <!-- ✅ 6. Login Activity (NO LONGER LAUNCHER) -->
+            android:theme="@style/Theme.StudentRegistration" />
+
+        <activity android:name=".StudentTaskActivity" android:exported="true" />
+        <activity android:name=".FeesListActivity" android:exported="false" />
         <activity
             android:name=".LoginActivity"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.StudentRegistration" /> <!-- 7. Registration Activity -->
+            android:theme="@style/Theme.StudentRegistration" />
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:windowSoftInputMode="stateHidden|adjustResize" /> <!-- 8. Details Activity -->
-        <activity
-            android:name=".DetailsActivity"
-            android:exported="false" /> <!-- 9. Course Details -->
-        <activity
-            android:name=".CourseDetailsActivity"
-            android:exported="false" /> <!-- 10. FileProvider -->
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity android:name=".DetailsActivity" android:exported="false" />
+        <activity android:name=".CourseDetailsActivity" android:exported="false" />
+
+        <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -77,6 +80,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-    </application>
 
+    </application>
 </manifest>

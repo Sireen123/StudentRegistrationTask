@@ -33,6 +33,7 @@ class DetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var session: SessionPrefs
     private var profilePhotoUri: Uri? = null
+    private var currentCollegeName: String = ""   // ✅ holds the chosen college for UI & next screens
 
     private val dateFormatter by lazy { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -48,13 +49,22 @@ class DetailsActivity : AppCompatActivity() {
         binding.includeBack.btnBack.setOnClickListener { finish() }
         binding.includeBack.tvScreenTitle.text = "Student Details"
 
+        // ✅ Source the college name from: Intent → Session (in that order)
+        val intentCollege = intent.getStringExtra("collegeName")
+        currentCollegeName = when {
+            !intentCollege.isNullOrBlank() -> intentCollege
+            !session.collegeName.isNullOrBlank() -> session.collegeName!!
+            else -> ""
+        }
+        // show immediately (will be updated again after RTDB/local load if needed)
+        binding.tvCollege.text = "College: ${currentCollegeName.ifBlank { "N/A" }}"
+
         val emailFromRegister = intent.getStringExtra("email")
         if (emailFromRegister != null) session.currentUserEmail = emailFromRegister
 
-        val hasArrears = intent.getBooleanExtra("hasArrears", false)
+        val hasArrears  = intent.getBooleanExtra("hasArrears", false)
         val arrearsCount = intent.getStringExtra("arrearsCount") ?: "0"
-        val selectedSem = intent.getStringExtra("selectedSemester")
-        val collegeName = session.collegeName ?: ""
+        val selectedSem  = intent.getStringExtra("selectedSemester")
 
         setLoading(true)
 
@@ -65,8 +75,7 @@ class DetailsActivity : AppCompatActivity() {
                 uid = uid,
                 selectedSem = selectedSem,
                 hasArrears = hasArrears,
-                arrearsCount = arrearsCount,
-                college = collegeName
+                arrearsCount = arrearsCount
             )
         } else {
             session.currentUserEmail?.let {
@@ -74,14 +83,14 @@ class DetailsActivity : AppCompatActivity() {
                     email = it,
                     selectedSem = selectedSem,
                     hasArrears = hasArrears,
-                    arrearsCount = arrearsCount,
-                    college = collegeName
+                    arrearsCount = arrearsCount
                 )
             } ?: run { setLoading(false) }
         }
 
         setupCourseClickListeners()
-        setupSignature(hasArrears, arrearsCount, collegeName)
+        // NOTE: setupSignature now uses the up-to-date currentCollegeName each time you tap Submit
+        setupSignature(hasArrears, arrearsCount)
     }
 
     override fun onResume() {
@@ -94,8 +103,7 @@ class DetailsActivity : AppCompatActivity() {
         uid: String,
         selectedSem: String?,
         hasArrears: Boolean,
-        arrearsCount: String,
-        college: String
+        arrearsCount: String
     ) {
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
@@ -114,6 +122,13 @@ class DetailsActivity : AppCompatActivity() {
                     val role        = snap.child("role").getValue(String::class.java) ?: "student"
                     val feesPaid    = snap.child("feesPaid").getValue(String::class.java) ?: "0"
                     val profilePhoto= snap.child("profilePhoto").getValue(String::class.java).orEmpty()
+
+                    // ✅ Fetch saved collegeName from RTDB (preferred)
+                    val collegeSaved = snap.child("collegeName").getValue(String::class.java)
+                    if (!collegeSaved.isNullOrBlank()) {
+                        currentCollegeName = collegeSaved
+                    }
+                    binding.tvCollege.text = "College: ${currentCollegeName.ifBlank { "N/A" }}"
 
                     // Bind to UI
                     binding.tvName.text = "Name: $name"
@@ -159,7 +174,7 @@ class DetailsActivity : AppCompatActivity() {
                     // Fallback to local silently
                     val emailLocal = session.currentUserEmail
                     if (emailLocal != null) {
-                        loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount, college)
+                        loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount)
                     } else {
                         setLoading(false)
                     }
@@ -169,7 +184,7 @@ class DetailsActivity : AppCompatActivity() {
                 // No toast; fallback silently
                 val emailLocal = session.currentUserEmail
                 if (emailLocal != null) {
-                    loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount, college)
+                    loadUserDetailsLocal(emailLocal, selectedSem, hasArrears, arrearsCount)
                 } else {
                     setLoading(false)
                 }
@@ -181,8 +196,7 @@ class DetailsActivity : AppCompatActivity() {
         email: String,
         selectedSem: String?,
         hasArrears: Boolean,
-        arrearsCount: String,
-        college: String
+        arrearsCount: String
     ) {
         val dao = AppDatabase.getDatabase(this).userDao()
 
@@ -202,6 +216,9 @@ class DetailsActivity : AppCompatActivity() {
                     binding.tvDept.text = "Department: ${user.department}"
                     binding.tvSem.text = "Semester: ${selectedSem ?: user.semester}"
                     binding.tvSignedByLabel.text = "Signed by: ${user.name}"
+
+                    // ✅ We keep currentCollegeName as set earlier (Intent/Session)
+                    binding.tvCollege.text = "College: ${currentCollegeName.ifBlank { "N/A" }}"
 
                     if (!user.profilePhoto.isNullOrBlank()) {
                         profilePhotoUri = Uri.parse(user.profilePhoto)
@@ -224,11 +241,11 @@ class DetailsActivity : AppCompatActivity() {
         val feeMap = mapOf(
             "Computer Science" to 75000,
             "Information Technology" to 75000,
-            "Electronics & Communication" to 70000,
-            "Electrical & Electronics" to 72000,
+            "Electronics &amp; Communication" to 70000,
+            "Electrical &amp; Electronics" to 72000,
             "Mechanical" to 72000,
             "Civil" to 68000,
-            "AI & Data Science" to 75000,
+            "AI &amp; Data Science" to 75000,
             "Cyber Security" to 75000,
             "Bio Technology" to 80000
         )
@@ -290,7 +307,7 @@ class DetailsActivity : AppCompatActivity() {
         setClick(binding.tvCourseBCA, "BCA", "65000")
     }
 
-    private fun setupSignature(hasArrears: Boolean, arrearCount: String, college: String) {
+    private fun setupSignature(hasArrears: Boolean, arrearCount: String) {
 
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
@@ -332,7 +349,9 @@ class DetailsActivity : AppCompatActivity() {
 
                 putExtra("hasArrears", hasArrears)
                 putExtra("arrearsCount", arrearCount)
-                putExtra("collegeName", college)
+
+                // ✅ always pass the latest college name forward
+                putExtra("collegeName", currentCollegeName)
 
                 putExtra("profile_photo_uri", profilePhotoUri?.toString())
             })

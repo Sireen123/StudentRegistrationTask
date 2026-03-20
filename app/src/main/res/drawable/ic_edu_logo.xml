@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Circle background -->
+    <path
+        android:fillColor="#F4F7FF"
+        android:pathData="M48,8a40,40 0 1,0 0,80a40,40 0 1,0 0,-80z"/>
+    <!-- Book base -->
+    <path
+        android:fillColor="#3E63F6"
+        android:pathData="M22,58h52v10c0,2.2 -1.8,4 -4,4H26c-2.2,0 -4,-1.8 -4,-4V58z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,56h48v4H24z"/>
+    <!-- Mortarboard (cap) -->
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M48,30l26,10l-26,10l-26,-10z"/>
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M34,42h28v8c0,2.2 -1.8,4 -4,4H38c-2.2,0 -4,-1.8 -4,-4v-8z"/>
+    <!-- Tassel -->
+    <path
+        android:fillColor="#FFB703"
+        android:strokeWidth="0"
+        android:pathData="M72,40 l6,4 l-2,1 l2,8 l-3,0 l-2,-7 l-3,0z"/>
+</vector>
