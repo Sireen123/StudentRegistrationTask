@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Allow saving PDFs, images, and files to Downloads/ -->
-    <external-path
-        name="external_files"
-        path="." />
-
-    <!-- Allow cached signature file (your signature PNG works here) -->
+    <!-- App cache images (profile photos copied here, signatures, temp files) -->
     <cache-path
-        name="cache"
-        path="." />
+        name="cache_images"
+        path="images/" />
 
-    <!-- Allow access to app files if needed -->
+    <!-- App private files (e.g., exported PDFs/images you keep persistently) -->
     <files-path
-        name="files"
-        path="." />
+        name="files_images"
+        path="images/" />
+
+    <!-- Optional: external app-specific cache (no permission needed, auto-cleanable) -->
+    <external-cache-path
+        name="ext_cache_docs"
+        path="docs/" />
+
+    <!-- Optional: external app-specific files (scoped, not public Downloads) -->
+    <external-files-path
+        name="ext_files_docs"
+        path="docs/" />
 
 </paths>

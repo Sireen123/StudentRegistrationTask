@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
+    id ("kotlin-parcelize")
 }
 
 android {
@@ -98,7 +99,9 @@ dependencies {
     // ✅ QR Code
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
-
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.5.1")
 
     // ✅ ROOM (ksp)
     val room_version = "2.8.4"
@@ -111,6 +114,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+
 
     }
 

@@ -1,203 +1,114 @@
 package com.example.studentregistration
 
-import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.pdf.PdfDocument
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.Button
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
-import androidx.fragment.app.Fragment
-import com.example.studentregistration.databinding.ActivityCertificateBinding
-import java.io.File
-import java.io.FileOutputStream
-
-// ✅ Firebase
 import com.example.studentregistration.data.FirebaseRepo
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.storage.FirebaseStorage
+import com.example.studentregistration.data.User
 
 class CertificateActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityCertificateBinding
-    private var lastSavedPdf: File? = null
-
-    private val studentName by lazy { intent.getStringExtra("name") ?: "Student" }
-    private val regNo by lazy { intent.getStringExtra("reg") ?: "" }
-    private val dept by lazy { intent.getStringExtra("dept") ?: "" }
-    private val sem by lazy { intent.getStringExtra("sem") ?: "" }
-
-    private val storage by lazy { FirebaseStorage.getInstance() }
+    private var studentId: String? = null
+    private var user: User? = null
+    private var hasArrears = false
+    private var arrearsCount = 0
+    private var collegeName = ""
+    private var signatureUri: Uri? = null
+    private var signedOn = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCertificateBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_certificate)
 
-        // BACK + TITLE
-        binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Certificate"
+        // ✅ Read parcelable user
+        user = intent.getParcelableExtra("user")
+        hasArrears = intent.getBooleanExtra("hasArrears", false)
+        arrearsCount = intent.getIntExtra("arrearsCount", 0)
+        collegeName = intent.getStringExtra("collegeName") ?: ""
+        signedOn = intent.getStringExtra("signed_on") ?: ""
 
-        // ✅ LOGOUT REMOVED COMPLETELY
+        signatureUri =
+            if (Build.VERSION.SDK_INT >= 33)
+                intent.getParcelableExtra("signature_uri", Uri::class.java)
+            else @Suppress("DEPRECATION")
+            intent.getParcelableExtra("signature_uri")
 
+        studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
+            ?: FirebaseRepo.auth.currentUser?.uid
 
-        val hasArrears = intent.getBooleanExtra("hasArrears", false)
+        // Back logic
+        findViewById<Button>(R.id.btnBackToDashboard).setOnClickListener { goDashboard() }
+        onBackPressedDispatcher.addCallback(this) { goDashboard() }
 
+        if (user == null) {
+            goDashboard()
+            return
+        }
+
+        if (savedInstanceState == null) loadFragment()
+    }
+
+    private fun loadFragment() {
+        val u = user!!
+
+        // Final decision
+        val isArrear = hasArrears || arrearsCount > 0
+
+        // ✅ Update workflow
+        updateWorkflow(isArrear)
+
+        // ✅ Bundle for fragment
         val args = Bundle().apply {
-            putString("name", intent.getStringExtra("name") ?: "")
-            putString("reg", intent.getStringExtra("reg") ?: "")
-            putString("roll", intent.getStringExtra("roll") ?: "")
-            putString("dept", intent.getStringExtra("dept") ?: "")
-            putString("sem", intent.getStringExtra("sem") ?: "")
-            putString("parent", intent.getStringExtra("parent") ?: "")
-            putString("collegeName", SessionPrefs(this@CertificateActivity).collegeName ?: "")
-            putString("arrearsCount", intent.getStringExtra("arrearsCount") ?: "0")
-
-            @Suppress("DEPRECATION")
-            putParcelable("signature_uri", intent.getParcelableExtra<Uri>("signature_uri"))
-
-            putString("profile_photo_uri", intent.getStringExtra("profile_photo_uri"))
-
-            putString(
-                "qr_data",
-                "Name: ${intent.getStringExtra("name") ?: ""}\n" +
-                        "Reg: ${intent.getStringExtra("reg") ?: ""}\n" +
-                        "Dept: ${intent.getStringExtra("dept") ?: ""}\n" +
-                        "Sem: ${intent.getStringExtra("sem") ?: ""}"
-            )
+            putParcelable("user", u)
+            putString("collegeName", collegeName)
+            putBoolean("hasArrears", isArrear)
+            putInt("arrearsCount", arrearsCount)
+            putParcelable("signature_uri", signatureUri)
+            putString("signed_on", signedOn)
         }
 
-        if (savedInstanceState == null) {
-            val frag: Fragment =
-                if (hasArrears) ArrearCertificateFragment() else FinalCertificateFragment()
-            frag.arguments = args
-            supportFragmentManager.beginTransaction()
-                .replace(binding.fragmentContainer.id, frag)
-                .commit()
-        }
+        val fragment =
+            if (isArrear)
+                ArrearCertificateFragment().apply { arguments = args }
+            else
+                FinalCertificateFragment().apply { arguments = args }
 
-        // DOWNLOAD PDF
-        binding.btnDownloadPdf.setOnClickListener {
-            val dialog = showLoadingDialog()
-            lastSavedPdf = generatePdfOrNull(dialog)
-
-            lastSavedPdf?.let { file ->
-                Toast.makeText(this, "PDF saved successfully!", Toast.LENGTH_LONG).show()
-                uploadCertificateToFirebase(file)
-            }
-        }
-
-        // SHARE PDF
-        binding.btnSharePdf.setOnClickListener {
-            val dialog = showLoadingDialog()
-
-            val pdf = lastSavedPdf ?: generatePdfOrNull(dialog)
-            if (pdf == null) {
-                dialog.dismiss()
-                Toast.makeText(this, "Unable to generate PDF.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            dialog.dismiss()
-
-            uploadCertificateToFirebase(pdf)
-
-            val uri = FileProvider.getUriForFile(
-                this,
-                "${packageName}.provider",
-                pdf
-            )
-
-            val share = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            startActivity(Intent.createChooser(share, "Share Certificate PDF"))
-        }
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
     }
 
-    private fun generatePdfOrNull(dialog: AlertDialog): File? {
-        val view = binding.fragmentContainer
+    private fun updateWorkflow(isArrear: Boolean) {
+        val uid = studentId ?: return
 
-        if (view.width == 0 || view.height == 0) {
-            dialog.dismiss()
-            Toast.makeText(this, "Certificate not fully loaded!", Toast.LENGTH_SHORT).show()
-            return null
-        }
+        val updates = mapOf(
+            "detailsSaved" to true,
+            "ackPending" to false,
+            "ackCompleted" to true,
+            "certPending" to false,
+            "certIssuedAt" to System.currentTimeMillis(),
+            "certType" to if (isArrear) "ARREAR" else "FINAL",
+            "certArrear" to isArrear,
+            "certFinal" to !isArrear
+        )
 
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        view.draw(canvas)
-
-        val pdfDoc = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
-        val page = pdfDoc.startPage(pageInfo)
-        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
-        pdfDoc.finishPage(page)
-
-        val downloads =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        if (!downloads.exists()) downloads.mkdirs()
-
-        val nameForFile = studentName.trim().replace("\\s+".toRegex(), "_")
-        val file = File(downloads, "Certificate_${nameForFile}_${System.currentTimeMillis()}.pdf")
-
-        return try {
-            FileOutputStream(file).use { fos -> pdfDoc.writeTo(fos) }
-            file
-        } catch (e: Exception) {
-            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
-            null
-        } finally {
-            pdfDoc.close()
-            dialog.dismiss()
-        }
+        FirebaseRepo.rtdb
+            .child("details")
+            .child(uid)
+            .child("workflow")
+            .updateChildren(updates)
     }
 
-    private fun showLoadingDialog(): AlertDialog {
-        val view = layoutInflater.inflate(R.layout.dialog_loading, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(view)
-            .setCancelable(false)
-            .create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(0x00000000))
-        dialog.show()
-        return dialog
-    }
-
-    private fun uploadCertificateToFirebase(file: File) {
-        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
-
-        val ref = storage.reference.child("users/$uid/certificates/${file.name}")
-        val fileUri = Uri.fromFile(file)
-
-        ref.putFile(fileUri)
-            .continueWithTask { ref.downloadUrl }
-            .addOnSuccessListener { url ->
-                val data = hashMapOf(
-                    "title" to "Certificate",
-                    "fileUrl" to url.toString(),
-                    "fileName" to file.name,
-                    "name" to studentName,
-                    "registerNo" to regNo,
-                    "department" to dept,
-                    "semester" to sem,
-                    "createdAt" to FieldValue.serverTimestamp()
-                )
-                FirebaseRepo.db.collection("users")
-                    .document(uid)
-                    .collection("certificates")
-                    .add(data)
-            }
+    private fun goDashboard() {
+        startActivity(Intent(this, DashboardActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+        })
+        finish()
     }
 }

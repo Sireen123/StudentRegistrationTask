@@ -1,4 +1,4 @@
-package com.example.studentregistration
+package com.example.studentregistration.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.studentregistration.R
 
 class DashboardAdapter(
     private val items: List<String>,
@@ -25,6 +26,7 @@ class DashboardAdapter(
     )
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         val title: TextView = itemView.findViewById(R.id.itemTitle)
 
         init {
@@ -53,14 +55,11 @@ class DashboardAdapter(
         holder.itemView.setBackgroundColor(ContextCompat.getColor(ctx, colorRes))
         holder.title.setTextColor(ContextCompat.getColor(ctx, android.R.color.black))
 
-        // ✅ Short labels stay on ONE line
-        if (label.length <= 10 && !label.contains(" ")) {
-            holder.title.maxLines = 1
-        } else {
-            holder.title.maxLines = 2
-        }
+        // ✅ Keep short words in one line
+        holder.title.maxLines =
+            if (label.length <= 10 && !label.contains(" ")) 1 else 2
 
-        // ✅ Fix ugly wrap for Daily Attendance
+        // ✅ Format "Daily Attendance"
         if (label.equals("Daily Attendance", ignoreCase = true)) {
             holder.title.text = "Daily\nAttendance"
         }

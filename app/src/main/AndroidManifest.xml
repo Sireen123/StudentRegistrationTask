@@ -3,17 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.studentregistration">
 
-    <!-- Permissions (keep only what you use) -->
+    <!-- ======= Permissions ======= -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android 13+ (Images only) -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:targetApi="33" />
+
+    <!-- For API <= 32 image picking -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Only needed <= API 28 -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <!-- For Android 13+ images access you may also add:
-         <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-         and keep READ_EXTERNAL_STORAGE for <= Android 12 -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
 
     <application
         android:allowBackup="true"
@@ -25,52 +31,50 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentRegistration">
 
-        <!-- LAUNCHER: Splash -->
+        <!-- Launcher Activity -->
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.StudentReg.Splash">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
-        <!-- Target opened from Splash (internal only) -->
-        <activity
-            android:name=".StartActivity"
-            android:exported="false" />
+        <activity android:name=".StartActivity" android:exported="false"/>
+        <activity android:name=".ReferStudentActivity" android:exported="false"/>
+        <activity android:name=".DashboardActivity" android:exported="false"/>
+        <activity android:name=".AcknowledgementActivity" android:exported="false"/>
 
-        <!-- Other activities -->
-        <activity android:name=".ReferStudentActivity" android:exported="false" />
-        <activity android:name=".DashboardActivity" android:exported="false" />
-        <activity android:name=".AcknowledgementActivity" android:exported="false" />
         <activity
             android:name=".CertificateActivity"
             android:exported="false"
             android:theme="@style/NoAnimTheme" />
 
-        <!-- ✅ IMPORTANT: use an AppCompat/Material theme here (or inherit app theme) -->
         <activity
             android:name=".LoadingActivity"
             android:exported="false"
             android:theme="@style/Theme.StudentRegistration" />
 
-        <activity android:name=".StudentTaskActivity" android:exported="true" />
-        <activity android:name=".FeesListActivity" android:exported="false" />
+        <activity android:name=".StudentTaskActivity" android:exported="true"/>
+        <activity android:name=".FeesListActivity" android:exported="false"/>
+
         <activity
             android:name=".LoginActivity"
             android:exported="false"
             android:launchMode="singleTop"
             android:theme="@style/Theme.StudentRegistration" />
+
         <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="stateHidden|adjustResize" />
-        <activity android:name=".DetailsActivity" android:exported="false" />
-        <activity android:name=".CourseDetailsActivity" android:exported="false" />
 
-        <!-- FileProvider -->
+        <activity android:name=".DetailsActivity" android:exported="false"/>
+        <activity android:name=".CourseDetailsActivity" android:exported="false"/>
+
+        <!-- ======= FileProvider (required for profile/signature images) ======= -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

@@ -2,15 +2,15 @@ package com.example.studentregistration
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.studentregistration.databinding.ActivityAcknowledgementBinding
-
-// ✅ Firebase
 import com.example.studentregistration.data.FirebaseRepo
+import com.example.studentregistration.data.User
+import com.example.studentregistration.databinding.ActivityAcknowledgementBinding
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.storage.FirebaseStorage
 import java.text.SimpleDateFormat
@@ -21,195 +21,156 @@ class AcknowledgementActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAcknowledgementBinding
 
-    private var name = ""
-    private var reg = ""
-    private var roll = ""
-    private var dept = ""
-    private var sem = ""
-    private var parent = ""
-    private var collegeName = ""
-    private var hasArrears = false
-    private var arrearsCount = "0"
+    private var user: User? = null
+    private var hasArrears: Boolean = false
+    private var arrearsCount: Int = 0
+    private var collegeName: String = ""
+
     private var signatureUri: Uri? = null
-    private var signedOn = ""
+    private var profilePhotoUri: Uri? = null
+    private var studentId: String? = null
 
-    // ✅ from DetailsActivity (may be local uri string)
-    private var profilePhotoUri: String? = null
-
-    // ✅ Firebase Storage
     private val storage by lazy { FirebaseStorage.getInstance() }
+    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAcknowledgementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Back & Title
-        binding.root.findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        binding.root.findViewById<TextView>(R.id.tvScreenTitle)?.text = "Acknowledgement"
-
+        // Toolbar
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.tvScreenTitle).text = "Acknowledgement"
         binding.tvTitle.text = "ACKNOWLEDGEMENT"
 
-        // ✅ Read values from DetailsActivity
-        intent.extras?.let { b ->
-            name         = b.getString("name", "")
-            reg          = b.getString("reg", "")
-            roll         = b.getString("roll", "")
-            dept         = b.getString("dept", "")
-            sem          = b.getString("sem", "")
-            parent       = b.getString("parent", "")
-            collegeName  = b.getString("collegeName", "")
-            hasArrears   = b.getBoolean("hasArrears", false)
-            arrearsCount = b.getString("arrearsCount", "0") ?: "0"
-            signedOn     = b.getString("signed_on", "")
-            signatureUri = b.getParcelable("signature_uri")
-            profilePhotoUri = b.getString("profile_photo_uri")
+        // ✅ Receive parcelable User
+        user = intent.getParcelableExtra("user")
+        hasArrears = intent.getBooleanExtra("hasArrears", false)
+        arrearsCount = intent.getIntExtra("arrearsCount", 0)
+        collegeName = intent.getStringExtra("collegeName") ?: ""
+
+        signatureUri =
+            if (Build.VERSION.SDK_INT >= 33)
+                intent.getParcelableExtra("signature_uri", Uri::class.java)
+            else @Suppress("DEPRECATION")
+            intent.getParcelableExtra("signature_uri")
+
+        profilePhotoUri = intent.getStringExtra("profile_photo_uri")?.let { Uri.parse(it) }
+
+        studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
+            ?: FirebaseRepo.auth.currentUser?.uid
+
+        if (user == null || studentId == null) {
+            Toast.makeText(this, "Invalid acknowledgement data.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
         }
 
-        // Clean text (remove any "Label: " prefixes passed from previous screens)
-        fun clean(v: String) = v.replace(Regex("(?i)^\\s*[a-z ]+:\\s*"), "").trim()
+        bindUI()
+        setupSubmit()
+    }
 
-        val cName = clean(name)
-        val cReg = clean(reg)
-        val cRoll = clean(roll)
-        val cDept = clean(dept)
-        val cSem = clean(sem)
-        val cParent = clean(parent)
-        val cCollege = clean(collegeName)
+    // ---------------- UI ----------------
+    private fun bindUI() {
+        val u = user!!
 
-        // Fill summary UI
-        binding.tvName.text = cName
-        binding.tvReg.text = cReg
-        binding.tvRoll.text = cRoll
-        binding.tvDept.text = cDept
-        binding.tvSem.text = cSem
-        binding.tvParent.text = cParent
-        binding.tvCollege.text = cCollege
-        binding.tvArrearFlag.text = if (hasArrears) "Yes ($arrearsCount)" else "No"
+        binding.tvName.text = u.name
+        binding.tvReg.text = u.registerNo
+        binding.tvRoll.text = u.rollNo
+        binding.tvDept.text = u.department
+        binding.tvSem.text = u.semester
+        binding.tvParent.text = u.parentName
+        binding.tvCollege.text = collegeName
 
-        // ✅ SUBMIT → (1) fire-and-forget save to Firebase, (2) navigate to Certificate
+        binding.tvArrearFlag.text =
+            if (hasArrears || arrearsCount > 0) "Yes ($arrearsCount)" else "No"
+    }
+
+    // ---------------- SUBMIT LOGIC ----------------
+    private fun setupSubmit() {
         binding.btnSubmit.setOnClickListener {
+
             if (!binding.cbAcknowledge.isChecked) {
-                Toast.makeText(this, "Please confirm these details.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please confirm the details.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // (1) Save to Firebase (non-blocking)
-            saveAcknowledgementToFirebase(
-                name = cName,
-                reg = cReg,
-                roll = cRoll,
-                dept = cDept,
-                sem = cSem,
-                parent = cParent,
-                college = cCollege,
-                hasArrears = hasArrears,
-                arrearsCount = arrearsCount,
-                signatureUri = signatureUri
+            val u = user!!
+            val finalHasArrears = hasArrears || arrearsCount > 0
+            val signedOn = dateFormat.format(Date())
+
+            // ✅ Upload signature + save acknowledgement
+            saveAckFirebase(
+                u = u,
+                hasArrears = finalHasArrears,
+                arrears = arrearsCount,
+                signedOn = signedOn,
+                sigUri = signatureUri
             )
 
-            // (2) Go to Certificate screen
-            val i = Intent(this, CertificateActivity::class.java).apply {
-                putExtra("name", cName)
-                putExtra("reg", cReg)
-                putExtra("roll", cRoll)
-                putExtra("dept", cDept)
-                putExtra("sem", cSem)
-                putExtra("parent", cParent)
-                putExtra("collegeName", cCollege)
-                putExtra("hasArrears", hasArrears)
-                putExtra("arrearsCount", arrearsCount)
-                putExtra("signature_uri", signatureUri)
-                putExtra("signed_on", signedOn)
-                putExtra("profile_photo_uri", profilePhotoUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(i)
+            // ✅ Update RTDB workflow
+            updateWorkflow(finalHasArrears)
+
+            // ✅ Go to Certificate screen
+            goToCertificate(
+                user = u,
+                hasArrears = finalHasArrears,
+                arrearsCount = arrearsCount,
+                signedOn = signedOn
+            )
         }
     }
 
-    // =================== FIREBASE SAVE ===================
-    private fun saveAcknowledgementToFirebase(
-        name: String,
-        reg: String,
-        roll: String,
-        dept: String,
-        sem: String,
-        parent: String,
-        college: String,
+    // ---------------- FIREBASE SAVE ----------------
+
+    private fun saveAckFirebase(
+        u: User,
         hasArrears: Boolean,
-        arrearsCount: String,
-        signatureUri: Uri?
+        arrears: Int,
+        signedOn: String,
+        sigUri: Uri?
     ) {
-        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
+        val uid = studentId ?: return
 
-        // 1) If we have a signature image, upload to Storage → then write doc
-        if (signatureUri != null) {
+        if (sigUri != null) {
             val fileName = "ack_${System.currentTimeMillis()}.png"
-            val ref = storage.reference.child("users/$uid/acknowledgements/$fileName")
+            val ref = storage.reference.child("users/$uid/ack/$fileName")
 
-            ref.putFile(signatureUri)
+            ref.putFile(sigUri)
                 .continueWithTask { ref.downloadUrl }
                 .addOnSuccessListener { url ->
-                    writeAckDoc(
-                        uid = uid,
-                        name = name, reg = reg, roll = roll,
-                        dept = dept, sem = sem, parent = parent, college = college,
-                        hasArrears = hasArrears, arrearsCount = arrearsCount,
-                        signatureUrl = url.toString()
-                    )
+                    writeAckDoc(u, url.toString(), hasArrears, arrears, signedOn)
                 }
                 .addOnFailureListener {
-                    // upload failed → still write doc without URL
-                    writeAckDoc(
-                        uid = uid,
-                        name = name, reg = reg, roll = roll,
-                        dept = dept, sem = sem, parent = parent, college = college,
-                        hasArrears = hasArrears, arrearsCount = arrearsCount,
-                        signatureUrl = ""
-                    )
+                    writeAckDoc(u, "", hasArrears, arrears, signedOn)
                 }
         } else {
-            // No signature image → just write doc
-            writeAckDoc(
-                uid = uid,
-                name = name, reg = reg, roll = roll,
-                dept = dept, sem = sem, parent = parent, college = college,
-                hasArrears = hasArrears, arrearsCount = arrearsCount,
-                signatureUrl = ""
-            )
+            writeAckDoc(u, "", hasArrears, arrears, signedOn)
         }
     }
 
     private fun writeAckDoc(
-        uid: String,
-        name: String,
-        reg: String,
-        roll: String,
-        dept: String,
-        sem: String,
-        parent: String,
-        college: String,
+        u: User,
+        sigUrl: String,
         hasArrears: Boolean,
-        arrearsCount: String,
-        signatureUrl: String
+        arrears: Int,
+        signedOn: String
     ) {
-        val fallbackSignedOn = if (signedOn.isNotBlank()) signedOn
-        else SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+        val uid = studentId ?: return
 
         val data = hashMapOf(
-            "name" to name,
-            "registerNo" to reg,
-            "rollNo" to roll,
-            "department" to dept,
-            "semester" to sem,
-            "parentName" to parent,
-            "collegeName" to college,
+            "name" to u.name,
+            "registerNo" to u.registerNo,
+            "rollNo" to u.rollNo,
+            "department" to u.department,
+            "semester" to u.semester,
+            "parentName" to u.parentName,
+            "collegeName" to collegeName,
             "hasArrears" to hasArrears,
-            "arrearsCount" to arrearsCount,
-            "signatureUrl" to signatureUrl,          // Firebase Storage URL (may be empty on failure)
-            "profilePhotoUri" to (profilePhotoUri ?: ""), // whatever was passed (may be local uri)
-            "signedOn" to fallbackSignedOn,
+            "arrearsCount" to arrears,
+            "signatureUrl" to sigUrl,
+            "profilePhotoUri" to (profilePhotoUri?.toString() ?: ""),
+            "signedOn" to signedOn,
             "createdAt" to FieldValue.serverTimestamp()
         )
 
@@ -217,7 +178,43 @@ class AcknowledgementActivity : AppCompatActivity() {
             .document(uid)
             .collection("acknowledgements")
             .add(data)
-            .addOnSuccessListener { /* no-op */ }
-            .addOnFailureListener { /* no-op */ }
+    }
+
+    // ---------------- WORKFLOW UPDATE ----------------
+    private fun updateWorkflow(isArrear: Boolean) {
+        val uid = studentId ?: return
+        val certType = if (isArrear) "ARREAR" else "FINAL"
+
+        val workflow = mapOf(
+            "detailsSaved" to true,
+            "ackPending" to false,
+            "ackCompleted" to true,
+            "ackCompletedAt" to System.currentTimeMillis(),
+            "certPending" to true,
+            "certType" to certType
+        )
+
+        FirebaseRepo.rtdb.child("details").child(uid).child("workflow").updateChildren(workflow)
+    }
+
+    // ---------------- NAVIGATE TO CERTIFICATE ----------------
+    private fun goToCertificate(
+        user: User,
+        hasArrears: Boolean,
+        arrearsCount: Int,
+        signedOn: String
+    ) {
+        startActivity(Intent(this, CertificateActivity::class.java).apply {
+
+            putExtra("user", user)
+            putExtra("hasArrears", hasArrears)
+            putExtra("arrearsCount", arrearsCount)
+            putExtra("collegeName", collegeName)
+            putExtra("signature_uri", signatureUri)
+            putExtra("signed_on", signedOn)
+            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        })
     }
 }

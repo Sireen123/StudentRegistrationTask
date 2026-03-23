@@ -20,14 +20,14 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
             android:layout_weight="1"
+            android:layout_marginStart="10dp"
             android:orientation="vertical"
-            android:padding="20dp"
             android:background="#FFFFFF"
-            android:elevation="4dp">
+            android:elevation="4dp"
+            android:padding="20dp">
 
-            <!-- ✅ PROFILE PHOTO TOP‑RIGHT -->
+            <!-- PROFILE PHOTO TOP‑RIGHT -->
             <ImageView
                 android:id="@+id/imgProfile"
                 android:layout_width="110dp"
@@ -39,7 +39,7 @@
                 android:background="@drawable/profile_border"
                 android:visibility="gone" />
 
-            <!-- LOGO TOP-LEFT -->
+            <!-- Optional logo -->
             <ImageView
                 android:id="@+id/imgLogo"
                 android:layout_width="60dp"
@@ -130,7 +130,7 @@
                 android:paddingTop="4dp"
                 android:layout_gravity="center" />
 
-            <!-- ✅ QR Code inside certificate -->
+            <!-- QR Code -->
             <ImageView
                 android:id="@+id/imgQr"
                 android:layout_width="160dp"
@@ -140,7 +140,7 @@
                 android:contentDescription="QR"
                 android:padding="4dp" />
 
-            <!-- ✅ “Scan to verify” -->
+            <!-- “Scan to verify” -->
             <TextView
                 android:id="@+id/tvScanToVerify"
                 android:layout_width="wrap_content"

@@ -1,9 +1,12 @@
 package com.example.studentregistration.data
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(
     tableName = "users",
     indices = [Index(value = ["email"], unique = true)]
@@ -29,6 +32,5 @@ data class User(
     val role: String,
     val feesPaid: String = "0",
 
-
     val profilePhoto: String? = null
-)
+) : Parcelable

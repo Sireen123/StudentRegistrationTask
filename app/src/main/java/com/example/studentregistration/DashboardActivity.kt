@@ -2,30 +2,15 @@ package com.example.studentregistration
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.studentregistration.adapter.FaqAdapter
+import com.example.studentregistration.adapter.DashboardAdapter
 import com.example.studentregistration.data.FirebaseRepo
-import com.example.studentregistration.model.FaqItem
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
-import kotlin.math.roundToInt
+import com.example.studentregistration.data.User
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -36,161 +21,134 @@ class DashboardActivity : AppCompatActivity() {
         "Library", "Time Table", "Transport", "Outing"
     )
 
-    private var userRef: DatabaseReference? = null
-    private var userListener: ValueEventListener? = null
+    private var user: User? = null
+    private var hasArrears = false
+    private var arrearsCount = 0
+    private var collegeName = ""
+    private var studentId: String? = null
+    private var loadingUser = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        WindowCompat.setDecorFitsSystemWindows(window, true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        val toolbar = findViewById<MaterialToolbar?>(R.id.toolbar)
-        toolbar?.let {
-            setSupportActionBar(it)
-            supportActionBar?.title = "Student Dashboard"
+        // From registration
+        user = intent.getParcelableExtra("user")
+        hasArrears = intent.getBooleanExtra("hasArrears", false)
+        arrearsCount = intent.getIntExtra("arrearsCount", 0)
+        collegeName = intent.getStringExtra("collegeName") ?: ""
 
-            ViewCompat.setOnApplyWindowInsetsListener(it) { v, insets ->
-                val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-                v.updatePadding(top = statusBars.top)
-                insets
-            }
+        // Login path → user not passed
+        studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
+            ?: FirebaseRepo.auth.currentUser?.uid
+
+        findViewById<TextView>(R.id.tvSubtitle).text =
+            user?.name ?: "Loading..."
+
+        // Load full user data when login
+        if (user == null && studentId != null) {
+            loadUser(studentId!!)
         }
 
-        findViewById<TextView?>(R.id.tvSubtitle)?.text =
-            intent.getStringExtra("email_from_login") ?: "Welcome..."
+        setupDashboardGrid()
+        setupLogout()
+    }
 
-        // Logout
-        findViewById<Button?>(R.id.btnLogout)?.setOnClickListener {
-            userListener?.let { listener -> userRef?.removeEventListener(listener) }
+    private fun loadUser(uid: String) {
+        if (loadingUser) return
+        loadingUser = true
+
+        FirebaseRepo.rtdb.child("users").child(uid).get()
+            .addOnSuccessListener { snap ->
+
+                if (!snap.exists()) {
+                    Toast.makeText(this, "User not found.", Toast.LENGTH_SHORT).show()
+                    loadingUser = false
+                    return@addOnSuccessListener
+                }
+
+                user = User(
+                    name = snap.child("name").value.toString(),
+                    registerNo = snap.child("registerNo").value.toString(),
+                    rollNo = snap.child("rollNo").value.toString(),
+                    address = snap.child("address").value.toString(),
+                    phone = snap.child("phone").value.toString(),
+                    email = snap.child("email").value.toString(),
+                    password = "",
+                    dob = snap.child("dob").value.toString(),
+                    gender = snap.child("gender").value.toString(),
+                    parentName = snap.child("parentName").value.toString(),
+                    department = snap.child("department").value.toString(),
+                    semester = snap.child("semester").value.toString(),
+                    role = snap.child("role").value.toString(),
+                    feesPaid = snap.child("feesPaid").value.toString(),
+                    profilePhoto = snap.child("profilePhoto").value?.toString()
+                )
+
+                hasArrears =
+                    snap.child("hasArrears").value as? Boolean ?: false
+
+                arrearsCount =
+                    (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
+
+                collegeName =
+                    snap.child("collegeName").value?.toString() ?: ""
+
+                findViewById<TextView>(R.id.tvSubtitle).text = user?.name ?: "Welcome"
+
+                loadingUser = false
+            }
+            .addOnFailureListener {
+                loadingUser = false
+                Toast.makeText(this, "Unable to load profile", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun setupDashboardGrid() {
+        val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
+        rv.layoutManager = GridLayoutManager(this, 2)
+        rv.adapter = DashboardAdapter(items) { pos -> handleClick(pos) }
+    }
+
+    private fun setupLogout() {
+        findViewById<Button>(R.id.btnLogout).setOnClickListener {
             FirebaseRepo.auth.signOut()
-
-            val intent = Intent(this, StartActivity::class.java)
-            intent.addFlags(
-                Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                        Intent.FLAG_ACTIVITY_NEW_TASK
-            )
-            startActivity(intent)
+            startActivity(Intent(this, StartActivity::class.java))
             finish()
         }
-
-        // Recycler Grid
-        val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
-        val span = 2
-        rv.layoutManager = GridLayoutManager(this, span)
-        rv.adapter = DashboardAdapter(items) { handleClick(it) }
-        rv.setHasFixedSize(true)
-        rv.addItemDecoration(GridSpacingItemDecoration(span, dpToPx(12), true))
     }
 
-    override fun onStart() {
-        super.onStart()
+    private fun handleClick(pos: Int) {
+        when (pos) {
 
-        val tv = findViewById<TextView?>(R.id.tvSubtitle)
-        tv?.text = "Welcome..."
-
-        val uid = FirebaseRepo.auth.currentUser?.uid ?: return
-        val ref = FirebaseRepo.rtdb.child("users").child(uid)
-
-        userListener?.let { listener -> userRef?.removeEventListener(listener) }
-        userRef = ref
-
-        userListener = object : ValueEventListener {
-            override fun onDataChange(snap: DataSnapshot) {
-                val name = snap.child("name").getValue(String::class.java)
-                val email = snap.child("email").getValue(String::class.java)
-
-                tv?.text = when {
-                    !name.isNullOrBlank() -> name
-                    !email.isNullOrBlank() -> email
-                    else -> "Welcome"
+            2 -> {   // ✅ MY DETAILS
+                val uid = studentId ?: FirebaseRepo.auth.currentUser?.uid
+                if (uid == null) {
+                    Toast.makeText(this, "Login required.", Toast.LENGTH_SHORT).show()
+                    return
                 }
+
+                // still loading?
+                if (user == null) {
+                    Toast.makeText(this, "Loading profile…", Toast.LENGTH_SHORT).show()
+                    loadUser(uid)
+                    return
+                }
+
+                openDetails()
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                tv?.text = "Welcome"
-            }
-        }
-
-        ref.addValueEventListener(userListener!!)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        userListener?.let { listener -> userRef?.removeEventListener(listener) }
-        userListener = null
-        userRef = null
-    }
-
-    private fun handleClick(position: Int) {
-        when (position) {
-            0 -> startActivity(Intent(this, FeesListActivity::class.java))
-            1 -> showFaqBottomSheet()
-            2 -> startActivity(Intent(this, DetailsActivity::class.java))
-            3 -> startActivity(Intent(this, ReferStudentActivity::class.java))
             else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun showFaqBottomSheet() {
-        val dialog = BottomSheetDialog(this)
-        val view = LayoutInflater.from(this).inflate(R.layout.faq_bottom_sheet, null, false)
-        dialog.setContentView(view)
-
-        dialog.setOnShowListener {
-            val sheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-            sheet?.let {
-                val behavior = BottomSheetBehavior.from(it)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                behavior.peekHeight = (resources.displayMetrics.heightPixels * 0.65f).toInt()
-            }
-        }
-
-        view.findViewById<ImageView?>(R.id.btnClose)?.setOnClickListener { dialog.dismiss() }
-
-        val rvFaq = view.findViewById<RecyclerView>(R.id.rvFaq)
-        rvFaq.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        rvFaq.adapter = FaqAdapter(
-            listOf(
-                FaqItem("How to create account?", "Tap New User and fill details."),
-                FaqItem("Why OTP?", "For account security."),
-                FaqItem("Invalid input?", "Fill all fields properly."),
-                FaqItem("Why select department?", "Required for certificate."),
-                FaqItem("Where is PDF saved?", "Downloads folder.")
-            )
-        )
-
-        dialog.show()
-    }
-
-    private fun dpToPx(dp: Int): Int =
-        (dp * resources.displayMetrics.density).roundToInt()
-
-    private class GridSpacingItemDecoration(
-        private val spanCount: Int,
-        private val spacingPx: Int,
-        private val includeEdge: Boolean
-    ) : RecyclerView.ItemDecoration() {
-
-        override fun getItemOffsets(
-            outRect: android.graphics.Rect,
-            view: View,
-            parent: RecyclerView,
-            state: RecyclerView.State
-        ) {
-            val position = parent.getChildAdapterPosition(view)
-            val column = position % spanCount
-
-            if (includeEdge) {
-                outRect.left = spacingPx - column * spacingPx / spanCount
-                outRect.right = (column + 1) * spacingPx / spanCount
-                if (position < spanCount) outRect.top = spacingPx
-                outRect.bottom = spacingPx
-            } else {
-                outRect.left = column * spacingPx / spanCount
-                outRect.right = spacingPx - (column + 1) * spacingPx / spanCount
-                if (position >= spanCount) outRect.top = spacingPx
-            }
-        }
+    private fun openDetails() {
+        startActivity(Intent(this, DetailsActivity::class.java).apply {
+            putExtra("user", user)
+            putExtra("hasArrears", hasArrears)
+            putExtra("arrearsCount", arrearsCount)
+            putExtra("collegeName", collegeName)
+            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+        })
     }
 }

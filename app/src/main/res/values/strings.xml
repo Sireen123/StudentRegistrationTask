@@ -127,6 +127,14 @@ fees &amp; attendance—fast.</string>
 
 
 
+        <string name="certificate_title">Certificate</string>
+        <string name="back_to_dashboard">Back</string>
+        <string name="download_as_pdf">Download as PDF</string>
+        <string name="share_certificate_pdf">Share Certificate PDF</string>
+
+
+
+
 
         <!-- Accessibility -->
         <string name="get_started">Get Started</string>
