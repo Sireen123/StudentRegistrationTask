@@ -20,11 +20,10 @@ import com.example.studentregistration.data.AppDatabase
 import com.example.studentregistration.data.LoginViewModel
 import com.example.studentregistration.data.LoginViewModelFactory
 import com.example.studentregistration.data.UserRepository
-import com.example.studentregistration.data.FirebaseRepo            // ✅ RTDB + Auth
+import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityLoginBinding
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 
-// Firebase (OTP + Email/Password)
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -43,7 +42,6 @@ class LoginActivity : AppCompatActivity() {
     private var hasNavigated = false
     private var otpVerified = false
 
-    // Firebase
     private lateinit var auth: FirebaseAuth
 
     private var verificationId: String? = null
@@ -56,30 +54,30 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Back Bar
+        // ✅ Back Bar
         val backBtn = findViewById<ImageButton>(R.id.btnBack)
         val title = findViewById<TextView>(R.id.tvScreenTitle)
         title?.text = "Login"
         backBtn?.setOnClickListener { navigateUpToStart() }
         onBackPressedDispatcher.addCallback(this) { navigateUpToStart() }
 
-        // DB + ViewModel
+        // ✅ Room + ViewModel
         val dao = AppDatabase.getDatabase(this).userDao()
         val repo = UserRepository(dao)
         val factory = LoginViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory)[LoginViewModel::class.java]
 
-        // Firebase
+        // ✅ Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Prefill email
+        // Prefill last email
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         binding.etEmail.setText(prefs.getString("last_email", ""))
 
-        // Phone number — digits only
+        // Phone only digits
         binding.etPhone.inputType = InputType.TYPE_CLASS_NUMBER
 
-        // Country picker setup
+        // Country code picker
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
         binding.countryCodePicker.setOnCountryChangeListener {
@@ -88,7 +86,6 @@ class LoginActivity : AppCompatActivity() {
             otpVerified = false
         }
 
-        // TextWatcher
         binding.etPhone.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -98,7 +95,7 @@ class LoginActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // SEND OTP
+        // ✅ SEND OTP
         binding.btnSendOtp.setOnClickListener {
             if (!validatePhoneForOtp()) return@setOnClickListener
 
@@ -119,7 +116,7 @@ class LoginActivity : AppCompatActivity() {
             )
         }
 
-        // LOGIN BUTTON
+        // ✅ LOGIN BUTTON
         binding.btnLogin.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
             if (!otpVerified) {
@@ -134,67 +131,87 @@ class LoginActivity : AppCompatActivity() {
             binding.btnLogin.isEnabled = false
 
             lifecycleScope.launch {
-                // Try local Room first (existing behavior)
                 viewModel.login(email, password)
             }
         }
 
-        // LOGIN RESULT
+        // ✅ LOGIN RESULT OBSERVER
         viewModel.loginResult.observe(this) { user ->
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return@observe
 
             val emailNow = binding.etEmail.text.toString().trim().lowercase()
             val passwordNow = binding.etPassword.text.toString().trim()
 
+            // ✅ LOCAL ROOM LOGIN SUCCESS
             if (user != null) {
                 if (hasNavigated) return@observe
                 hasNavigated = true
 
-                // Local success → go
-                startActivity(
-                    Intent(this, DashboardActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra("email_from_login", user.email)
-                    }
-                )
+                val uid = FirebaseRepo.auth.currentUser?.uid
+
+                if (uid != null) {
+                    startActivity(
+                        Intent(this, DashboardActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            putExtra(MainActivity.EXTRA_STUDENT_ID, uid)  // ✅ FIXED
+                        }
+                    )
+                } else {
+                    // If Room login, but Firebase not logged in → login manually
+                    Toast.makeText(this, "Firebase login missing, logging in...", Toast.LENGTH_SHORT).show()
+
+                    auth.signInWithEmailAndPassword(emailNow, passwordNow)
+                        .addOnSuccessListener { res ->
+                            val realUid = res.user?.uid!!
+                            startActivity(
+                                Intent(this, DashboardActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    putExtra(MainActivity.EXTRA_STUDENT_ID, realUid)  // ✅ FIXED
+                                }
+                            )
+                        }
+                }
                 finish()
-            } else {
-                // 🔁 NEW: If local fails, try Firebase Auth (cloud) login
-                auth.signInWithEmailAndPassword(emailNow, passwordNow)
-                    .addOnSuccessListener { res ->
-                        val uid = res.user?.uid ?: ""
-
-                        // Prefetch from RTDB (non-blocking)
-                        FirebaseRepo.rtdb.child("users").child(uid).get()
-                            .addOnSuccessListener { snap ->
-                                val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
-                                sp.edit()
-                                    .putString("uid", uid)
-                                    .putString("name", snap.child("name").getValue(String::class.java))
-                                    .putString("email", snap.child("email").getValue(String::class.java))
-                                    .putString("phone", snap.child("phone").getValue(String::class.java))
-                                    .apply()
-                            }
-
-                        if (hasNavigated) return@addOnSuccessListener
-                        hasNavigated = true
-                        startActivity(
-                            Intent(this, DashboardActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                putExtra("email_from_login", emailNow)
-                            }
-                        )
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
-                        binding.btnLogin.isEnabled = true
-                    }
+                return@observe
             }
+
+            // ✅ IF LOCAL FAILS → Try Firebase Auth
+            auth.signInWithEmailAndPassword(emailNow, passwordNow)
+                .addOnSuccessListener { res ->
+                    val uid = res.user?.uid ?: ""
+
+                    // Prefetch RTDB data
+                    FirebaseRepo.rtdb.child("users").child(uid).get()
+                        .addOnSuccessListener { snap ->
+                            val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
+                            sp.edit()
+                                .putString("uid", uid)
+                                .putString("name", snap.child("name").getValue(String::class.java))
+                                .putString("email", snap.child("email").getValue(String::class.java))
+                                .putString("phone", snap.child("phone").getValue(String::class.java))
+                                .apply()
+                        }
+
+                    if (hasNavigated) return@addOnSuccessListener
+                    hasNavigated = true
+
+                    // ✅ FIXED — send UID to Dashboard
+                    startActivity(
+                        Intent(this, DashboardActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
+                        }
+                    )
+                    finish()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
+                    binding.btnLogin.isEnabled = true
+                }
         }
     }
 
-    // BACK
+    // ✅ Back to start
     private fun navigateUpToStart() {
         startActivity(
             Intent(this, StartActivity::class.java).apply {
@@ -208,7 +225,7 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    // VALIDATION
+    // ✅ Input validation
     private fun validateInputs(): Boolean {
         val email = binding.etEmail.text.toString().trim()
         val phoneText = binding.etPhone.text.toString().trim()
@@ -222,26 +239,8 @@ class LoginActivity : AppCompatActivity() {
         if (phoneText.count { it.isDigit() } < 10)
             return err(binding.etPhone, "Phone must have minimum 10 digits")
 
-        val region = binding.countryCodePicker.selectedCountryNameCode
-        val digits = phoneText.filter { it.isDigit() }
-
-        if (region == "IN") {
-            if (!digits.matches(Regex("^[6-9]\\d{9}$")))
-                return err(binding.etPhone, "Enter valid Indian number")
-
-            val util = PhoneNumberUtil.getInstance()
-            try {
-                val proto = util.parse("+91$digits", "IN")
-                if (!util.isValidNumberForRegion(proto, "IN"))
-                    return err(binding.etPhone, "Enter valid Indian number")
-            } catch (_: Exception) {
-                return err(binding.etPhone, "Enter valid Indian number")
-            }
-        }
-
         if (password.isEmpty()) return err(binding.etPassword, "Password required")
-        // (Optional) If you want strict check here too:
-        // if (password.length < 6) return err(binding.etPassword, "Min 6 characters")
+
         return true
     }
 
@@ -297,7 +296,7 @@ class LoginActivity : AppCompatActivity() {
         binding.tvPhoneCounter.text = "$digits / $lastAppliedMax"
     }
 
-    // OTP send & verify
+    // ✅ OTP send
     private fun sendOtp(
         e164: String,
         onVerified: () -> Unit,
@@ -344,6 +343,7 @@ class LoginActivity : AppCompatActivity() {
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
+    // ✅ OTP verification
     private fun signInWithPhoneCredential(
         credential: PhoneAuthCredential,
         onVerified: () -> Unit,

@@ -66,13 +66,11 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
 
-        // Login path → user=null => load from Firebase
         if (user == null) loadUserFromFirebase(uid!!) else bindUI()
 
         setupSignature()
     }
 
-    // ✅ Fetch RTDB user when logging in
     private fun loadUserFromFirebase(uid: String) {
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
@@ -111,7 +109,6 @@ class DetailsActivity : AppCompatActivity() {
             }
     }
 
-    // ✅ Room fallback (offline)
     private fun loadFromLocalRoom() {
         val email = session.currentUserEmail ?: return
         val dao = AppDatabase.getDatabase(this).userDao()
@@ -125,7 +122,6 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Bind User data to UI
     private fun bindUI() {
         val u = user ?: return
 
@@ -142,18 +138,9 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvSem.text = "Semester: ${u.semester}"
         binding.tvCollege.text = "College: $collegeName"
 
-        if (!u.profilePhoto.isNullOrBlank()) {
-            try {
-                binding.imgProfile.setImageURI(Uri.parse(u.profilePhoto))
-            } catch (_: Exception) {
-                binding.imgProfile.setImageDrawable(null)
-            }
-        }
-
         updateFeesUI(u)
     }
 
-    // ✅ Fee progress indicator
     private fun updateFeesUI(u: User) {
         val total = when (u.department) {
             "Computer Science" -> 75000
@@ -200,7 +187,6 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Signature saving
     private fun setupSignature() {
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
@@ -239,6 +225,9 @@ class DetailsActivity : AppCompatActivity() {
             putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         })
+
+        // ✅ MUST HAVE → Fixes your issue
+        finish()
     }
 
     private fun toast(msg: String) =

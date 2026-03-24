@@ -4,8 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studentregistration.data.FirebaseRepo
@@ -38,12 +36,14 @@ class AcknowledgementActivity : AppCompatActivity() {
         binding = ActivityAcknowledgementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Toolbar
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.tvScreenTitle).text = "Acknowledgement"
+        // ✅ FIXED BACK BAR
+        binding.includeBack.btnBack.setOnClickListener {
+            finishAffinity()   // No return to Dashboard
+        }
+        binding.includeBack.tvScreenTitle.text = "Acknowledgement"
         binding.tvTitle.text = "ACKNOWLEDGEMENT"
 
-        // ✅ Receive parcelable User
+        // ✅ Get Data
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
@@ -61,7 +61,7 @@ class AcknowledgementActivity : AppCompatActivity() {
             ?: FirebaseRepo.auth.currentUser?.uid
 
         if (user == null || studentId == null) {
-            Toast.makeText(this, "Invalid acknowledgement data.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Invalid acknowledgement data", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -70,7 +70,6 @@ class AcknowledgementActivity : AppCompatActivity() {
         setupSubmit()
     }
 
-    // ---------------- UI ----------------
     private fun bindUI() {
         val u = user!!
 
@@ -86,12 +85,11 @@ class AcknowledgementActivity : AppCompatActivity() {
             if (hasArrears || arrearsCount > 0) "Yes ($arrearsCount)" else "No"
     }
 
-    // ---------------- SUBMIT LOGIC ----------------
     private fun setupSubmit() {
         binding.btnSubmit.setOnClickListener {
 
             if (!binding.cbAcknowledge.isChecked) {
-                Toast.makeText(this, "Please confirm the details.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please confirm the details", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -99,7 +97,6 @@ class AcknowledgementActivity : AppCompatActivity() {
             val finalHasArrears = hasArrears || arrearsCount > 0
             val signedOn = dateFormat.format(Date())
 
-            // ✅ Upload signature + save acknowledgement
             saveAckFirebase(
                 u = u,
                 hasArrears = finalHasArrears,
@@ -108,10 +105,8 @@ class AcknowledgementActivity : AppCompatActivity() {
                 sigUri = signatureUri
             )
 
-            // ✅ Update RTDB workflow
             updateWorkflow(finalHasArrears)
 
-            // ✅ Go to Certificate screen
             goToCertificate(
                 user = u,
                 hasArrears = finalHasArrears,
@@ -120,8 +115,6 @@ class AcknowledgementActivity : AppCompatActivity() {
             )
         }
     }
-
-    // ---------------- FIREBASE SAVE ----------------
 
     private fun saveAckFirebase(
         u: User,
@@ -156,8 +149,6 @@ class AcknowledgementActivity : AppCompatActivity() {
         arrears: Int,
         signedOn: String
     ) {
-        val uid = studentId ?: return
-
         val data = hashMapOf(
             "name" to u.name,
             "registerNo" to u.registerNo,
@@ -175,12 +166,11 @@ class AcknowledgementActivity : AppCompatActivity() {
         )
 
         FirebaseRepo.db.collection("users")
-            .document(uid)
+            .document(studentId!!)
             .collection("acknowledgements")
             .add(data)
     }
 
-    // ---------------- WORKFLOW UPDATE ----------------
     private fun updateWorkflow(isArrear: Boolean) {
         val uid = studentId ?: return
         val certType = if (isArrear) "ARREAR" else "FINAL"
@@ -197,7 +187,6 @@ class AcknowledgementActivity : AppCompatActivity() {
         FirebaseRepo.rtdb.child("details").child(uid).child("workflow").updateChildren(workflow)
     }
 
-    // ---------------- NAVIGATE TO CERTIFICATE ----------------
     private fun goToCertificate(
         user: User,
         hasArrears: Boolean,
@@ -205,7 +194,6 @@ class AcknowledgementActivity : AppCompatActivity() {
         signedOn: String
     ) {
         startActivity(Intent(this, CertificateActivity::class.java).apply {
-
             putExtra("user", user)
             putExtra("hasArrears", hasArrears)
             putExtra("arrearsCount", arrearsCount)
@@ -213,8 +201,9 @@ class AcknowledgementActivity : AppCompatActivity() {
             putExtra("signature_uri", signatureUri)
             putExtra("signed_on", signedOn)
             putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
-
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         })
+
+        finish() // ✅ closes acknowledgement
     }
 }

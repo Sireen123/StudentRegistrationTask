@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- App cache images (profile photos copied here, signatures, temp files) -->
+    <!-- ✅ FIX 1: Allow ALL files in app cache -->
     <cache-path
-        name="cache_images"
-        path="images/" />
+        name="app_cache"
+        path="." />
 
-    <!-- App private files (e.g., exported PDFs/images you keep persistently) -->
+    <!-- ✅ FIX 2: Allow ALL files in app files directory -->
     <files-path
-        name="files_images"
-        path="images/" />
+        name="app_files"
+        path="." />
 
-    <!-- Optional: external app-specific cache (no permission needed, auto-cleanable) -->
+    <!-- ✅ Optional: Allow external-cache files -->
     <external-cache-path
-        name="ext_cache_docs"
-        path="docs/" />
+        name="ext_cache"
+        path="." />
 
-    <!-- Optional: external app-specific files (scoped, not public Downloads) -->
+    <!-- ✅ Optional: Allow external-files directory -->
     <external-files-path
-        name="ext_files_docs"
-        path="docs/" />
+        name="ext_files"
+        path="." />
 
 </paths>

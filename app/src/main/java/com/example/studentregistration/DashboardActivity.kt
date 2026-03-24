@@ -32,23 +32,22 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        // From registration
-        user = intent.getParcelableExtra("user")
-        hasArrears = intent.getBooleanExtra("hasArrears", false)
-        arrearsCount = intent.getIntExtra("arrearsCount", 0)
-        collegeName = intent.getStringExtra("collegeName") ?: ""
-
-        // Login path → user not passed
+        // ❗ ALWAYS RECEIVE UID
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
-        findViewById<TextView>(R.id.tvSubtitle).text =
-            user?.name ?: "Loading..."
-
-        // Load full user data when login
-        if (user == null && studentId != null) {
-            loadUser(studentId!!)
+        if (studentId == null) {
+            Toast.makeText(this, "Session expired. Login again.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, StartActivity::class.java))
+            finish()
+            return
         }
+
+        // ✅ Set temporary title
+        findViewById<TextView>(R.id.tvSubtitle).text = "Loading..."
+
+        // ✅ ALWAYS load user from Firebase for existing login
+        loadUser(studentId!!)
 
         setupDashboardGrid()
         setupLogout()
@@ -61,12 +60,14 @@ class DashboardActivity : AppCompatActivity() {
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
 
+                loadingUser = false
+
                 if (!snap.exists()) {
                     Toast.makeText(this, "User not found.", Toast.LENGTH_SHORT).show()
-                    loadingUser = false
                     return@addOnSuccessListener
                 }
 
+                // ✅ build user object
                 user = User(
                     name = snap.child("name").value.toString(),
                     registerNo = snap.child("registerNo").value.toString(),
@@ -85,18 +86,12 @@ class DashboardActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value?.toString()
                 )
 
-                hasArrears =
-                    snap.child("hasArrears").value as? Boolean ?: false
+                hasArrears = snap.child("hasArrears").value as? Boolean ?: false
+                arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
+                collegeName = snap.child("collegeName").value?.toString() ?: ""
 
-                arrearsCount =
-                    (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
-
-                collegeName =
-                    snap.child("collegeName").value?.toString() ?: ""
-
+                // ✅ Update UI
                 findViewById<TextView>(R.id.tvSubtitle).text = user?.name ?: "Welcome"
-
-                loadingUser = false
             }
             .addOnFailureListener {
                 loadingUser = false
@@ -121,24 +116,18 @@ class DashboardActivity : AppCompatActivity() {
     private fun handleClick(pos: Int) {
         when (pos) {
 
-            2 -> {   // ✅ MY DETAILS
-                val uid = studentId ?: FirebaseRepo.auth.currentUser?.uid
-                if (uid == null) {
-                    Toast.makeText(this, "Login required.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-
-                // still loading?
+            // ✅ 2 → My Details
+            2 -> {
                 if (user == null) {
-                    Toast.makeText(this, "Loading profile…", Toast.LENGTH_SHORT).show()
-                    loadUser(uid)
+                    Toast.makeText(this, "Profile loading... Try again", Toast.LENGTH_SHORT).show()
                     return
                 }
-
                 openDetails()
             }
 
-            else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
+            else -> {
+                Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
