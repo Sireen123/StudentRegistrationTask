@@ -11,15 +11,10 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
-import com.example.studentregistration.data.AppDatabase
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
 import com.example.studentregistration.databinding.ActivityDetailsBinding
 import com.github.gcacace.signaturepad.views.SignaturePad
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -28,8 +23,6 @@ import java.util.*
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
-    private lateinit var session: SessionPrefs
-
     private var uid: String? = null
     private var user: User? = null
     private var hasArrears = false
@@ -44,95 +37,81 @@ class DetailsActivity : AppCompatActivity() {
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        session = SessionPrefs(this)
+        binding.includeBack.tvScreenTitle.text = "My Details"
+        binding.includeBack.btnBack.setOnClickListener { finish() }
 
-        // Read incoming bundle
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
-        collegeName = intent.getStringExtra("collegeName") ?: (session.collegeName ?: "")
+        collegeName = intent.getStringExtra("collegeName") ?: ""
 
         uid = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
         if (uid == null) {
-            toast("Session lost. Please login again.")
+            toast("Session lost.")
             finish()
             return
         }
 
-        binding.includeBack.tvScreenTitle.text = "My Details"
-        binding.includeBack.btnBack.setOnClickListener { finish() }
-
         binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
 
-        if (user == null) loadUserFromFirebase(uid!!) else bindUI()
+        if (user == null) loadUserFromFirebase(uid!!)
+        else bindUI()
 
         setupSignature()
     }
 
+    // ✅✅ FIXED FAST FIREBASE LOADING
     private fun loadUserFromFirebase(uid: String) {
+
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
 
                 if (!snap.exists()) {
-                    loadFromLocalRoom()
+                    toast("User not found.")
                     return@addOnSuccessListener
                 }
 
                 user = User(
-                    name = snap.child("name").value.toString(),
-                    registerNo = snap.child("registerNo").value.toString(),
-                    rollNo = snap.child("rollNo").value.toString(),
-                    address = snap.child("address").value.toString(),
-                    phone = snap.child("phone").value.toString(),
-                    email = snap.child("email").value.toString(),
+                    name = snap.child("name").value as? String ?: "",
+                    registerNo = snap.child("registerNo").value as? String ?: "",
+                    rollNo = snap.child("rollNo").value as? String ?: "",
+                    address = snap.child("address").value as? String ?: "",
+                    phone = snap.child("phone").value as? String ?: "",
+                    email = snap.child("email").value as? String ?: "",
                     password = "",
-                    dob = snap.child("dob").value.toString(),
-                    gender = snap.child("gender").value.toString(),
-                    parentName = snap.child("parentName").value.toString(),
-                    department = snap.child("department").value.toString(),
-                    semester = snap.child("semester").value.toString(),
-                    role = snap.child("role").value.toString(),
-                    feesPaid = snap.child("feesPaid").value.toString(),
-                    profilePhoto = snap.child("profilePhoto").value?.toString()
+                    dob = snap.child("dob").value as? String ?: "",
+                    gender = snap.child("gender").value as? String ?: "",
+                    parentName = snap.child("parentName").value as? String ?: "",
+                    department = snap.child("department").value as? String ?: "",
+                    semester = snap.child("semester").value as? String ?: "",
+                    role = snap.child("role").value as? String ?: "",
+                    feesPaid = snap.child("feesPaid").value as? String ?: "",
+                    profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                hasArrears = snap.child("hasArrears").value as? Boolean ?: hasArrears
-                arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: arrearsCount
-                collegeName = snap.child("collegeName").value?.toString() ?: collegeName
-
-                bindUI()
+                // ✅ Optional workflow
+                FirebaseRepo.rtdb.child("details").child(uid).child("workflow").get()
+                    .addOnSuccessListener { wf ->
+                        hasArrears = wf.child("certArrear").value as? Boolean ?: false
+                        arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
+                        collegeName = snap.child("collegeName").value as? String ?: ""
+                        bindUI()
+                    }
+                    .addOnFailureListener { bindUI() }
             }
             .addOnFailureListener {
-                loadFromLocalRoom()
+                toast("Failed to load user.")
             }
-    }
-
-    private fun loadFromLocalRoom() {
-        val email = session.currentUserEmail ?: return
-        val dao = AppDatabase.getDatabase(this).userDao()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val u = dao.getUserByEmail(email)
-            withContext(Dispatchers.Main) {
-                if (u != null) { user = u; bindUI() }
-                else toast("Unable to load profile")
-            }
-        }
     }
 
     private fun bindUI() {
         val u = user ?: return
 
-        // ✅✅ PHOTO FIX ADDED HERE
         if (!u.profilePhoto.isNullOrEmpty()) {
-            try {
-                val uri = Uri.parse(u.profilePhoto)
-                binding.imgProfile.setImageURI(uri)
-            } catch (_: Exception) {
-                toast("Unable to load profile photo")
-            }
+            try { binding.imgProfile.setImageURI(Uri.parse(u.profilePhoto!!)) }
+            catch (_: Exception) {}
         }
 
         binding.tvName.text = "Name: ${u.name}"
@@ -166,7 +145,7 @@ class DetailsActivity : AppCompatActivity() {
         }
 
         val paid = u.feesPaid.toIntOrNull() ?: 0
-        val percent = if (total > 0) (paid * 100 / total) else 0
+        val percent = if (total > 0) paid * 100 / total else 0
 
         binding.tvPaidAmount.text = "₹$paid"
         binding.tvTotalAmount.text = "₹$total"
@@ -187,8 +166,9 @@ class DetailsActivity : AppCompatActivity() {
 
         repeat(10) { i ->
             val dot = View(this)
-            dot.layoutParams =
-                LinearLayout.LayoutParams(18, 18).apply { setMargins(5, 0, 5, 0) }
+            dot.layoutParams = LinearLayout.LayoutParams(18, 18).apply {
+                setMargins(5, 0, 5, 0)
+            }
             dot.setBackgroundResource(
                 if (i < filled) R.drawable.progress_dot_paid
                 else R.drawable.progress_dot_empty
@@ -198,6 +178,7 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     private fun setupSignature() {
+
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
             override fun onSigned() { binding.btnSubmit.isEnabled = true }
@@ -212,13 +193,13 @@ class DetailsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val tempSig = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
-            FileOutputStream(tempSig).use {
+            val temp = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
+            FileOutputStream(temp).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
 
             signatureUri =
-                FileProvider.getUriForFile(this, "$packageName.provider", tempSig)
+                FileProvider.getUriForFile(this, "$packageName.provider", temp)
 
             goAcknowledgement()
         }
@@ -235,7 +216,6 @@ class DetailsActivity : AppCompatActivity() {
             putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         })
-
         finish()
     }
 

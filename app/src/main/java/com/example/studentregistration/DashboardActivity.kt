@@ -4,12 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregistration.adapter.DashboardAdapter
 import com.example.studentregistration.adapter.FaqAdapter
@@ -22,10 +21,10 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 class DashboardActivity : AppCompatActivity() {
 
     private val items = listOf(
-        "Fees",            // 0
-        "FAQ",             // 1
-        "My Details",      // 2
-        "Refer a Student", // 3
+        "Fees",
+        "FAQ",
+        "My Details",
+        "Refer a Student",
         "Event Calendar",
         "Daily Attendance",
         "Hourly Attendance",
@@ -43,13 +42,20 @@ class DashboardActivity : AppCompatActivity() {
     private var arrearsCount = 0
     private var collegeName = ""
     private var studentId: String? = null
-    private var loadingUser = false
+
+    private var isDashboardReady = false   // ✅ prevents tapping before loading
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        // ✅ Get UID from Login/Registration
+        val subtitle = findViewById<TextView>(R.id.tvSubtitle)
+        val progress = findViewById<ProgressBar>(R.id.progressLoading)
+
+        progress.visibility = View.VISIBLE
+        subtitle.text = "Loading..."
+
+        // ✅ Get UID
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
@@ -60,62 +66,64 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        findViewById<TextView>(R.id.tvSubtitle).text = "Loading..."
-
-        // ✅ If user came from registration
+        // ✅ Get user from registration OR fetch from Firebase
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
         collegeName = intent.getStringExtra("collegeName") ?: ""
 
-        // ✅ If user is null (existing login) → load from Firebase
-        if (user == null) loadUser(studentId!!)
-        else findViewById<TextView>(R.id.tvSubtitle).text = user?.name
+        if (user == null) {
+            loadUserFromFirebase(studentId!!, progress, subtitle)
+        } else {
+            subtitle.text = user?.name
+            progress.visibility = View.GONE
+            isDashboardReady = true
+        }
 
         setupDashboardGrid()
         setupLogout()
     }
 
-    private fun loadUser(uid: String) {
-        if (loadingUser) return
-        loadingUser = true
+    // ✅ FIXED — Always load profile from /users
+    private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
 
-                loadingUser = false
-
                 if (!snap.exists()) {
                     Toast.makeText(this, "User not found.", Toast.LENGTH_SHORT).show()
+                    progress.visibility = View.GONE
                     return@addOnSuccessListener
                 }
 
                 user = User(
-                    name = snap.child("name").value.toString(),
-                    registerNo = snap.child("registerNo").value.toString(),
-                    rollNo = snap.child("rollNo").value.toString(),
-                    address = snap.child("address").value.toString(),
-                    phone = snap.child("phone").value.toString(),
-                    email = snap.child("email").value.toString(),
+                    name = snap.child("name").value as? String ?: "",
+                    registerNo = snap.child("registerNo").value as? String ?: "",
+                    rollNo = snap.child("rollNo").value as? String ?: "",
+                    address = snap.child("address").value as? String ?: "",
+                    phone = snap.child("phone").value as? String ?: "",
+                    email = snap.child("email").value as? String ?: "",
                     password = "",
-                    dob = snap.child("dob").value.toString(),
-                    gender = snap.child("gender").value.toString(),
-                    parentName = snap.child("parentName").value.toString(),
-                    department = snap.child("department").value.toString(),
-                    semester = snap.child("semester").value.toString(),
-                    role = snap.child("role").value.toString(),
-                    feesPaid = snap.child("feesPaid").value.toString(),
-                    profilePhoto = snap.child("profilePhoto").value?.toString()
+                    dob = snap.child("dob").value as? String ?: "",
+                    gender = snap.child("gender").value as? String ?: "",
+                    parentName = snap.child("parentName").value as? String ?: "",
+                    department = snap.child("department").value as? String ?: "",
+                    semester = snap.child("semester").value as? String ?: "",
+                    role = snap.child("role").value as? String ?: "",
+                    feesPaid = snap.child("feesPaid").value as? String ?: "",
+                    profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
                 hasArrears = snap.child("hasArrears").value as? Boolean ?: false
                 arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
-                collegeName = snap.child("collegeName").value?.toString() ?: ""
+                collegeName = snap.child("collegeName").value as? String ?: ""
 
-                findViewById<TextView>(R.id.tvSubtitle).text = user?.name
+                subtitle.text = user?.name
+                progress.visibility = View.GONE
+                isDashboardReady = true
             }
             .addOnFailureListener {
-                loadingUser = false
+                progress.visibility = View.GONE
                 Toast.makeText(this, "Unable to load profile.", Toast.LENGTH_SHORT).show()
             }
     }
@@ -123,7 +131,17 @@ class DashboardActivity : AppCompatActivity() {
     private fun setupDashboardGrid() {
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         rv.layoutManager = GridLayoutManager(this, 2)
-        rv.adapter = DashboardAdapter(items) { pos -> handleClick(pos) }
+
+        rv.adapter = DashboardAdapter(items) { pos ->
+
+            // ✅ Prevent clicks while loading
+            if (!isDashboardReady) {
+                Toast.makeText(this, "Loading your profile...", Toast.LENGTH_SHORT).show()
+                return@DashboardAdapter
+            }
+
+            handleClick(pos)
+        }
     }
 
     private fun setupLogout() {
@@ -137,19 +155,19 @@ class DashboardActivity : AppCompatActivity() {
     private fun handleClick(pos: Int) {
         when (pos) {
 
-            0 -> startActivity(Intent(this, FeesListActivity::class.java)) // ✅ Fees
+            0 -> startActivity(Intent(this, FeesListActivity::class.java))
 
-            1 -> showFaqBottomSheet()                                      // ✅ FAQ bottom sheet
+            1 -> showFaqBottomSheet()
 
-            2 -> {                                                         // ✅ My Details
+            2 -> {
                 if (user == null) {
-                    Toast.makeText(this, "Profile loading... try again.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Profile loading...", Toast.LENGTH_SHORT).show()
                     return
                 }
                 openDetails()
             }
 
-            3 -> startActivity(Intent(this, ReferStudentActivity::class.java)) // ✅ Refer Student
+            3 -> startActivity(Intent(this, ReferStudentActivity::class.java))
 
             else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
         }
@@ -165,13 +183,11 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
-    // ✅ **FAQ Bottom Sheet — SAME LOGIC AS StartActivity**
     private fun showFaqBottomSheet() {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)
         dialog.setContentView(view)
 
-        // Expand on open
         dialog.setOnShowListener {
             val sheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             sheet?.let {
@@ -181,12 +197,10 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        // Close button
-        view.findViewById<ImageView>(R.id.btnClose)?.setOnClickListener { dialog.dismiss() }
+        view.findViewById<View>(R.id.btnClose)?.setOnClickListener { dialog.dismiss() }
 
-        // ✅ FAQ LIST (same as StartActivity)
         val rv = view.findViewById<RecyclerView>(R.id.rvFaq)
-        rv.layoutManager = LinearLayoutManager(this)
+        rv.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
 
         rv.adapter = FaqAdapter(
             listOf(
