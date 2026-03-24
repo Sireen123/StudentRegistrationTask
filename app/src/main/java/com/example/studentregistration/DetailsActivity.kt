@@ -125,6 +125,16 @@ class DetailsActivity : AppCompatActivity() {
     private fun bindUI() {
         val u = user ?: return
 
+        // ✅✅ PHOTO FIX ADDED HERE
+        if (!u.profilePhoto.isNullOrEmpty()) {
+            try {
+                val uri = Uri.parse(u.profilePhoto)
+                binding.imgProfile.setImageURI(uri)
+            } catch (_: Exception) {
+                toast("Unable to load profile photo")
+            }
+        }
+
         binding.tvName.text = "Name: ${u.name}"
         binding.tvReg.text = "Register No: ${u.registerNo}"
         binding.tvRoll.text = "Roll No: ${u.rollNo}"
@@ -226,7 +236,6 @@ class DetailsActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         })
 
-        // ✅ MUST HAVE → Fixes your issue
         finish()
     }
 

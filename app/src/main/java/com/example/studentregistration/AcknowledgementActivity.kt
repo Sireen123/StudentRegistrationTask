@@ -9,41 +9,39 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
 import com.example.studentregistration.databinding.ActivityAcknowledgementBinding
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.storage.FirebaseStorage
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class AcknowledgementActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAcknowledgementBinding
 
     private var user: User? = null
-    private var hasArrears: Boolean = false
-    private var arrearsCount: Int = 0
-    private var collegeName: String = ""
-
+    private var hasArrears = false
+    private var arrearsCount = 0
+    private var collegeName = ""
     private var signatureUri: Uri? = null
-    private var profilePhotoUri: Uri? = null
-    private var studentId: String? = null
+    private var uid: String? = null
 
-    private val storage by lazy { FirebaseStorage.getInstance() }
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    private val dateFormat =
+        SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    private val today = dateFormat.format(Date())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAcknowledgementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ FIXED BACK BAR
-        binding.includeBack.btnBack.setOnClickListener {
-            finishAffinity()   // No return to Dashboard
-        }
+        // Back bar
         binding.includeBack.tvScreenTitle.text = "Acknowledgement"
-        binding.tvTitle.text = "ACKNOWLEDGEMENT"
+        binding.includeBack.btnBack.setOnClickListener { finish() }
 
-        // ✅ Get Data
+        readIntentData()
+        setupUI()
+        setupListeners()
+    }
+
+    private fun readIntentData() {
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
@@ -55,23 +53,12 @@ class AcknowledgementActivity : AppCompatActivity() {
             else @Suppress("DEPRECATION")
             intent.getParcelableExtra("signature_uri")
 
-        profilePhotoUri = intent.getStringExtra("profile_photo_uri")?.let { Uri.parse(it) }
-
-        studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
+        uid = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
-
-        if (user == null || studentId == null) {
-            Toast.makeText(this, "Invalid acknowledgement data", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
-
-        bindUI()
-        setupSubmit()
     }
 
-    private fun bindUI() {
-        val u = user!!
+    private fun setupUI() {
+        val u = user ?: return
 
         binding.tvName.text = u.name
         binding.tvReg.text = u.registerNo
@@ -85,125 +72,49 @@ class AcknowledgementActivity : AppCompatActivity() {
             if (hasArrears || arrearsCount > 0) "Yes ($arrearsCount)" else "No"
     }
 
-    private fun setupSubmit() {
+    private fun setupListeners() {
         binding.btnSubmit.setOnClickListener {
-
             if (!binding.cbAcknowledge.isChecked) {
-                Toast.makeText(this, "Please confirm the details", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please confirm details first", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val u = user!!
-            val finalHasArrears = hasArrears || arrearsCount > 0
-            val signedOn = dateFormat.format(Date())
-
-            saveAckFirebase(
-                u = u,
-                hasArrears = finalHasArrears,
-                arrears = arrearsCount,
-                signedOn = signedOn,
-                sigUri = signatureUri
-            )
-
-            updateWorkflow(finalHasArrears)
-
-            goToCertificate(
-                user = u,
-                hasArrears = finalHasArrears,
-                arrearsCount = arrearsCount,
-                signedOn = signedOn
-            )
+            updateWorkflowAndGoCertificate()
         }
     }
 
-    private fun saveAckFirebase(
-        u: User,
-        hasArrears: Boolean,
-        arrears: Int,
-        signedOn: String,
-        sigUri: Uri?
-    ) {
-        val uid = studentId ?: return
+    private fun updateWorkflowAndGoCertificate() {
+        val id = uid ?: return
 
-        if (sigUri != null) {
-            val fileName = "ack_${System.currentTimeMillis()}.png"
-            val ref = storage.reference.child("users/$uid/ack/$fileName")
-
-            ref.putFile(sigUri)
-                .continueWithTask { ref.downloadUrl }
-                .addOnSuccessListener { url ->
-                    writeAckDoc(u, url.toString(), hasArrears, arrears, signedOn)
-                }
-                .addOnFailureListener {
-                    writeAckDoc(u, "", hasArrears, arrears, signedOn)
-                }
-        } else {
-            writeAckDoc(u, "", hasArrears, arrears, signedOn)
-        }
-    }
-
-    private fun writeAckDoc(
-        u: User,
-        sigUrl: String,
-        hasArrears: Boolean,
-        arrears: Int,
-        signedOn: String
-    ) {
-        val data = hashMapOf(
-            "name" to u.name,
-            "registerNo" to u.registerNo,
-            "rollNo" to u.rollNo,
-            "department" to u.department,
-            "semester" to u.semester,
-            "parentName" to u.parentName,
-            "collegeName" to collegeName,
-            "hasArrears" to hasArrears,
-            "arrearsCount" to arrears,
-            "signatureUrl" to sigUrl,
-            "profilePhotoUri" to (profilePhotoUri?.toString() ?: ""),
-            "signedOn" to signedOn,
-            "createdAt" to FieldValue.serverTimestamp()
-        )
-
-        FirebaseRepo.db.collection("users")
-            .document(studentId!!)
-            .collection("acknowledgements")
-            .add(data)
-    }
-
-    private fun updateWorkflow(isArrear: Boolean) {
-        val uid = studentId ?: return
-        val certType = if (isArrear) "ARREAR" else "FINAL"
-
-        val workflow = mapOf(
+        val updates = mapOf(
             "detailsSaved" to true,
             "ackPending" to false,
             "ackCompleted" to true,
-            "ackCompletedAt" to System.currentTimeMillis(),
-            "certPending" to true,
-            "certType" to certType
+            "ackSignedAt" to System.currentTimeMillis()
         )
 
-        FirebaseRepo.rtdb.child("details").child(uid).child("workflow").updateChildren(workflow)
+        FirebaseRepo.rtdb.child("details").child(id).child("workflow")
+            .updateChildren(updates)
+            .addOnSuccessListener { goCertificate() }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to update workflow", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun goToCertificate(
-        user: User,
-        hasArrears: Boolean,
-        arrearsCount: Int,
-        signedOn: String
-    ) {
-        startActivity(Intent(this, CertificateActivity::class.java).apply {
-            putExtra("user", user)
-            putExtra("hasArrears", hasArrears)
-            putExtra("arrearsCount", arrearsCount)
-            putExtra("collegeName", collegeName)
-            putExtra("signature_uri", signatureUri)
-            putExtra("signed_on", signedOn)
-            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        })
+    private fun goCertificate() {
+        val u = user ?: return
 
-        finish() // ✅ closes acknowledgement
+        val i = Intent(this, CertificateActivity::class.java)
+        i.putExtra("user", u)
+        i.putExtra("hasArrears", hasArrears)
+        i.putExtra("arrearsCount", arrearsCount)
+        i.putExtra("collegeName", collegeName)
+        i.putExtra("signature_uri", signatureUri)
+        i.putExtra("signed_on", today)
+        i.putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        startActivity(i)
+        finish()
     }
 }
