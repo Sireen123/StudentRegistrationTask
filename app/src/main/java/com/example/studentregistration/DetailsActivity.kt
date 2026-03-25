@@ -30,8 +30,6 @@ class DetailsActivity : AppCompatActivity() {
     private var collegeName = ""
     private var signatureUri: Uri? = null
 
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailsBinding.inflate(layoutInflater)
@@ -40,34 +38,30 @@ class DetailsActivity : AppCompatActivity() {
         binding.includeBack.tvScreenTitle.text = "My Details"
         binding.includeBack.btnBack.setOnClickListener { finish() }
 
+        // ✅ READ REAL UID
+        val sp = getSharedPreferences("user_session", MODE_PRIVATE)
+        uid = sp.getString("real_uid", null)
+
+        if (uid == null) {
+            toast("Session expired")
+            finish()
+            return
+        }
+
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
         collegeName = intent.getStringExtra("collegeName") ?: ""
 
-        uid = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
-            ?: FirebaseRepo.auth.currentUser?.uid
-
-        if (uid == null) {
-            toast("Session lost.")
-            finish()
-            return
-        }
-
-        binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
-
-        if (user == null) loadUserFromFirebase(uid!!)
+        if (user == null) loadUser()
         else bindUI()
 
         setupSignature()
     }
 
-    // ✅✅ FIXED FAST FIREBASE LOADING
-    private fun loadUserFromFirebase(uid: String) {
-
-        FirebaseRepo.rtdb.child("users").child(uid).get()
+    private fun loadUser() {
+        FirebaseRepo.rtdb.child("users").child(uid!!).get()
             .addOnSuccessListener { snap ->
-
                 if (!snap.exists()) {
                     toast("User not found.")
                     return@addOnSuccessListener
@@ -91,18 +85,10 @@ class DetailsActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                // ✅ Optional workflow
-                FirebaseRepo.rtdb.child("details").child(uid).child("workflow").get()
-                    .addOnSuccessListener { wf ->
-                        hasArrears = wf.child("certArrear").value as? Boolean ?: false
-                        arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
-                        collegeName = snap.child("collegeName").value as? String ?: ""
-                        bindUI()
-                    }
-                    .addOnFailureListener { bindUI() }
+                bindUI()
             }
             .addOnFailureListener {
-                toast("Failed to load user.")
+                toast("Error loading details.")
             }
     }
 
@@ -110,8 +96,7 @@ class DetailsActivity : AppCompatActivity() {
         val u = user ?: return
 
         if (!u.profilePhoto.isNullOrEmpty()) {
-            try { binding.imgProfile.setImageURI(Uri.parse(u.profilePhoto!!)) }
-            catch (_: Exception) {}
+            binding.imgProfile.setImageURI(Uri.parse(u.profilePhoto))
         }
 
         binding.tvName.text = "Name: ${u.name}"
@@ -120,9 +105,9 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvAddress.text = "Address: ${u.address}"
         binding.tvPhone.text = "Phone: ${u.phone}"
         binding.tvEmail.text = "Email: ${u.email}"
-        binding.tvDob.text = "Date of Birth: ${u.dob}"
+        binding.tvDob.text = "DOB: ${u.dob}"
         binding.tvGender.text = "Gender: ${u.gender}"
-        binding.tvParent.text = "Parent/Guardian: ${u.parentName}"
+        binding.tvParent.text = "Parent: ${u.parentName}"
         binding.tvDept.text = "Department: ${u.department}"
         binding.tvSem.text = "Semester: ${u.semester}"
         binding.tvCollege.text = "College: $collegeName"
@@ -152,33 +137,13 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvBalanceAmount.text = "Balance: ₹${total - paid}"
 
         ObjectAnimator.ofInt(binding.feesProgress, "progress", percent).apply {
-            duration = 700
+            duration = 800
             interpolator = DecelerateInterpolator()
             start()
-        }
-
-        buildDots(percent)
-    }
-
-    private fun buildDots(percent: Int) {
-        binding.dotsContainer.removeAllViews()
-        val filled = percent / 10
-
-        repeat(10) { i ->
-            val dot = View(this)
-            dot.layoutParams = LinearLayout.LayoutParams(18, 18).apply {
-                setMargins(5, 0, 5, 0)
-            }
-            dot.setBackgroundResource(
-                if (i < filled) R.drawable.progress_dot_paid
-                else R.drawable.progress_dot_empty
-            )
-            binding.dotsContainer.addView(dot)
         }
     }
 
     private fun setupSignature() {
-
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
             override fun onSigned() { binding.btnSubmit.isEnabled = true }
@@ -189,36 +154,29 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.btnSubmit.setOnClickListener {
             if (binding.signPad.isEmpty) {
-                toast("Please sign first")
+                toast("Please sign")
                 return@setOnClickListener
             }
 
-            val temp = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
-            FileOutputStream(temp).use {
+            val file = File(cacheDir, "signature.png")
+            FileOutputStream(file).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
 
-            signatureUri =
-                FileProvider.getUriForFile(this, "$packageName.provider", temp)
+            signatureUri = FileProvider.getUriForFile(this, "$packageName.provider", file)
 
-            goAcknowledgement()
+            startActivity(Intent(this, AcknowledgementActivity::class.java).apply {
+                putExtra("user", user)
+                putExtra("hasArrears", hasArrears)
+                putExtra("arrearsCount", arrearsCount)
+                putExtra("collegeName", collegeName)
+                putExtra("signature_uri", signatureUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            })
+
+            finish()
         }
     }
 
-    private fun goAcknowledgement() {
-        val u = user ?: return
-        startActivity(Intent(this, AcknowledgementActivity::class.java).apply {
-            putExtra("user", u)
-            putExtra("hasArrears", hasArrears)
-            putExtra("arrearsCount", arrearsCount)
-            putExtra("collegeName", collegeName)
-            putExtra("signature_uri", signatureUri)
-            putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        })
-        finish()
-    }
-
-    private fun toast(msg: String) =
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }

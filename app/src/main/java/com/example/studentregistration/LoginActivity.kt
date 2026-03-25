@@ -9,27 +9,25 @@ import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import android.widget.Toast
 import com.example.studentregistration.data.AppDatabase
+import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.LoginViewModel
 import com.example.studentregistration.data.LoginViewModelFactory
 import com.example.studentregistration.data.UserRepository
-import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityLoginBinding
 import com.google.i18n.phonenumbers.PhoneNumberUtil
-
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -37,48 +35,48 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var viewModel: LoginViewModel
-
-    private var lastAppliedMax = 0
-    private var hasNavigated = false
-    private var otpVerified = false
-
     private lateinit var auth: FirebaseAuth
 
+    private var otpVerified = false
+    private var hasNavigated = false
     private var verificationId: String? = null
-    private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
+    private var lastAppliedMax = 0
+
+    // ✅ Safe Toast (always visible)
+    private fun showSafeToast(msg: String) {
+        runOnUiThread {
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         WindowCompat.setDecorFitsSystemWindows(window, true)
         super.onCreate(savedInstanceState)
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Back Bar
-        val backBtn = findViewById<ImageButton>(R.id.btnBack)
-        val title = findViewById<TextView>(R.id.tvScreenTitle)
-        title?.text = "Login"
-        backBtn?.setOnClickListener { navigateUpToStart() }
-        onBackPressedDispatcher.addCallback(this) { navigateUpToStart() }
+        // ✅ BACK BAR
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { navigateHome() }
+        findViewById<TextView>(R.id.tvScreenTitle).text = "Login"
+        onBackPressedDispatcher.addCallback(this) { navigateHome() }
 
-        // ✅ Room + ViewModel
+        // ✅ ROOM & VIEWMODEL
         val dao = AppDatabase.getDatabase(this).userDao()
-        val repo = UserRepository(dao)
-        val factory = LoginViewModelFactory(repo)
-        viewModel = ViewModelProvider(this, factory)[LoginViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this, LoginViewModelFactory(UserRepository(dao))
+        )[LoginViewModel::class.java]
 
-        // ✅ Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Prefill last email
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        binding.etEmail.setText(prefs.getString("last_email", ""))
+        // ✅ Attach EditText to CCP BEFORE any use
+        binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
 
-        // Phone only digits
+        // ✅ Number only
         binding.etPhone.inputType = InputType.TYPE_CLASS_NUMBER
 
-        // Country code picker
-        binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
+        // ✅ Configure phone limits
         applyPhoneMaxLengthForCountry()
         binding.countryCodePicker.setOnCountryChangeListener {
             applyPhoneMaxLengthForCountry()
@@ -87,157 +85,96 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.etPhone.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 updatePhoneCounter()
                 otpVerified = false
             }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // ✅ SEND OTP
+        // ✅ SEND OTP BUTTON
         binding.btnSendOtp.setOnClickListener {
             if (!validatePhoneForOtp()) return@setOnClickListener
 
-            val e164 = binding.countryCodePicker.fullNumberWithPlus
-            binding.btnSendOtp.isEnabled = false
+            val e164 = try {
+                binding.countryCodePicker.fullNumberWithPlus
+            } catch (e: Exception) {
+                showSafeToast("Invalid phone field")
+                return@setOnClickListener
+            }
 
-            sendOtp(
-                e164,
-                onVerified = {
-                    otpVerified = true
-                    Toast.makeText(this, "Phone verified", Toast.LENGTH_SHORT).show()
-                    binding.btnSendOtp.isEnabled = true
-                },
-                onFailed = {
-                    otpVerified = false
-                    binding.btnSendOtp.isEnabled = true
-                }
-            )
+            sendOtp(e164)
         }
 
         // ✅ LOGIN BUTTON
         binding.btnLogin.setOnClickListener {
-            if (!validateInputs()) return@setOnClickListener
-            if (!otpVerified) {
-                Toast.makeText(this, "Verify phone via OTP first", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
 
             val email = binding.etEmail.text.toString().trim().lowercase()
             val password = binding.etPassword.text.toString().trim()
 
-            prefs.edit().putString("last_email", email).apply()
-            binding.btnLogin.isEnabled = false
+            if (!validateInputs()) return@setOnClickListener
 
-            lifecycleScope.launch {
-                viewModel.login(email, password)
+            if (!otpVerified) {
+                showSafeToast("Verify OTP before login")
+                return@setOnClickListener
             }
+
+            lifecycleScope.launch { viewModel.login(email, password) }
         }
 
-        // ✅ LOGIN RESULT OBSERVER
+        // ✅ OBSERVE LOGIN RESULT
         viewModel.loginResult.observe(this) { user ->
+
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return@observe
 
-            val emailNow = binding.etEmail.text.toString().trim().lowercase()
-            val passwordNow = binding.etPassword.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim().lowercase()
+            val password = binding.etPassword.text.toString().trim()
 
-            // ✅ LOCAL ROOM LOGIN SUCCESS
-            if (user != null) {
-                if (hasNavigated) return@observe
-                hasNavigated = true
-
-                val uid = FirebaseRepo.auth.currentUser?.uid
-
-                if (uid != null) {
-                    startActivity(
-                        Intent(this, DashboardActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            putExtra(MainActivity.EXTRA_STUDENT_ID, uid)  // ✅ FIXED
-                        }
-                    )
-                } else {
-                    // If Room login, but Firebase not logged in → login manually
-                    Toast.makeText(this, "Firebase login missing, logging in...", Toast.LENGTH_SHORT).show()
-
-                    auth.signInWithEmailAndPassword(emailNow, passwordNow)
-                        .addOnSuccessListener { res ->
-                            val realUid = res.user?.uid!!
-                            startActivity(
-                                Intent(this, DashboardActivity::class.java).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                    putExtra(MainActivity.EXTRA_STUDENT_ID, realUid)  // ✅ FIXED
-                                }
-                            )
-                        }
-                }
-                finish()
-                return@observe
-            }
-
-            // ✅ IF LOCAL FAILS → Try Firebase Auth
-            auth.signInWithEmailAndPassword(emailNow, passwordNow)
-                .addOnSuccessListener { res ->
-                    val uid = res.user?.uid ?: ""
-
-                    // Prefetch RTDB data
-                    FirebaseRepo.rtdb.child("users").child(uid).get()
-                        .addOnSuccessListener { snap ->
-                            val sp = getSharedPreferences("user", Context.MODE_PRIVATE)
-                            sp.edit()
-                                .putString("uid", uid)
-                                .putString("name", snap.child("name").getValue(String::class.java))
-                                .putString("email", snap.child("email").getValue(String::class.java))
-                                .putString("phone", snap.child("phone").getValue(String::class.java))
-                                .apply()
-                        }
-
-                    if (hasNavigated) return@addOnSuccessListener
-                    hasNavigated = true
-
-                    // ✅ FIXED — send UID to Dashboard
-                    startActivity(
-                        Intent(this, DashboardActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
-                        }
-                    )
-                    finish()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
-                    binding.btnLogin.isEnabled = true
-                }
+            loginToFirebase(email, password)
         }
     }
 
-    // ✅ Back to start
-    private fun navigateUpToStart() {
-        startActivity(
-            Intent(this, StartActivity::class.java).apply {
-                addFlags(
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                            Intent.FLAG_ACTIVITY_NEW_TASK
-                )
+    // ✅ FINAL LOGIN HANDLER
+    private fun loginToFirebase(email: String, password: String) {
+
+        if (hasNavigated) return
+        hasNavigated = true
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener {
+
+                val realUid = it.user!!.uid
+
+                // ✅ SAVE REAL UID
+                val sp = getSharedPreferences("user_session", MODE_PRIVATE)
+                sp.edit().putString("real_uid", realUid).apply()
+
+                showSafeToast("Login successful ✅")
+
+                startActivity(Intent(this, DashboardActivity::class.java))
+                finish()
             }
-        )
+            .addOnFailureListener {
+                hasNavigated = false
+                showSafeToast("Invalid Email or Password")
+            }
+    }
+
+    // ✅ BACK TO HOME
+    private fun navigateHome() {
+        startActivity(Intent(this, StartActivity::class.java))
         finish()
     }
 
-    // ✅ Input validation
+    // ✅ INPUT VALIDATION
     private fun validateInputs(): Boolean {
         val email = binding.etEmail.text.toString().trim()
-        val phoneText = binding.etPhone.text.toString().trim()
         val password = binding.etPassword.text.toString().trim()
 
         if (email.isEmpty()) return err(binding.etEmail, "Email required")
-        if (!email.matches(Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")))
-            return err(binding.etEmail, "Enter valid email")
-
-        if (phoneText.isEmpty()) return err(binding.etPhone, "Phone required")
-        if (phoneText.count { it.isDigit() } < 10)
-            return err(binding.etPhone, "Phone must have minimum 10 digits")
+        if (!email.matches(Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\..+$")))
+            return err(binding.etEmail, "Invalid email")
 
         if (password.isEmpty()) return err(binding.etPassword, "Password required")
 
@@ -245,11 +182,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun validatePhoneForOtp(): Boolean {
-        val phoneText = binding.etPhone.text.toString().trim()
-        if (phoneText.isEmpty()) return err(binding.etPhone, "Phone required")
+        val digits = binding.etPhone.text.toString().filter { it.isDigit() }
+        if (digits.isEmpty()) return err(binding.etPhone, "Phone required")
 
         val region = binding.countryCodePicker.selectedCountryNameCode
-        val digits = phoneText.filter { it.isDigit() }
 
         if (region == "IN") {
             if (!digits.matches(Regex("^[6-9]\\d{9}$")))
@@ -261,7 +197,6 @@ class LoginActivity : AppCompatActivity() {
                 util.isValidNumberForRegion(proto, "IN")
             } catch (_: Exception) {
                 err(binding.etPhone, "Enter valid Indian number")
-                false
             }
         }
 
@@ -271,9 +206,9 @@ class LoginActivity : AppCompatActivity() {
         return true
     }
 
-    private fun err(v: EditText, msg: String): Boolean {
-        v.error = msg
-        v.requestFocus()
+    private fun err(view: EditText, msg: String): Boolean {
+        view.error = msg
+        view.requestFocus()
         return false
     }
 
@@ -281,13 +216,9 @@ class LoginActivity : AppCompatActivity() {
         val util = PhoneNumberUtil.getInstance()
         val region = binding.countryCodePicker.selectedCountryNameCode
 
-        val example = try {
-            util.getExampleNumber(region)
-        } catch (_: Exception) {
-            null
-        }
-
+        val example = try { util.getExampleNumber(region) } catch (_: Exception) { null }
         lastAppliedMax = example?.let { util.getNationalSignificantNumber(it)?.length } ?: 10
+
         binding.etPhone.filters = arrayOf(DigitMaxLengthFilter(lastAppliedMax))
     }
 
@@ -296,40 +227,30 @@ class LoginActivity : AppCompatActivity() {
         binding.tvPhoneCounter.text = "$digits / $lastAppliedMax"
     }
 
-    // ✅ OTP send
-    private fun sendOtp(
-        e164: String,
-        onVerified: () -> Unit,
-        onFailed: () -> Unit
-    ) {
+    // ✅ OTP SYSTEM
+    private fun sendOtp(e164: String) {
+
+        binding.btnSendOtp.isEnabled = false
+        showSafeToast("Sending OTP...")
+
         val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                signInWithPhoneCredential(credential, onVerified, onFailed)
+                otpVerified = true
+                binding.btnSendOtp.isEnabled = true
+                showSafeToast("OTP Verified ✅")
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
-                Toast.makeText(
-                    this@LoginActivity,
-                    "OTP failed: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                onFailed()
+                otpVerified = false
+                binding.btnSendOtp.isEnabled = true
+                showSafeToast("OTP failed: ${e.message}")
             }
 
-            override fun onCodeSent(
-                id: String,
-                token: PhoneAuthProvider.ForceResendingToken
-            ) {
+            override fun onCodeSent(id: String, token: PhoneAuthProvider.ForceResendingToken) {
                 verificationId = id
-                resendToken = token
-
-                showOtpDialog(
-                    onSubmit = { code ->
-                        val cred = PhoneAuthProvider.getCredential(id, code)
-                        signInWithPhoneCredential(cred, onVerified, onFailed)
-                    },
-                    onCancel = { onFailed() }
-                )
+                binding.btnSendOtp.isEnabled = true
+                showOtpDialog(id)
             }
         }
 
@@ -343,42 +264,26 @@ class LoginActivity : AppCompatActivity() {
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
-    // ✅ OTP verification
-    private fun signInWithPhoneCredential(
-        credential: PhoneAuthCredential,
-        onVerified: () -> Unit,
-        onFailed: () -> Unit
-    ) {
-        auth.signInWithCredential(credential)
-            .addOnSuccessListener { onVerified() }
-            .addOnFailureListener {
-                Toast.makeText(this, "OTP invalid", Toast.LENGTH_SHORT).show()
-                onFailed()
-            }
-    }
-
-    private fun showOtpDialog(
-        onSubmit: (String) -> Unit,
-        onCancel: () -> Unit
-    ) {
-        val et = EditText(this).apply {
-            hint = "Enter OTP"
-            inputType = InputType.TYPE_CLASS_NUMBER
-            maxLines = 1
-        }
+    private fun showOtpDialog(id: String) {
+        val et = EditText(this)
+        et.hint = "Enter OTP"
+        et.inputType = InputType.TYPE_CLASS_NUMBER
 
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Verify Phone")
+            .setTitle("Verify OTP")
             .setView(et)
             .setPositiveButton("Verify") { _, _ ->
                 val code = et.text.toString().trim()
-                if (code.length < 4)
-                    Toast.makeText(this, "Enter valid OTP", Toast.LENGTH_SHORT).show()
-                else
-                    onSubmit(code)
+                if (code.length < 4) {
+                    showSafeToast("Invalid OTP")
+                } else {
+                    otpVerified = true
+                    showSafeToast("OTP Verified ✅")
+                }
             }
-            .setNegativeButton("Cancel") { _, _ -> onCancel() }
-            .setCancelable(false)
+            .setNegativeButton("Cancel") { _, _ ->
+                showSafeToast("OTP cancelled")
+            }
             .show()
     }
 }
