@@ -15,7 +15,6 @@ import com.example.studentregistration.adapter.FaqAdapter
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
 import com.example.studentregistration.model.FaqItem
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class DashboardActivity : AppCompatActivity() {
@@ -41,31 +40,47 @@ class DashboardActivity : AppCompatActivity() {
         val subtitle = findViewById<TextView>(R.id.tvSubtitle)
         val progress = findViewById<ProgressBar>(R.id.progressLoading)
 
-        // ✅ ALWAYS READ REAL UID
-        val sp = getSharedPreferences("user_session", MODE_PRIVATE)
-        studentId = sp.getString("real_uid", null)
+        //--------------------------------------------
+        // ✅ 1. FIX SESSION EXPIRED PROBLEM
+        //--------------------------------------------
 
-        if (studentId == null) {
+        // FIRST try to get studentId from Intent (registration flow)
+        studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
+
+        // THEN fallback to SharedPreferences (login flow)
+        if (studentId.isNullOrEmpty()) {
+            val sp = getSharedPreferences("user_session", MODE_PRIVATE)
+            studentId = sp.getString("real_uid", null)
+        }
+
+        // Last fail-safe → only if both missing
+        if (studentId.isNullOrEmpty()) {
             Toast.makeText(this, "Session expired.", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, StartActivity::class.java))
             finish()
             return
         }
 
-        progress.visibility = View.VISIBLE
         subtitle.text = "Loading..."
+        progress.visibility = View.VISIBLE
 
-        // NEW REGISTER USER DATA
+        //--------------------------------------------
+        // ✅ 2. READ REGISTRATION DATA IF SENT
+        //--------------------------------------------
         user = intent.getParcelableExtra("user")
         hasArrears = intent.getBooleanExtra("hasArrears", false)
         arrearsCount = intent.getIntExtra("arrearsCount", 0)
         collegeName = intent.getStringExtra("collegeName") ?: ""
 
+        //--------------------------------------------
+        // ✅ 3. If user came from registration → no Firebase loading needed
+        //--------------------------------------------
         if (user != null) {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
             isDashboardReady = true
         } else {
+            // ✅ If the user came from login → load from Firebase
             loadUserFromFirebase(studentId!!, progress, subtitle)
         }
 
@@ -73,14 +88,18 @@ class DashboardActivity : AppCompatActivity() {
         setupLogout()
     }
 
+    //--------------------------------------------
+    // ✅ Load user data from Firebase
+    //--------------------------------------------
     private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
+
                 if (!snap.exists()) {
                     Toast.makeText(this, "User not found.", Toast.LENGTH_SHORT).show()
-                    isDashboardReady = true
                     progress.visibility = View.GONE
+                    isDashboardReady = true
                     return@addOnSuccessListener
                 }
 
@@ -113,6 +132,9 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
+    //--------------------------------------------
+    // ✅ Dashboard Buttons
+    //--------------------------------------------
     private fun setupGrid() {
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         rv.layoutManager = GridLayoutManager(this, 2)
@@ -136,6 +158,9 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    //--------------------------------------------
+    // ✅ Logout
+    //--------------------------------------------
     private fun setupLogout() {
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             FirebaseRepo.auth.signOut()
@@ -144,6 +169,9 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    //--------------------------------------------
+    // ✅ Go to Details Screen
+    //--------------------------------------------
     private fun openDetails() {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
             putExtra("user", user)
@@ -153,6 +181,9 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
+    //--------------------------------------------
+    // ✅ FAQ Bottom Sheet
+    //--------------------------------------------
     private fun showFaq() {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)

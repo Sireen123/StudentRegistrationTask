@@ -35,7 +35,20 @@ class LoadingActivity : AppCompatActivity() {
             val navTarget = intent.getStringExtra(MainActivity.EXTRA_NAV_TARGET) ?: "DASHBOARD"
             val forceDashboard = intent.getBooleanExtra(MainActivity.EXTRA_FORCE_DASHBOARD, true)
 
-            val detailsOk = studentId?.let { checkDetailsSaved(it) } ?: false
+            // ✅ FIX: If studentId is missing → never continue
+            if (studentId.isNullOrEmpty()) {
+                Toast.makeText(
+                    this@LoadingActivity,
+                    "Something went wrong. Please try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                startActivity(Intent(this@LoadingActivity, StartActivity::class.java))
+                finish()
+                return@launch
+            }
+
+            val detailsOk = checkDetailsSaved(studentId)
 
             if (!detailsOk) {
                 Toast.makeText(
@@ -58,19 +71,16 @@ class LoadingActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Forward ALL extras (User parcelable, arrears, collegeName, etc.)
-    private fun goToDashboard(studentId: String?, navTarget: String, forceDashboard: Boolean) {
+    // ✅ Forward ALL extras (user, arrears, collegeName)
+    private fun goToDashboard(studentId: String, navTarget: String, forceDashboard: Boolean) {
         val newIntent = Intent(this, DashboardActivity::class.java).apply {
 
-            // Reset activity stack
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
-            // Keep original navigation extras
             putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
             putExtra(MainActivity.EXTRA_NAV_TARGET, navTarget)
             putExtra(MainActivity.EXTRA_FORCE_DASHBOARD, forceDashboard)
 
-            // ✅ Forward EVERYTHING that MainActivity placed in goLoader()
             intent.extras?.let { putExtras(it) }
         }
 
