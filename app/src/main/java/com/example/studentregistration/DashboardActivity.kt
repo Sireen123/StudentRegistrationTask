@@ -40,20 +40,16 @@ class DashboardActivity : AppCompatActivity() {
         val subtitle = findViewById<TextView>(R.id.tvSubtitle)
         val progress = findViewById<ProgressBar>(R.id.progressLoading)
 
-        //--------------------------------------------
-        // ✅ 1. FIX SESSION EXPIRED PROBLEM
-        //--------------------------------------------
-
-        // FIRST try to get studentId from Intent (registration flow)
+        //-------------------------------------------------
+        // ✅ 1. GET UID (Registration → Intent | Login → SharedPrefs)
+        //-------------------------------------------------
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
 
-        // THEN fallback to SharedPreferences (login flow)
         if (studentId.isNullOrEmpty()) {
             val sp = getSharedPreferences("user_session", MODE_PRIVATE)
             studentId = sp.getString("real_uid", null)
         }
 
-        // Last fail-safe → only if both missing
         if (studentId.isNullOrEmpty()) {
             Toast.makeText(this, "Session expired.", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, StartActivity::class.java))
@@ -64,33 +60,52 @@ class DashboardActivity : AppCompatActivity() {
         subtitle.text = "Loading..."
         progress.visibility = View.VISIBLE
 
-        //--------------------------------------------
-        // ✅ 2. READ REGISTRATION DATA IF SENT
-        //--------------------------------------------
-        user = intent.getParcelableExtra("user")
-        hasArrears = intent.getBooleanExtra("hasArrears", false)
-        arrearsCount = intent.getIntExtra("arrearsCount", 0)
-        collegeName = intent.getStringExtra("collegeName") ?: ""
+        //-------------------------------------------------
+        // ✅ 2. LOAD DATA FROM SESSIONPREFS (LOGIN FLOW)
+        //-------------------------------------------------
+        val session = SessionPrefs(this)
+        val sessionCollege = session.collegeName ?: ""
+        val sessionArrears = session.hasArrears
+        val sessionArrearCount = session.arrearsCount
 
-        //--------------------------------------------
-        // ✅ 3. If user came from registration → no Firebase loading needed
-        //--------------------------------------------
+        //-------------------------------------------------
+        // ✅ 3. READ FROM INTENT (REGISTRATION FLOW)
+        //-------------------------------------------------
+        val intentCollege = intent.getStringExtra("collegeName")
+        val intentHasArrears = intent.getBooleanExtra("hasArrears", sessionArrears)
+        val intentArrearCount = intent.getIntExtra("arrearsCount", sessionArrearCount)
+
+        // ✅ Decide final values
+        collegeName = intentCollege ?: sessionCollege
+        hasArrears = intentHasArrears
+        arrearsCount = intentArrearCount
+
+        user = intent.getParcelableExtra("user")
+
+        //-------------------------------------------------
+        // ✅ 4. If user came from registration → ready
+        //-------------------------------------------------
         if (user != null) {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
             isDashboardReady = true
-        } else {
-            // ✅ If the user came from login → load from Firebase
-            loadUserFromFirebase(studentId!!, progress, subtitle)
+            setupGrid()
+            setupLogout()
+            return
         }
+
+        //-------------------------------------------------
+        // ✅ 5. Otherwise load from Firebase (login flow)
+        //-------------------------------------------------
+        loadUserFromFirebase(studentId!!, progress, subtitle)
 
         setupGrid()
         setupLogout()
     }
 
-    //--------------------------------------------
-    // ✅ Load user data from Firebase
-    //--------------------------------------------
+    //-------------------------------------------------
+    // ✅ FETCH FULL USER DETAILS FROM FIREBASE
+    //-------------------------------------------------
     private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
@@ -103,6 +118,7 @@ class DashboardActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
+                // ✅ Create User model
                 user = User(
                     name = snap.child("name").value as? String ?: "",
                     registerNo = snap.child("registerNo").value as? String ?: "",
@@ -121,6 +137,11 @@ class DashboardActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
+                // ✅ LOAD College & Arrears from Firebase (login flow)
+                collegeName = snap.child("collegeName").value as? String ?: collegeName
+                hasArrears = snap.child("hasArrears").value as? Boolean ?: hasArrears
+                arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: arrearsCount
+
                 subtitle.text = user!!.name
                 progress.visibility = View.GONE
                 isDashboardReady = true
@@ -132,9 +153,9 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
-    //--------------------------------------------
-    // ✅ Dashboard Buttons
-    //--------------------------------------------
+    //-------------------------------------------------
+    // ✅ GRID MENU ACTION HANDLER
+    //-------------------------------------------------
     private fun setupGrid() {
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         rv.layoutManager = GridLayoutManager(this, 2)
@@ -149,18 +170,20 @@ class DashboardActivity : AppCompatActivity() {
             when (pos) {
                 0 -> startActivity(Intent(this, FeesListActivity::class.java))
                 1 -> showFaq()
-                2 -> {
-                    if (user == null) return@DashboardAdapter
-                    openDetails()
-                }
+
+                //-------------------------------------------------
+                // ✅ Open Details → ALWAYS send full correct details
+                //-------------------------------------------------
+                2 -> openDetails()
+
                 else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    //--------------------------------------------
-    // ✅ Logout
-    //--------------------------------------------
+    //-------------------------------------------------
+    // ✅ LOGOUT
+    //-------------------------------------------------
     private fun setupLogout() {
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             FirebaseRepo.auth.signOut()
@@ -169,21 +192,22 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    //--------------------------------------------
-    // ✅ Go to Details Screen
-    //--------------------------------------------
+    //-------------------------------------------------
+    // ✅ OPEN DETAILS ACTIVITY (FINAL FIX)
+    //-------------------------------------------------
     private fun openDetails() {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
             putExtra("user", user)
             putExtra("hasArrears", hasArrears)
             putExtra("arrearsCount", arrearsCount)
             putExtra("collegeName", collegeName)
+            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
         })
     }
 
-    //--------------------------------------------
-    // ✅ FAQ Bottom Sheet
-    //--------------------------------------------
+    //-------------------------------------------------
+    // ✅ FAQ BOTTOM SHEET
+    //-------------------------------------------------
     private fun showFaq() {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)

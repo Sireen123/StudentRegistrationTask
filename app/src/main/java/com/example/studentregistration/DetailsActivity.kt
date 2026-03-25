@@ -26,6 +26,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private var uid: String? = null
     private var user: User? = null
+
     private var hasArrears = false
     private var arrearsCount = 0
     private var collegeName: String = ""
@@ -41,17 +42,19 @@ class DetailsActivity : AppCompatActivity() {
         binding.includeBack.tvScreenTitle.text = "My Details"
         binding.includeBack.btnBack.setOnClickListener { finish() }
 
-        // ✅ Read intent values FIRST (these are correct & must not be overwritten)
+        //----------------------------------------------------------
+        // ✅ 1. Read values passed from previous activity (Dashboard)
+        //----------------------------------------------------------
         user = intent.getParcelableExtra("user")
 
         if (intent.hasExtra("hasArrears"))
-            hasArrears = intent.getBooleanExtra("hasArrears", hasArrears)
+            hasArrears = intent.getBooleanExtra("hasArrears", false)
 
         if (intent.hasExtra("arrearsCount"))
-            arrearsCount = intent.getIntExtra("arrearsCount", arrearsCount)
+            arrearsCount = intent.getIntExtra("arrearsCount", 0)
 
         if (intent.hasExtra("collegeName"))
-            collegeName = intent.getStringExtra("collegeName") ?: collegeName
+            collegeName = intent.getStringExtra("collegeName") ?: ""
 
         uid = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
@@ -64,19 +67,24 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
 
-        // ✅ If user already passed from Dashboard → use directly
+        //----------------------------------------------------------
+        // ✅ 2. If no user found in Intent → load from Firebase
+        //----------------------------------------------------------
         if (user == null) {
             loadUserFromFirebase(uid!!)
         } else {
             bindUI()
         }
 
+        //----------------------------------------------------------
+        // ✅ 3. Setup signature pad
+        //----------------------------------------------------------
         setupSignature()
     }
-    /**
-     * ✅ FIXED: Firebase DOES NOT overwrite the correct values anymore.
-     * It only fills values that were NOT passed through Intent.
-     */
+
+    // -------------------------------------------------------------
+    // ✅ Load user from Firebase ONLY if details were not passed
+    // -------------------------------------------------------------
     private fun loadUserFromFirebase(uid: String) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
@@ -87,7 +95,6 @@ class DetailsActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // ✅ Base user details from Firebase
                 user = User(
                     name = snap.child("name").value as? String ?: "",
                     registerNo = snap.child("registerNo").value as? String ?: "",
@@ -106,12 +113,12 @@ class DetailsActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                // ✅ ONLY update collegeName if Intent did NOT send it
+                // ✅ If Dashboard didn’t pass college → load from Firebase
                 if (collegeName.isBlank()) {
                     collegeName = snap.child("collegeName").value as? String ?: ""
                 }
 
-                // ✅ ONLY update arrears if Intent did NOT send them
+                // ✅ If Dashboard didn’t pass arrears → load from Firebase
                 if (!intent.hasExtra("hasArrears")) {
                     hasArrears = snap.child("hasArrears").value as? Boolean ?: false
                 }
@@ -126,10 +133,9 @@ class DetailsActivity : AppCompatActivity() {
             }
     }
 
-    /**
-     * ✅ FINAL FIX: ALL values shown correctly.
-     * College, arrears, arrearsCount come directly from Intent (correct)
-     */
+    // -------------------------------------------------------------
+    // ✅ Bind all UI elements with correct values
+    // -------------------------------------------------------------
     private fun bindUI() {
         val u = user ?: return
 
@@ -140,7 +146,7 @@ class DetailsActivity : AppCompatActivity() {
             } catch (_: Exception) {}
         }
 
-        // ✅ Basic Info
+        // ✅ Basic fields
         binding.tvName.text = "Name: ${u.name}"
         binding.tvReg.text = "Register No: ${u.registerNo}"
         binding.tvRoll.text = "Roll No: ${u.rollNo}"
@@ -153,17 +159,17 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvDept.text = "Department: ${u.department}"
         binding.tvSem.text = "Semester: ${u.semester}"
 
-        // ✅ FIXED: CORRECT COLLEGE from Intent
+        // ✅ Fixed: Always correct college
         binding.tvCollege.text = "College: $collegeName"
 
-        // ✅ FIXED: CORRECT ARREARS from Intent
-        binding.tvHasArrears.text =
-            if (hasArrears) "Has Arrears: Yes" else "Has Arrears: No"
-
+        // ✅ Fixed: Correct arrears status
+        binding.tvHasArrears.text = if (hasArrears) "Has Arrears: Yes" else "Has Arrears: No"
         binding.tvArrearsCount.text = "Arrears Count: $arrearsCount"
 
+        // ✅ Fees calculation
         updateFeesUI(u)
     }
+
     private fun updateFeesUI(u: User) {
 
         val total = when (u.department) {
@@ -197,7 +203,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private fun buildDots(percent: Int) {
         binding.dotsContainer.removeAllViews()
-        val filled = percent / 10   // number of filled dots
+        val filled = percent / 10
 
         repeat(10) { i ->
             val dot = View(this)
@@ -209,25 +215,23 @@ class DetailsActivity : AppCompatActivity() {
                 if (i < filled) R.drawable.progress_dot_paid
                 else R.drawable.progress_dot_empty
             )
+
             binding.dotsContainer.addView(dot)
         }
-    }private fun setupSignature() {
+    }
+
+    // -------------------------------------------------------------
+    // ✅ Signature Capture
+    // -------------------------------------------------------------
+    private fun setupSignature() {
 
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
             override fun onStartSigning() {}
-
-            override fun onSigned() {
-                binding.btnSubmit.isEnabled = true
-            }
-
-            override fun onClear() {
-                binding.btnSubmit.isEnabled = false
-            }
+            override fun onSigned() { binding.btnSubmit.isEnabled = true }
+            override fun onClear() { binding.btnSubmit.isEnabled = false }
         })
 
-        binding.btnClearSign.setOnClickListener {
-            binding.signPad.clear()
-        }
+        binding.btnClearSign.setOnClickListener { binding.signPad.clear() }
 
         binding.btnSubmit.setOnClickListener {
 
@@ -236,15 +240,14 @@ class DetailsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // ✅ Save signature to cache folder
-            val temp = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
-            FileOutputStream(temp).use {
+            // ✅ Save signature locally
+            val file = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
+            FileOutputStream(file).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
 
-            // ✅ Convert file to URI (for next activity)
             signatureUri =
-                FileProvider.getUriForFile(this, "$packageName.provider", temp)
+                FileProvider.getUriForFile(this, "$packageName.provider", file)
 
             goAcknowledgement()
         }
