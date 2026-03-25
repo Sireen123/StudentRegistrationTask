@@ -18,10 +18,8 @@ import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import com.example.studentregistration.api.DatasetNetworkModule
 import com.example.studentregistration.data.*
 import com.example.studentregistration.databinding.ActivityMainBinding
-import com.example.studentregistration.model.University
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,24 +70,30 @@ class MainActivity : AppCompatActivity() {
         session = SessionPrefs(this)
         userRepo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
+        // ✅ FIX: Back button works now
+        binding.includeBack.btnBack.setOnClickListener {
+            startActivity(Intent(this, StartActivity::class.java))
+            finish()
+        }
+
         binding.btnUploadPhoto.setOnClickListener { pickImage.launch(arrayOf("image/*")) }
 
-        // ✅ Student name → alphabets only
+        // ✅ Student name → letters only
         binding.etName.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z ]+"))) src else ""
         })
 
-        // ✅ Parent name → alphabets only
+        // ✅ Parent name → letters only
         binding.etParentName.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z ]+"))) src else ""
         })
 
-        // ✅ Roll No → alphabets + numbers
+        // ✅ Roll No → letters + numbers
         binding.etRoll.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z0-9]+"))) src else ""
         })
 
-        // ✅ NO COLLEGE PICKER — Just EditText now
+        // ✅ College edit text
         binding.etCollege.addTextChangedListener {
             collegeName = it.toString().trim()
         }
