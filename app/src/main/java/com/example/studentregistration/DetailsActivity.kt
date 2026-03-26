@@ -43,7 +43,7 @@ class DetailsActivity : AppCompatActivity() {
         binding.includeBack.btnBack.setOnClickListener { finish() }
 
         //----------------------------------------------------------
-        // ✅ 1. Read values passed from previous activity (Dashboard)
+        // ✅ 1. Read passed values
         //----------------------------------------------------------
         user = intent.getParcelableExtra("user")
 
@@ -68,22 +68,23 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
 
         //----------------------------------------------------------
-        // ✅ 2. If no user found in Intent → load from Firebase
+        // ✅ 2. Load user
         //----------------------------------------------------------
         if (user == null) {
             loadUserFromFirebase(uid!!)
         } else {
             bindUI()
+            binding.tvSignedBy.text = "Signed by: ${user?.name}"   // ✅ UPDATE
         }
 
         //----------------------------------------------------------
-        // ✅ 3. Setup signature pad
+        // ✅ 3. Signature Setup
         //----------------------------------------------------------
         setupSignature()
     }
 
     // -------------------------------------------------------------
-    // ✅ Load user from Firebase ONLY if details were not passed
+    // ✅ Load user from Firebase
     // -------------------------------------------------------------
     private fun loadUserFromFirebase(uid: String) {
 
@@ -113,20 +114,21 @@ class DetailsActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                // ✅ College fix
                 if (collegeName.isBlank()) {
                     collegeName = snap.child("collegeName").value as? String ?: ""
                 }
 
-                // ✅ Arrears fix
                 if (!intent.hasExtra("hasArrears")) {
                     hasArrears = snap.child("hasArrears").value as? Boolean ?: false
                 }
+
                 if (!intent.hasExtra("arrearsCount")) {
                     arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
                 }
 
                 bindUI()
+                binding.tvSignedBy.text = "Signed by: ${user?.name}"   // ✅ UPDATE
+
             }
             .addOnFailureListener {
                 toast("Failed to load user.")
@@ -134,19 +136,17 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     // -------------------------------------------------------------
-    // ✅ Bind all UI elements with correct values
+    // ✅ Bind UI fields
     // -------------------------------------------------------------
     private fun bindUI() {
         val u = user ?: return
 
-        // ✅ Profile Image
         if (!u.profilePhoto.isNullOrEmpty()) {
             try {
                 binding.imgProfile.setImageURI(Uri.parse(u.profilePhoto!!))
             } catch (_: Exception) {}
         }
 
-        // ✅ Basic fields
         binding.tvName.text = "Name: ${u.name}"
         binding.tvReg.text = "Register No: ${u.registerNo}"
         binding.tvRoll.text = "Roll No: ${u.rollNo}"
@@ -158,19 +158,15 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvParent.text = "Parent/Guardian: ${u.parentName}"
         binding.tvDept.text = "Department: ${u.department}"
         binding.tvSem.text = "Semester: ${u.semester}"
-
         binding.tvCollege.text = "College: $collegeName"
 
         binding.tvHasArrears.text = if (hasArrears) "Has Arrears: Yes" else "Has Arrears: No"
         binding.tvArrearsCount.text = "Arrears Count: $arrearsCount"
 
         updateFeesUI(u)
-
-        // ✅ ADD THIS — Only update for course clicks
         setupCourseClicks()
     }
 
-    // ✅ COURSE CLICK SETUP (ONLY NEW PART)
     private fun setupCourseClicks() {
         binding.tvCourseCSE.setOnClickListener { openCourse(binding.tvCourseCSE.text.toString()) }
         binding.tvCourseECE.setOnClickListener { openCourse(binding.tvCourseECE.text.toString()) }
@@ -181,7 +177,6 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvCourseBCA.setOnClickListener { openCourse(binding.tvCourseBCA.text.toString()) }
     }
 
-    // ✅ OPEN COURSE ACTIVITY (ONLY NEW PART)
     private fun openCourse(fullText: String) {
 
         val parts = fullText.split("—").map { it.trim() }
