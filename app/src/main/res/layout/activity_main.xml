@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:fitsSystemWindows="true"
-    android:background="#FFFBFE">
+    android:background="#FFFBFE"
+    android:fitsSystemWindows="true">
 
     <include
         android:id="@+id/includeBack"
@@ -16,8 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true"
-        android:clipToPadding="false">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,11 +29,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
                 android:text="Student Registration"
-                android:textColor="#000000"
+                android:textColor="#000"
+                android:textStyle="bold"
                 android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_marginBottom="20dp" />
 
             <!-- PROFILE -->
             <LinearLayout
@@ -51,16 +50,15 @@
                     android:layout_height="120dp"
                     android:src="@drawable/ic_person_placeholder"
                     android:scaleType="centerCrop"
-                    android:layout_gravity="center"
-                    app:shapeAppearanceOverlay="@style/CircleImage"
-                    android:contentDescription="profile_photo" />
+                    android:contentDescription="@string/app_name"
+                    app:shapeAppearanceOverlay="@style/CircleImage" />
 
                 <Button
                     android:id="@+id/btnUploadPhoto"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Upload Photo" />
+                    android:text="Upload Photo"
+                    android:layout_marginTop="10dp" />
 
             </LinearLayout>
 
@@ -76,11 +74,11 @@
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- REGISTER NUMBER -->
+            <!-- REGISTER -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRegister"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -95,11 +93,11 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:digits="0123456789"
-                    android:singleLine="true"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- ROLL NUMBER -->
+            <!-- ROLL -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRoll"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -113,46 +111,52 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
-                    android:singleLine="true"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- GENDER -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:text="Gender"
                 android:textColor="#000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:layout_marginTop="12dp" />
 
-            <RadioGroup
-                android:id="@+id/rgGender"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/genderSegment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp">
+                android:layout_marginTop="6dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
 
-                <RadioButton
-                    android:id="@+id/rbMale"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMale"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:text="Male" />
 
-                <RadioButton
-                    android:id="@+id/rbFemale"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFemale"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="22dp"
+                    android:layout_weight="1"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:text="Female" />
 
-                <RadioButton
-                    android:id="@+id/rbOther"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOther"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="22dp"
+                    android:layout_weight="1"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:text="Other" />
-            </RadioGroup>
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <!-- ADDRESS -->
             <com.google.android.material.textfield.TextInputLayout
@@ -167,19 +171,19 @@
                     android:id="@+id/etAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="top"
                     android:minLines="2"
-                    android:inputType="textMultiLine"
-                    android:imeOptions="actionNext" />
+                    android:gravity="top"
+                    android:inputType="textMultiLine" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- PHONE -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="12dp">
 
                 <com.hbb20.CountryCodePicker
                     android:id="@+id/countryCodePicker"
@@ -202,9 +206,10 @@
                         android:layout_height="wrap_content"
                         android:inputType="number"
                         android:digits="0123456789"
-                        android:singleLine="true"
-                        android:imeOptions="actionNext" />
+                        android:singleLine="true" />
+
                 </com.google.android.material.textfield.TextInputLayout>
+
             </LinearLayout>
 
             <!-- EMAIL -->
@@ -221,8 +226,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
-                    android:singleLine="true"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- PASSWORD -->
@@ -240,8 +245,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
-                    android:singleLine="true"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- DOB -->
@@ -260,9 +265,10 @@
                     android:focusable="false"
                     android:clickable="true"
                     android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- PARENT NAME -->
+            <!-- PARENT -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilParent"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -276,9 +282,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- ✅ COLLEGE NAME (NO SPINNER ANYMORE) -->
+            <!-- COLLEGE -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilCollege"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -292,16 +299,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:singleLine="true" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- DEPARTMENT -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
                 android:text="Department"
                 android:textColor="#000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:layout_marginTop="14dp" />
 
             <Spinner
                 android:id="@+id/spDepartment"
@@ -313,10 +321,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
                 android:text="Semester"
                 android:textColor="#000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:layout_marginTop="14dp" />
 
             <Spinner
                 android:id="@+id/spSemester"
@@ -329,8 +337,8 @@
                 android:id="@+id/llArrears"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
                 android:orientation="vertical"
+                android:layout_marginTop="14dp"
                 android:visibility="gone">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
@@ -355,20 +363,28 @@
                         android:inputType="number"
                         android:digits="0123456789"
                         android:singleLine="true" />
+
                 </com.google.android.material.textfield.TextInputLayout>
+
             </LinearLayout>
 
+            <!-- FEES PAID SWITCH -->
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/swPaid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="I have paid the semester fees" />
+                android:text="I have paid the semester fees"
+                android:layout_marginTop="14dp" />
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- REGISTER BUTTON -->
+    <!-- ✅ SHIMMER (FIXED) -->
+    <include
+        android:id="@+id/shimmerLayout"
+        layout="@layout/shimmer_loading" />
+
+    <!-- ✅ REGISTER BUTTON -->
     <Button
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
@@ -376,7 +392,6 @@
         android:text="Register"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:backgroundTint="#3F51B5"
-        android:elevation="10dp" />
+        android:backgroundTint="#3F51B5" />
 
 </LinearLayout>

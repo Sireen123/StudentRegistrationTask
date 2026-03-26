@@ -3,23 +3,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.studentregistration">
 
-    <!-- ======= Permissions ======= -->
+    <!-- ===== Permissions ===== -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Android 13+ (Images only) -->
+    <!-- ✅ CAMERA Permission -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ✅ Camera hardware is optional -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Android 13+ -->
     <uses-permission
         android:name="android.permission.READ_MEDIA_IMAGES"
-        tools:targetApi="33" />
+        tools:targetApi="33"/>
 
-    <!-- For API <= 32 image picking -->
+    <!-- <= Android 12 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+        android:maxSdkVersion="32"/>
 
-    <!-- Only needed <= API 28 -->
+    <!-- <= Android 9 -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="28"/>
 
     <application
         android:allowBackup="true"
@@ -31,7 +37,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentRegistration">
 
-        <!-- Launcher Activity -->
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true"
@@ -64,17 +69,17 @@
             android:name=".LoginActivity"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.StudentRegistration" />
+            android:theme="@style/Theme.StudentRegistration"/>
 
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
+            android:windowSoftInputMode="stateHidden|adjustResize"/>
 
         <activity android:name=".DetailsActivity" android:exported="false"/>
         <activity android:name=".CourseDetailsActivity" android:exported="false"/>
 
-        <!-- ======= FileProvider (required for profile/signature images) ======= -->
+        <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -82,8 +87,9 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/file_paths"/>
         </provider>
 
     </application>
+
 </manifest>

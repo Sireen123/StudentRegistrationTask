@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="28dp"
+    android:gravity="center"
+    android:background="@drawable/success_dialog_bg">
+
+    <ImageView
+        android:id="@+id/imgSuccess"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_success" />
+
+    <TextView
+        android:id="@+id/txtSuccessTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Success!"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        android:paddingTop="12dp" />
+
+    <TextView
+        android:id="@+id/txtSuccessMsg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Registration Completed"
+        android:textSize="16sp"
+        android:textColor="#444444"
+        android:paddingTop="6dp"
+        android:gravity="center" />
+
+</LinearLayout>

@@ -2,15 +2,21 @@ package com.example.studentregistration
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
+import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.view.animation.AlphaAnimation
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +26,8 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.example.studentregistration.data.*
 import com.example.studentregistration.databinding.ActivityMainBinding
+import com.facebook.shimmer.ShimmerFrameLayout
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_STUDENT_ID = "EXTRA_STUDENT_ID"
         const val EXTRA_NAV_TARGET = "NAV_TARGET"
-        const val EXTRA_FORCE_DASHBOARD = "FORCE_DASHBOARD"
+        const val EXTRA_FORCE_DASHBOARD = "EXTRA_FORCE_DASHBOARD"
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -42,13 +50,35 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userRepo: UserRepository
     private val calendar = Calendar.getInstance()
 
-    private var feesPaidAmount: String = "0"
+    private var feesPaidAmount = "0"
     private var selectedImageUri: Uri? = null
+
+    private lateinit var shimmer: ShimmerFrameLayout
 
     private val auth by lazy { FirebaseAuth.getInstance() }
 
     private lateinit var collegeName: String
 
+    // ✅ CAMERA URI
+    private var cameraUri: Uri? = null
+
+    // ✅ CAMERA Permission Request
+    private val requestCameraPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) openCamera()
+            else toast("Camera permission is required")
+        }
+
+    // ✅ CAMERA Launcher
+    private val openCameraLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success && cameraUri != null) {
+                selectedImageUri = cameraUri
+                binding.imgProfile.setImageURI(cameraUri)
+            }
+        }
+
+    // ✅ GALLERY Launcher
     private val pickImage =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { srcUri ->
             if (srcUri != null) {
@@ -56,7 +86,6 @@ class MainActivity : AppCompatActivity() {
                     selectedImageUri = copyToAppCache(srcUri)
                     binding.imgProfile.setImageURI(selectedImageUri)
                 } catch (_: Exception) {
-                    selectedImageUri = null
                     toast("Unable to load image")
                 }
             }
@@ -67,33 +96,39 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         session = SessionPrefs(this)
         userRepo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
-        // ✅ FIX: Back button works now
+        shimmer = findViewById(R.id.shimmerLayout)
+
+        // ✅ Back button
         binding.includeBack.btnBack.setOnClickListener {
             startActivity(Intent(this, StartActivity::class.java))
             finish()
         }
 
-        binding.btnUploadPhoto.setOnClickListener { pickImage.launch(arrayOf("image/*")) }
+        // ✅ Photo Options
+        binding.btnUploadPhoto.setOnClickListener { showPhotoOptions() }
 
-        // ✅ Student name → letters only
+        // ✅ First Letter Auto Caps
+        binding.etName.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        binding.etParentName.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        binding.etRoll.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        binding.etAddress.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        binding.etCollege.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+
+        // ✅ Input filters
         binding.etName.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z ]+"))) src else ""
         })
-
-        // ✅ Parent name → letters only
         binding.etParentName.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z ]+"))) src else ""
         })
-
-        // ✅ Roll No → letters + numbers
         binding.etRoll.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z0-9]+"))) src else ""
         })
 
-        // ✅ College edit text
         binding.etCollege.addTextChangedListener {
             collegeName = it.toString().trim()
         }
@@ -102,24 +137,26 @@ class MainActivity : AppCompatActivity() {
         setupDobPicker()
         setupArrearUI()
 
+        // ✅ Phone logic
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
         binding.countryCodePicker.setOnCountryChangeListener { applyPhoneMaxLengthForCountry() }
 
-        binding.swPaid.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) showFeesPopup() else feesPaidAmount = "0"
+        // ✅ Fees switch
+        binding.swPaid.setOnCheckedChangeListener { _, checked ->
+            if (checked) showFeesPopup() else feesPaidAmount = "0"
         }
 
+        // ✅ Register Logic
         binding.btnRegister.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
+
             if (!isOnline()) {
                 toast("No internet connection")
                 return@setOnClickListener
             }
 
-            val original = binding.btnRegister.text
-            binding.btnRegister.isEnabled = false
-            binding.btnRegister.text = "Please wait…"
+            startShimmer()
 
             val user = buildUser()
             val hasArrears = binding.swHasArrears.isChecked
@@ -135,16 +172,79 @@ class MainActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         pushToFirebase(user.email, user.password, user, hasArrears, arrearsCount)
                     }
-
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        binding.btnRegister.isEnabled = true
-                        binding.btnRegister.text = original
+                        stopShimmer()
                         toast("Error: ${e.message}")
                     }
                 }
             }
         }
+
+        // ✅ Simple smooth fade
+        fadeIn(binding.scrollRoot)
+    }
+
+    // ✅ Photo menu with Remove + Preview
+    private fun showPhotoOptions() {
+        val options = arrayOf("Camera", "Gallery", "Remove Photo", "Preview Photo")
+
+        AlertDialog.Builder(this)
+            .setTitle("Select Option")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> requestCameraPermission.launch(android.Manifest.permission.CAMERA)
+                    1 -> pickImage.launch(arrayOf("image/*"))
+                    2 -> {
+                        selectedImageUri = null
+                        binding.imgProfile.setImageResource(R.drawable.ic_person_placeholder)
+                    }
+                    3 -> previewPhoto()
+                }
+            }
+            .show()
+    }
+
+    private fun previewPhoto() {
+        if (selectedImageUri == null) {
+            toast("No photo to preview")
+            return
+        }
+
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val imageView = ImageView(this)
+        imageView.setImageURI(selectedImageUri)
+        dialog.setContentView(imageView)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        dialog.show()
+    }
+
+    private fun openCamera() {
+        val file = File(cacheDir, "cam_${System.currentTimeMillis()}.jpg")
+        cameraUri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
+        cameraUri?.let { openCameraLauncher.launch(it) }
+    }
+
+    private fun startShimmer() {
+        shimmer.visibility = View.VISIBLE
+        shimmer.startShimmer()
+    }
+
+    private fun stopShimmer() {
+        shimmer.stopShimmer()
+        shimmer.visibility = View.GONE
+    }
+
+    private fun showSuccessPopup() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_success, null)
+        dialog.setContentView(view)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+
+        view.postDelayed({ dialog.dismiss() }, 2000)
     }
 
     private fun pushToFirebase(
@@ -154,31 +254,37 @@ class MainActivity : AppCompatActivity() {
         hasArrears: Boolean,
         arrearsCount: Int
     ) {
-
         auth.fetchSignInMethodsForEmail(email)
             .addOnSuccessListener { methods ->
 
                 val exists = !methods.signInMethods.isNullOrEmpty()
 
                 val finishFlow: (String) -> Unit = { uid ->
+                    stopShimmer()
+                    showSuccessPopup()
                     upsertUser(uid, user, hasArrears, arrearsCount)
                 }
 
                 if (exists) {
                     auth.signInWithEmailAndPassword(email, password)
                         .addOnSuccessListener { finishFlow(it.user!!.uid) }
-                        .addOnFailureListener { toast("Login failed") }
+                        .addOnFailureListener {
+                            stopShimmer()
+                            toast("Login failed")
+                        }
 
                 } else {
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnSuccessListener { finishFlow(it.user!!.uid) }
-                        .addOnFailureListener { toast("Registration failed") }
+                        .addOnFailureListener {
+                            stopShimmer()
+                            toast("Registration failed")
+                        }
                 }
             }
     }
 
     private fun upsertUser(uid: String, user: User, hasArrears: Boolean, arrearsCount: Int) {
-
         val map = mapOf(
             "uid" to uid,
             "name" to user.name,
@@ -237,11 +343,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ Segmented Gender Logic
     private fun buildUser(): User {
 
-        val gender = when (binding.rgGender.checkedRadioButtonId) {
-            binding.rbMale.id -> "Male"
-            binding.rbFemale.id -> "Female"
+        val gender = when (binding.genderSegment.checkedButtonId) {
+            binding.btnMale.id -> "Male"
+            binding.btnFemale.id -> "Female"
             else -> "Other"
         }
 
@@ -282,7 +389,8 @@ class MainActivity : AppCompatActivity() {
         if (binding.etParentName.text!!.isEmpty()) return err(binding.etParentName, "Required")
         if (binding.etCollege.text!!.isEmpty()) return err(binding.etCollege, "Required")
 
-        if (binding.rgGender.checkedRadioButtonId == -1) {
+        // ✅ Validation for segmented gender
+        if (binding.genderSegment.checkedButtonId == View.NO_ID) {
             toast("Select Gender")
             return false
         }
@@ -445,4 +553,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun toast(msg: String) =
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+    // ✅ Smooth fade animation
+    private fun fadeIn(view: View) {
+        val anim = AlphaAnimation(0f, 1f)
+        anim.duration = 500
+        view.startAnimation(anim)
+    }
 }
