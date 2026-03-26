@@ -4,19 +4,19 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <!-- ✅ Added certificateRoot -->
     <LinearLayout
+        android:id="@+id/certificateRoot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal">
 
-        <!-- Gold strip -->
         <View
             android:layout_width="12dp"
             android:layout_height="match_parent"
             android:background="@drawable/gold_gradient" />
 
-        <!-- Certificate Card -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -27,7 +27,6 @@
             android:elevation="4dp"
             android:padding="20dp">
 
-            <!-- PROFILE PHOTO TOP‑RIGHT -->
             <ImageView
                 android:id="@+id/imgProfile"
                 android:layout_width="110dp"
@@ -39,16 +38,12 @@
                 android:background="@drawable/profile_border"
                 android:visibility="gone" />
 
-            <!-- Optional logo -->
             <ImageView
                 android:id="@+id/imgLogo"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:src="@drawable/logo_gold_seal"
-                android:layout_gravity="start"
-                android:contentDescription="logo"/>
+                android:src="@drawable/logo_gold_seal" />
 
-            <!-- Title -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
@@ -57,99 +52,52 @@
                 android:textColor="#107E84"
                 android:textStyle="bold"
                 android:textSize="22sp"
-                android:gravity="center"
-                android:paddingTop="8dp"
-                android:paddingBottom="6dp"/>
+                android:gravity="center" />
 
-            <!-- Divider -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#C2A14D"
-                android:layout_marginBottom="12dp"/>
+                android:background="#C2A14D" />
 
-            <!-- Body -->
             <TextView
                 android:id="@+id/tvBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:lineSpacingExtra="4dp"
-                android:textColor="#333"/>
+                android:textColor="#333" />
 
-            <!-- Date -->
             <TextView
                 android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Date:"
-                android:textSize="15sp"
-                android:paddingTop="18dp"
-                android:paddingBottom="18dp"/>
+                android:text="Date:" />
 
-            <!-- Signature -->
             <ImageView
                 android:id="@+id/ivSignature"
                 android:layout_width="220dp"
                 android:layout_height="80dp"
-                android:adjustViewBounds="true"
-                android:layout_gravity="start" />
-
-            <View
-                android:layout_width="200dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="4dp"
-                android:background="#888" />
-
-            <TextView
-                android:id="@+id/tvStudentSig"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Student Signature"
-                android:textSize="12sp"
-                android:paddingTop="4dp" />
-
-            <!-- SPACE -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="26dp"/>
-
-            <!-- College line -->
-            <View
-                android:layout_width="200dp"
-                android:layout_height="1dp"
-                android:background="#888"
-                android:layout_gravity="center"/>
+                android:adjustViewBounds="true" />
 
             <TextView
                 android:id="@+id/tvCollege"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="College Name"
-                android:textSize="13sp"
-                android:paddingTop="4dp"
-                android:layout_gravity="center" />
+                android:text="College Name" />
 
-            <!-- QR Code -->
             <ImageView
                 android:id="@+id/imgQr"
                 android:layout_width="160dp"
                 android:layout_height="160dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:contentDescription="QR"
-                android:padding="4dp" />
+                android:layout_marginTop="12dp" />
 
-            <!-- “Scan to verify” -->
             <TextView
                 android:id="@+id/tvScanToVerify"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Scan to verify"
-                android:textSize="12sp"
-                android:textColor="#666666"
-                android:layout_marginTop="6dp"
-                android:layout_gravity="center_horizontal"/>
+                android:text="Scan to verify" />
+
         </LinearLayout>
+
     </LinearLayout>
+
 </ScrollView>

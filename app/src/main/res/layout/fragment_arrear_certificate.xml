@@ -4,7 +4,9 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <!-- ✅ Added certificateRoot wrapper -->
     <LinearLayout
+        android:id="@+id/certificateRoot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -27,7 +29,7 @@
             android:elevation="4dp"
             android:padding="20dp">
 
-            <!-- STUDENT PHOTO TOP-RIGHT -->
+            <!-- STUDENT PHOTO -->
             <ImageView
                 android:id="@+id/imgProfile"
                 android:layout_width="110dp"
@@ -39,16 +41,15 @@
                 android:background="@drawable/profile_border"
                 android:visibility="gone" />
 
-            <!-- Optional logo -->
+            <!-- Logo -->
             <ImageView
                 android:id="@+id/logo"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:src="@drawable/logo_gold_seal"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/app_name" />
+                android:adjustViewBounds="true" />
 
-            <!-- TITLE -->
+            <!-- Title -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
@@ -59,38 +60,38 @@
                 android:textSize="22sp"
                 android:gravity="center"
                 android:paddingTop="8dp"
-                android:paddingBottom="6dp"/>
+                android:paddingBottom="6dp" />
 
-            <!-- DIVIDER -->
+            <!-- Divider -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#C2A14D"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp" />
 
-            <!-- BODY TEXT -->
+            <!-- Body -->
             <TextView
                 android:id="@+id/tvBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:lineSpacingExtra="4dp"
-                android:textColor="#333"/>
+                android:textColor="#333" />
 
-            <!-- WARNING BOX -->
+            <!-- ✅ tvWarn (needed by Kotlin file) -->
             <TextView
                 android:id="@+id/tvWarn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="NOTE: You have arrears pending."
+                android:text="NOTE: You currently have arrears."
                 android:padding="12dp"
                 android:textColor="#B00020"
                 android:textStyle="bold"
                 android:background="#FFF0F0"
                 android:textSize="15sp"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="16dp" />
 
-            <!-- STEPS BOX -->
+            <!-- ✅ tvSteps (needed by Kotlin file) -->
             <TextView
                 android:id="@+id/tvSteps"
                 android:layout_width="match_parent"
@@ -99,19 +100,19 @@
                 android:background="#FFF7F7"
                 android:textColor="#B00020"
                 android:textSize="14sp"
-                android:layout_marginTop="6dp"/>
+                android:layout_marginTop="6dp" />
 
-            <!-- DATE -->
+            <!-- Date -->
             <TextView
                 android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
                 android:text="Date:"
+                android:textSize="15sp"
                 android:paddingTop="18dp"
-                android:paddingBottom="18dp"/>
+                android:paddingBottom="18dp" />
 
-            <!-- SIGNATURE -->
+            <!-- Signature -->
             <ImageView
                 android:id="@+id/ivSignature"
                 android:layout_width="200dp"
@@ -122,7 +123,7 @@
                 android:layout_width="200dp"
                 android:layout_height="1dp"
                 android:background="#888"
-                android:layout_marginTop="4dp"/>
+                android:layout_marginTop="4dp" />
 
             <TextView
                 android:id="@+id/tvStudentSig"
@@ -130,21 +131,21 @@
                 android:layout_height="wrap_content"
                 android:text="Student Signature"
                 android:textSize="12sp"
-                android:paddingTop="4dp"/>
+                android:paddingTop="4dp" />
 
             <!-- SPACE -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="26dp" />
 
-            <!-- COLLEGE LINE -->
+            <!-- College underline -->
             <View
                 android:layout_width="200dp"
                 android:layout_height="1dp"
                 android:background="#888"
                 android:layout_gravity="center" />
 
-            <!-- COLLEGE NAME -->
+            <!-- College name -->
             <TextView
                 android:id="@+id/tvCollege"
                 android:layout_width="wrap_content"
@@ -152,28 +153,27 @@
                 android:text="College Name"
                 android:textSize="13sp"
                 android:paddingTop="4dp"
-                android:layout_gravity="center"/>
+                android:layout_gravity="center" />
 
-            <!-- QR CODE -->
+            <!-- QR Code -->
             <ImageView
                 android:id="@+id/imgQr"
                 android:layout_width="160dp"
                 android:layout_height="160dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
                 android:padding="4dp"
-                android:contentDescription="QR" />
+                android:layout_marginTop="12dp" />
 
-            <!-- Scan to verify -->
+            <!-- Scan Label -->
             <TextView
                 android:id="@+id/tvScanToVerify"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Scan to verify"
-                android:textColor="#666666"
+                android:textColor="#666"
                 android:textSize="12sp"
-                android:layout_marginTop="6dp"
-                android:layout_gravity="center_horizontal"/>
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp" />
 
         </LinearLayout>
     </LinearLayout>

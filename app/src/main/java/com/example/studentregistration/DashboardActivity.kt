@@ -40,11 +40,8 @@ class DashboardActivity : AppCompatActivity() {
         val subtitle = findViewById<TextView>(R.id.tvSubtitle)
         val progress = findViewById<ProgressBar>(R.id.progressLoading)
 
-        //-------------------------------------------------
-        // ✅ 1. GET UID (Registration → Intent | Login → SharedPrefs)
-        //-------------------------------------------------
+        // ✅ 1. GET UID
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
-
         if (studentId.isNullOrEmpty()) {
             val sp = getSharedPreferences("user_session", MODE_PRIVATE)
             studentId = sp.getString("real_uid", null)
@@ -60,31 +57,25 @@ class DashboardActivity : AppCompatActivity() {
         subtitle.text = "Loading..."
         progress.visibility = View.VISIBLE
 
-        //-------------------------------------------------
-        // ✅ 2. LOAD DATA FROM SESSIONPREFS (LOGIN FLOW)
-        //-------------------------------------------------
+        // ✅ 2. LOAD SESSIONPREFS
         val session = SessionPrefs(this)
         val sessionCollege = session.collegeName ?: ""
         val sessionArrears = session.hasArrears
         val sessionArrearCount = session.arrearsCount
 
-        //-------------------------------------------------
         // ✅ 3. READ FROM INTENT (REGISTRATION FLOW)
-        //-------------------------------------------------
         val intentCollege = intent.getStringExtra("collegeName")
         val intentHasArrears = intent.getBooleanExtra("hasArrears", sessionArrears)
         val intentArrearCount = intent.getIntExtra("arrearsCount", sessionArrearCount)
 
-        // ✅ Decide final values
+        // ✅ Final values
         collegeName = intentCollege ?: sessionCollege
         hasArrears = intentHasArrears
         arrearsCount = intentArrearCount
 
         user = intent.getParcelableExtra("user")
 
-        //-------------------------------------------------
-        // ✅ 4. If user came from registration → ready
-        //-------------------------------------------------
+        // ✅ If came from registration → ready
         if (user != null) {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
@@ -94,18 +85,14 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        //-------------------------------------------------
-        // ✅ 5. Otherwise load from Firebase (login flow)
-        //-------------------------------------------------
+        // ✅ Load from Firebase (login)
         loadUserFromFirebase(studentId!!, progress, subtitle)
 
         setupGrid()
         setupLogout()
     }
 
-    //-------------------------------------------------
-    // ✅ FETCH FULL USER DETAILS FROM FIREBASE
-    //-------------------------------------------------
+    // ✅ FETCH USER DATA
     private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
@@ -118,7 +105,6 @@ class DashboardActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // ✅ Create User model
                 user = User(
                     name = snap.child("name").value as? String ?: "",
                     registerNo = snap.child("registerNo").value as? String ?: "",
@@ -137,7 +123,6 @@ class DashboardActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                // ✅ LOAD College & Arrears from Firebase (login flow)
                 collegeName = snap.child("collegeName").value as? String ?: collegeName
                 hasArrears = snap.child("hasArrears").value as? Boolean ?: hasArrears
                 arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: arrearsCount
@@ -153,9 +138,7 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
-    //-------------------------------------------------
-    // ✅ GRID MENU ACTION HANDLER
-    //-------------------------------------------------
+    // ✅ GRID CLICK HANDLER
     private fun setupGrid() {
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         rv.layoutManager = GridLayoutManager(this, 2)
@@ -170,20 +153,13 @@ class DashboardActivity : AppCompatActivity() {
             when (pos) {
                 0 -> startActivity(Intent(this, FeesListActivity::class.java))
                 1 -> showFaq()
-
-                //-------------------------------------------------
-                // ✅ Open Details → ALWAYS send full correct details
-                //-------------------------------------------------
                 2 -> openDetails()
-
                 else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    //-------------------------------------------------
     // ✅ LOGOUT
-    //-------------------------------------------------
     private fun setupLogout() {
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             FirebaseRepo.auth.signOut()
@@ -192,9 +168,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    //-------------------------------------------------
-    // ✅ OPEN DETAILS ACTIVITY (FINAL FIX)
-    //-------------------------------------------------
+    // ✅ OPEN DETAILS
     private fun openDetails() {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
             putExtra("user", user)
@@ -205,9 +179,7 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
-    //-------------------------------------------------
-    // ✅ FAQ BOTTOM SHEET
-    //-------------------------------------------------
+    // ✅ FIXED FAQ — SAME 5 ITEMS AS StartActivity
     private fun showFaq() {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)
@@ -220,9 +192,11 @@ class DashboardActivity : AppCompatActivity() {
 
         rv.adapter = FaqAdapter(
             listOf(
-                FaqItem("How to create account?", "Tap new user."),
+                FaqItem("How to create account?", "Tap New User and fill details."),
                 FaqItem("Why OTP?", "For account security."),
-                FaqItem("Invalid input?", "Fill all required fields.")
+                FaqItem("Invalid input?", "Fill all fields properly."),
+                FaqItem("Why select department?", "Required for certificate."),
+                FaqItem("Where is PDF saved?", "Downloads folder.")
             )
         )
 

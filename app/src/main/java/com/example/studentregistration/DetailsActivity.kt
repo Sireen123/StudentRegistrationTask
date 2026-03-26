@@ -113,12 +113,12 @@ class DetailsActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                // ✅ If Dashboard didn’t pass college → load from Firebase
+                // ✅ College fix
                 if (collegeName.isBlank()) {
                     collegeName = snap.child("collegeName").value as? String ?: ""
                 }
 
-                // ✅ If Dashboard didn’t pass arrears → load from Firebase
+                // ✅ Arrears fix
                 if (!intent.hasExtra("hasArrears")) {
                     hasArrears = snap.child("hasArrears").value as? Boolean ?: false
                 }
@@ -159,19 +159,49 @@ class DetailsActivity : AppCompatActivity() {
         binding.tvDept.text = "Department: ${u.department}"
         binding.tvSem.text = "Semester: ${u.semester}"
 
-        // ✅ Fixed: Always correct college
         binding.tvCollege.text = "College: $collegeName"
 
-        // ✅ Fixed: Correct arrears status
         binding.tvHasArrears.text = if (hasArrears) "Has Arrears: Yes" else "Has Arrears: No"
         binding.tvArrearsCount.text = "Arrears Count: $arrearsCount"
 
-        // ✅ Fees calculation
         updateFeesUI(u)
+
+        // ✅ ADD THIS — Only update for course clicks
+        setupCourseClicks()
+    }
+
+    // ✅ COURSE CLICK SETUP (ONLY NEW PART)
+    private fun setupCourseClicks() {
+        binding.tvCourseCSE.setOnClickListener { openCourse(binding.tvCourseCSE.text.toString()) }
+        binding.tvCourseECE.setOnClickListener { openCourse(binding.tvCourseECE.text.toString()) }
+        binding.tvCourseCIVIL.setOnClickListener { openCourse(binding.tvCourseCIVIL.text.toString()) }
+        binding.tvCourseMECH.setOnClickListener { openCourse(binding.tvCourseMECH.text.toString()) }
+        binding.tvCourseBTECH.setOnClickListener { openCourse(binding.tvCourseBTECH.text.toString()) }
+        binding.tvCourseBARCH.setOnClickListener { openCourse(binding.tvCourseBARCH.text.toString()) }
+        binding.tvCourseBCA.setOnClickListener { openCourse(binding.tvCourseBCA.text.toString()) }
+    }
+
+    // ✅ OPEN COURSE ACTIVITY (ONLY NEW PART)
+    private fun openCourse(fullText: String) {
+
+        val parts = fullText.split("—").map { it.trim() }
+        if (parts.size < 2) {
+            toast("Invalid course info")
+            return
+        }
+
+        val courseName = parts[0]
+        val courseFee = parts[1].replace("₹", "").replace(",", "").trim()
+
+        val intent = Intent(this, CourseDetailsActivity::class.java).apply {
+            putExtra("course_name", courseName)
+            putExtra("course_fee", courseFee)
+        }
+
+        startActivity(intent)
     }
 
     private fun updateFeesUI(u: User) {
-
         val total = when (u.department) {
             "Computer Science" -> 75000
             "Information Technology" -> 75000
@@ -240,7 +270,6 @@ class DetailsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // ✅ Save signature locally
             val file = File(cacheDir, "sig_${System.currentTimeMillis()}.png")
             FileOutputStream(file).use {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
