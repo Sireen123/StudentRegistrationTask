@@ -2,6 +2,7 @@ package com.example.studentregistration
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.example.studentregistration.databinding.ActivityCourseDetailsBinding
 
 // ✅ Firebase (optional usage)
@@ -13,6 +14,17 @@ class CourseDetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCourseDetailsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ APPLY THEME (safe & required for dark/light mode)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
 
         binding = ActivityCourseDetailsBinding.inflate(layoutInflater)

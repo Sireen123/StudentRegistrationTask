@@ -4,15 +4,22 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="?attr/colorSurface">
 
-    <!-- ✅ Your reusable back bar -->
+    <!-- ✅ Reusable Material Back Bar -->
     <include
+        android:id="@+id/backBar"
         layout="@layout/include_back_bar" />
 
-    <!-- ✅ Student list -->
+    <!-- ✅ Student List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvStudents"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingTop="4dp"
+        android:paddingBottom="12dp"
+        android:background="?attr/colorSurface" />
+
 </LinearLayout>

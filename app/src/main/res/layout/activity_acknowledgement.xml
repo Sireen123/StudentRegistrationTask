@@ -3,21 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#FFFBFE"
     android:fitsSystemWindows="true"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- ⭐ TOP BACK BAR -->
+        <!-- ✅ BACK BAR -->
         <include
             android:id="@+id/includeBack"
             layout="@layout/include_back_bar" />
 
-        <!-- Screen Title -->
+        <!-- ✅ SCREEN TITLE -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
@@ -25,29 +25,33 @@
             android:text="ACKNOWLEDGEMENT"
             android:textStyle="bold"
             android:textSize="20sp"
+            android:textColor="?attr/colorOnSurface"
             android:gravity="center"
             android:paddingBottom="12dp"
             android:layout_marginTop="8dp" />
 
-        <!-- Verification Box -->
+        <!-- ✅ VERIFICATION BOX -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="14dp"
-            android:background="#FFF7E6">
+            android:background="?attr/colorSurfaceVariant"
+            android:elevation="2dp">
 
             <TextView
                 android:id="@+id/lblName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Name:"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblReg"
@@ -55,25 +59,29 @@
                 android:layout_height="wrap_content"
                 android:text="Register No:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvReg"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblRoll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Roll No:"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvRoll"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblDept"
@@ -81,12 +89,14 @@
                 android:layout_height="wrap_content"
                 android:text="Department:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvDept"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblSem"
@@ -94,12 +104,14 @@
                 android:layout_height="wrap_content"
                 android:text="Semester:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvSem"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblParent"
@@ -107,12 +119,14 @@
                 android:layout_height="wrap_content"
                 android:text="Parent/Guardian:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvParent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblCollege"
@@ -120,12 +134,14 @@
                 android:layout_height="wrap_content"
                 android:text="College:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvCollege"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/lblArrear"
@@ -133,24 +149,27 @@
                 android:layout_height="wrap_content"
                 android:text="Arrear Status:"
                 android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="6dp" />
 
             <TextView
                 android:id="@+id/tvArrearFlag"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface" />
 
         </LinearLayout>
 
-        <!-- Confirm Checkbox -->
+        <!-- ✅ CONFIRM CHECKBOX -->
         <CheckBox
             android:id="@+id/cbAcknowledge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="I confirm these details are correct."
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginTop="12dp" />
 
-        <!-- Submit Button -->
+        <!-- ✅ SUBMIT BUTTON -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -158,11 +177,12 @@
             android:orientation="horizontal"
             android:paddingTop="8dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubmit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Submit"
+                style="@style/Widget.Material3.Button"
                 android:layout_marginStart="12dp" />
         </LinearLayout>
 

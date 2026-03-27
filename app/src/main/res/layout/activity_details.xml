@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#FFFBFE"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,22 +13,22 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- ⭐ TOP BACK BUTTON BAR -->
+        <!-- ✅ BACK BAR -->
         <include
             android:id="@+id/includeBack"
             layout="@layout/include_back_bar" />
 
-        <!-- Heading -->
+        <!-- ✅ HEADING -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:text="Student Details"
-            android:textColor="#000000"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <!-- ✅ Profile Photo (centered, circular) -->
+        <!-- ✅ PROFILE -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,24 +42,24 @@
                 android:layout_height="110dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_person_placeholder"
-                app:shapeAppearanceOverlay="@style/CircleImage" />
+                app:shapeAppearanceOverlay="@style/CircleImage"/>
         </LinearLayout>
 
-        <!-- Student Fields -->
-        <TextView android:id="@+id/tvName" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Name:" />
-        <TextView android:id="@+id/tvReg" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Register No:" />
-        <TextView android:id="@+id/tvRoll" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Roll No:" />
-        <TextView android:id="@+id/tvAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Address:" />
-        <TextView android:id="@+id/tvPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Phone:" />
-        <TextView android:id="@+id/tvEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Email:" />
-        <TextView android:id="@+id/tvDob" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Date of Birth:" />
-        <TextView android:id="@+id/tvGender" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gender:" />
-        <TextView android:id="@+id/tvParent" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent/Guardian:" />
-        <TextView android:id="@+id/tvCollege" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="College:" />
-        <TextView android:id="@+id/tvDept" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Department:" />
-        <TextView android:id="@+id/tvSem" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Semester:" />
+        <!-- ✅ STUDENT FIELDS -->
+        <TextView android:id="@+id/tvName" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Name:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvReg" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Register No:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvRoll" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Roll No:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Address:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Phone:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Email:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvDob" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Date of Birth:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvGender" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gender:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvParent" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent/Guardian:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvCollege" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="College:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvDept" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Department:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvSem" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Semester:" android:textColor="?attr/colorOnSurface"/>
 
-        <!-- Arrears Section -->
+        <!-- ✅ ARREARS -->
         <LinearLayout
             android:id="@+id/groupArrears"
             android:layout_width="match_parent"
@@ -67,11 +67,22 @@
             android:orientation="vertical"
             android:paddingTop="8dp">
 
-            <TextView android:id="@+id/tvHasArrears" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Arrears History:" />
-            <TextView android:id="@+id/tvArrearsCount" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No. of arrears:" />
+            <TextView
+                android:id="@+id/tvHasArrears"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Arrears History:"
+                android:textColor="?attr/colorOnSurface"/>
+
+            <TextView
+                android:id="@+id/tvArrearsCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No. of arrears:"
+                android:textColor="?attr/colorOnSurface"/>
         </LinearLayout>
 
-        <!-- Fees Progress -->
+        <!-- ✅ FEES PROGRESS -->
         <LinearLayout
             android:id="@+id/feesProgressLayout"
             android:layout_width="match_parent"
@@ -91,14 +102,42 @@
                     android:layout_height="12dp"
                     android:progressDrawable="@drawable/fees_progress_drawable"
                     android:max="100"
-                    android:progress="0" />
+                    android:progress="0"/>
             </FrameLayout>
 
-            <LinearLayout android:id="@+id/dotsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="horizontal" android:layout_marginTop="6dp" />
+            <LinearLayout
+                android:id="@+id/dotsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"/>
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="6dp">
-                <TextView android:id="@+id/tvPaidAmount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="₹0" android:textSize="16sp" android:textStyle="bold" />
-                <TextView android:id="@+id/tvTotalAmount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="₹0" android:textSize="16sp" android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:id="@+id/tvPaidAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="₹0"
+                    android:textStyle="bold"
+                    android:gravity="start"
+                    android:textColor="?attr/colorOnSurface"/>
+
+                <TextView
+                    android:id="@+id/tvTotalAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="₹0"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -108,10 +147,10 @@
             android:layout_height="wrap_content"
             android:text="Balance: ₹0"
             android:textStyle="bold"
-            android:textColor="#C62828"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="4dp"
+            android:textColor="?attr/colorError"/>
 
-        <!-- Fee Structure -->
+        <!-- ✅ COURSE LIST -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -119,7 +158,8 @@
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="6dp"
+            android:textColor="?attr/colorOnSurface"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,16 +169,17 @@
             android:showDividers="middle"
             android:paddingVertical="4dp">
 
-            <TextView android:id="@+id/tvCourseCSE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CSE — ₹75,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseECE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE ECE — ₹70,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CIVIL — ₹68,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseMECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE MECH — ₹72,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseBTECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTECH — ₹80,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseBARCH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BARCH — ₹85,000" android:padding="8dp" android:textColor="#3F51B5" />
-            <TextView android:id="@+id/tvCourseBCA" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BCA — ₹65,000" android:padding="8dp" android:textColor="#3F51B5" />
+            <!-- ✅ ALL COURSE TEXTS AUTO THEME -->
+            <TextView android:id="@+id/tvCourseCSE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CSE — ₹75,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseECE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE ECE — ₹70,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CIVIL — ₹68,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseMECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE MECH — ₹72,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBTECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTECH — ₹80,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBARCH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BARCH — ₹85,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBCA" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BCA — ₹65,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
         </LinearLayout>
 
-        <!-- Signature Section -->
+        <!-- ✅ SIGNATURE SECTION -->
         <LinearLayout
             android:id="@+id/sectionSignature"
             android:layout_width="match_parent"
@@ -151,20 +192,18 @@
                 android:layout_height="wrap_content"
                 android:text="Signature:"
                 android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginBottom="6dp"/>
 
-
-            <!-- ✅ ADDED: tvSignedBy (shows student name) -->
             <TextView
                 android:id="@+id/tvSignedBy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Signed by: NA"
                 android:textSize="12sp"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
-                android:textColor="#000000"
-                android:layout_marginStart="6dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"/>
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -185,16 +224,17 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="11sp"
-                android:textColor="#666666"
-                android:layout_marginTop="6dp" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginTop="6dp"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnClearSign"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Clear"
+                style="@style/Widget.Material3.Button"
                 android:layout_marginTop="6dp"
-                android:layout_gravity="end" />
+                android:layout_gravity="end"/>
 
             <TextView
                 android:id="@+id/tvSignDate"
@@ -206,16 +246,17 @@
                 android:layout_marginTop="8dp"
                 android:text="Date:"
                 android:textStyle="bold"
-                android:textColor="#222222"
+                android:textColor="?attr/colorOnSurface"
                 android:background="@drawable/rounded_pill_bg" />
-
         </LinearLayout>
 
-        <Button
+        <!-- ✅ SUBMIT BUTTON -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit"
+            style="@style/Widget.Material3.Button"
             android:enabled="true"
             android:layout_marginTop="12dp" />
 

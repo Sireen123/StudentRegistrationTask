@@ -10,6 +10,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
@@ -35,6 +36,16 @@ class DetailsActivity : AppCompatActivity() {
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ THEME APPLY BLOCK (Correct position)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -42,9 +53,7 @@ class DetailsActivity : AppCompatActivity() {
         binding.includeBack.tvScreenTitle.text = "My Details"
         binding.includeBack.btnBack.setOnClickListener { finish() }
 
-        //----------------------------------------------------------
-        // ✅ 1. Read passed values
-        //----------------------------------------------------------
+        // ✅ 1. LOAD INTENT VALUES
         user = intent.getParcelableExtra("user")
 
         if (intent.hasExtra("hasArrears"))
@@ -67,25 +76,18 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.tvSignDate.text = "Date: ${dateFormat.format(Date())}"
 
-        //----------------------------------------------------------
-        // ✅ 2. Load user
-        //----------------------------------------------------------
+        // ✅ 2. LOAD USER DATA (local or firebase)
         if (user == null) {
             loadUserFromFirebase(uid!!)
         } else {
             bindUI()
-            binding.tvSignedBy.text = "Signed by: ${user?.name}"   // ✅ UPDATE
+            binding.tvSignedBy.text = "Signed by: ${user?.name}"
         }
 
-        //----------------------------------------------------------
-        // ✅ 3. Signature Setup
-        //----------------------------------------------------------
+        // ✅ 3. Signature logic
         setupSignature()
     }
 
-    // -------------------------------------------------------------
-    // ✅ Load user from Firebase
-    // -------------------------------------------------------------
     private fun loadUserFromFirebase(uid: String) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
@@ -127,17 +129,13 @@ class DetailsActivity : AppCompatActivity() {
                 }
 
                 bindUI()
-                binding.tvSignedBy.text = "Signed by: ${user?.name}"   // ✅ UPDATE
-
+                binding.tvSignedBy.text = "Signed by: ${user?.name}"
             }
             .addOnFailureListener {
                 toast("Failed to load user.")
             }
     }
 
-    // -------------------------------------------------------------
-    // ✅ Bind UI fields
-    // -------------------------------------------------------------
     private fun bindUI() {
         val u = user ?: return
 
@@ -178,7 +176,6 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     private fun openCourse(fullText: String) {
-
         val parts = fullText.split("—").map { it.trim() }
         if (parts.size < 2) {
             toast("Invalid course info")
@@ -188,12 +185,10 @@ class DetailsActivity : AppCompatActivity() {
         val courseName = parts[0]
         val courseFee = parts[1].replace("₹", "").replace(",", "").trim()
 
-        val intent = Intent(this, CourseDetailsActivity::class.java).apply {
+        startActivity(Intent(this, CourseDetailsActivity::class.java).apply {
             putExtra("course_name", courseName)
             putExtra("course_fee", courseFee)
-        }
-
-        startActivity(intent)
+        })
     }
 
     private fun updateFeesUI(u: User) {
@@ -245,9 +240,6 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    // -------------------------------------------------------------
-    // ✅ Signature Capture
-    // -------------------------------------------------------------
     private fun setupSignature() {
 
         binding.signPad.setOnSignedListener(object : SignaturePad.OnSignedListener {
@@ -270,8 +262,7 @@ class DetailsActivity : AppCompatActivity() {
                 binding.signPad.signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
 
-            signatureUri =
-                FileProvider.getUriForFile(this, "$packageName.provider", file)
+            signatureUri = FileProvider.getUriForFile(this, "$packageName.provider", file)
 
             goAcknowledgement()
         }
@@ -281,14 +272,12 @@ class DetailsActivity : AppCompatActivity() {
         val u = user ?: return
 
         startActivity(Intent(this, AcknowledgementActivity::class.java).apply {
-
             putExtra("user", u)
             putExtra("hasArrears", hasArrears)
             putExtra("arrearsCount", arrearsCount)
             putExtra("collegeName", collegeName)
             putExtra("signature_uri", signatureUri)
             putExtra(MainActivity.EXTRA_STUDENT_ID, uid)
-
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         })
 

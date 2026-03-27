@@ -20,6 +20,7 @@ import android.view.animation.AlphaAnimation
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -59,17 +60,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var collegeName: String
 
-    // ✅ CAMERA URI
     private var cameraUri: Uri? = null
 
-    // ✅ CAMERA Permission Request
     private val requestCameraPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) openCamera()
             else toast("Camera permission is required")
         }
 
-    // ✅ CAMERA Launcher
     private val openCameraLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success && cameraUri != null) {
@@ -78,7 +76,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    // ✅ GALLERY Launcher
     private val pickImage =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { srcUri ->
             if (srcUri != null) {
@@ -94,6 +91,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // ✅ APPLY THEME (only new line added — does NOT break logic)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -102,23 +109,19 @@ class MainActivity : AppCompatActivity() {
 
         shimmer = findViewById(R.id.shimmerLayout)
 
-        // ✅ Back button
         binding.includeBack.btnBack.setOnClickListener {
             startActivity(Intent(this, StartActivity::class.java))
             finish()
         }
 
-        // ✅ Photo Options
         binding.btnUploadPhoto.setOnClickListener { showPhotoOptions() }
 
-        // ✅ First Letter Auto Caps
         binding.etName.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         binding.etParentName.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         binding.etRoll.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         binding.etAddress.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         binding.etCollege.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
 
-        // ✅ Input filters
         binding.etName.filters = arrayOf(InputFilter { src, _, _, _, _, _ ->
             if (src.matches(Regex("[a-zA-Z ]+"))) src else ""
         })
@@ -137,17 +140,14 @@ class MainActivity : AppCompatActivity() {
         setupDobPicker()
         setupArrearUI()
 
-        // ✅ Phone logic
         binding.countryCodePicker.registerCarrierNumberEditText(binding.etPhone)
         applyPhoneMaxLengthForCountry()
         binding.countryCodePicker.setOnCountryChangeListener { applyPhoneMaxLengthForCountry() }
 
-        // ✅ Fees switch
         binding.swPaid.setOnCheckedChangeListener { _, checked ->
             if (checked) showFeesPopup() else feesPaidAmount = "0"
         }
 
-        // ✅ Register Logic
         binding.btnRegister.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
 
@@ -181,11 +181,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Simple smooth fade
         fadeIn(binding.scrollRoot)
     }
 
-    // ✅ Photo menu with Remove + Preview
     private fun showPhotoOptions() {
         val options = arrayOf("Camera", "Gallery", "Remove Photo", "Preview Photo")
 
@@ -343,7 +341,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Segmented Gender Logic
     private fun buildUser(): User {
 
         val gender = when (binding.genderSegment.checkedButtonId) {
@@ -389,7 +386,6 @@ class MainActivity : AppCompatActivity() {
         if (binding.etParentName.text!!.isEmpty()) return err(binding.etParentName, "Required")
         if (binding.etCollege.text!!.isEmpty()) return err(binding.etCollege, "Required")
 
-        // ✅ Validation for segmented gender
         if (binding.genderSegment.checkedButtonId == View.NO_ID) {
             toast("Select Gender")
             return false
@@ -554,7 +550,6 @@ class MainActivity : AppCompatActivity() {
     private fun toast(msg: String) =
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
-    // ✅ Smooth fade animation
     private fun fadeIn(view: View) {
         val anim = AlphaAnimation(0f, 1f)
         anim.duration = 500

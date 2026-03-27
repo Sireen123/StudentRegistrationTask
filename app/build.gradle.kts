@@ -55,9 +55,11 @@ dependencies {
     // ✅ Core Android
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity-ktx:1.9.3")
+
+    // ✅ ✅ MATERIAL 3 (This fixes your button error)
+    implementation("com.google.android.material:material:1.12.0")
 
     // ✅ ViewModel + LiveData + Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
@@ -93,7 +95,7 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
 
-    // ✅ QR Code
+    // ✅ QR Code Scanner
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
@@ -105,12 +107,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
 
-    // ✅ ✅ ✅ ADDED FOR YOUR FEATURES ✅ ✅ ✅
-
-    // 👉 Feature #8 (Material 3 segmented buttons)
-    implementation("com.google.android.material:material:1.12.0")
-
-    // 👉 Feature #5 (Facebook Shimmer loading)
+    // ✅ Facebook Shimmer
     implementation("com.facebook.shimmer:shimmer:0.5.0")
 
     // ✅ Testing

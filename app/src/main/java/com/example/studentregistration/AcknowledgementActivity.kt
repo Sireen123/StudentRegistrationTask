@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
 import com.example.studentregistration.databinding.ActivityAcknowledgementBinding
@@ -28,6 +29,16 @@ class AcknowledgementActivity : AppCompatActivity() {
     private val today = dateFormat.format(Date())
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ THEME SWITCH — added safely (does NOT change logic)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
         binding = ActivityAcknowledgementBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -4,7 +4,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- MAIN CONTENT -->
+    <!-- ✅ THEME SWITCH BUTTONS -->
+    <LinearLayout
+        android:id="@+id/themeButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="16dp"
+        android:elevation="30dp">
+
+        <TextView
+            android:id="@+id/btnLight"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:text="🌞"
+            android:textSize="32sp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnDark"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:text="🌙"
+            android:textSize="32sp"
+            android:layout_marginStart="12dp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+
+
+    <!-- ✅ MAIN CONTENT -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -20,28 +58,33 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:textColor="#000000"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="24dp" />
 
-        <Button
+        <!-- ✅ MATERIAL 3 BUTTON (WORKING) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExistingUser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Existing User" />
+            android:text="Existing User"
+            style="@style/Widget.Material3.Button" />
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="16dp" />
 
-        <Button
+        <!-- ✅ MATERIAL 3 BUTTON (WORKING) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewUser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="New User" />
-
+            android:text="New User"
+            style="@style/Widget.Material3.Button" />
     </LinearLayout>
 
-    <!-- ✅ BLUE FAQ TILE BUTTON OUTSIDE (same look as inside) -->
+
+
+    <!-- ✅ FAQ BLUE TILE (FIXED) -->
     <LinearLayout
         android:id="@+id/faqTileOutside"
         android:layout_width="wrap_content"
@@ -68,7 +111,6 @@
             android:textColor="@android:color/white"
             android:textStyle="bold"
             android:textSize="18sp" />
-
     </LinearLayout>
 
 </FrameLayout>

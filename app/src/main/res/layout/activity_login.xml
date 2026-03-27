@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:fitsSystemWindows="true"
-    android:background="#FFFBFE">
+    android:background="?attr/colorSurface">
 
     <!-- ✅ BACK BAR -->
     <include
         android:id="@+id/includeBack"
         layout="@layout/include_back_bar" />
 
-    <!-- ✅ YOUR ORIGINAL CONTENT (unchanged) -->
+    <!-- ✅ MAIN CONTENT -->
     <ScrollView
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:background="#FFFBFE">
+        android:background="?attr/colorSurface">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,7 +30,7 @@
             android:paddingHorizontal="20dp"
             android:paddingVertical="24dp">
 
-            <!-- Title -->
+            <!-- ✅ TITLE -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
@@ -37,9 +38,10 @@
                 android:text="@string/hint_login"
                 android:textStyle="bold"
                 android:textSize="22sp"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="20dp" />
 
-            <!-- Email -->
+            <!-- ✅ EMAIL -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilEmail"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -54,7 +56,7 @@
                     android:inputType="textEmailAddress" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Password -->
+            <!-- ✅ PASSWORD -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPassword"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -71,7 +73,7 @@
                     android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Phone Row -->
+            <!-- ✅ PHONE ROW -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -100,34 +102,37 @@
                         android:layout_height="wrap_content"
                         android:inputType="phone" />
                 </com.google.android.material.textfield.TextInputLayout>
+
             </LinearLayout>
 
-            <!-- Phone Counter -->
+            <!-- ✅ PHONE COUNTER -->
             <TextView
                 android:id="@+id/tvPhoneCounter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="12sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginTop="4dp"
                 android:paddingStart="4dp" />
 
-            <!-- Send OTP -->
-            <Button
+            <!-- ✅ SEND OTP BUTTON -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSendOtp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Send OTP"
+                style="@style/Widget.Material3.Button"
                 android:layout_marginTop="10dp" />
 
-            <!-- Login Button -->
-            <Button
+            <!-- ✅ LOGIN BUTTON -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/hint_login"
+                style="@style/Widget.Material3.Button"
                 android:layout_marginTop="20dp" />
-
 
         </LinearLayout>
 

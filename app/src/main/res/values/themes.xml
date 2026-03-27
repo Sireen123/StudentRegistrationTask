@@ -1,36 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ✅ Main App Theme (Material3, AppCompat-compatible) -->
-    <style name="Theme.StudentRegistration" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Status + Nav colors -->
-        <item name="android:statusBarColor">@color/clg_primary</item>
-        <item name="android:navigationBarColor">@color/clg_primary</item>
+    <!-- ✅ LIGHT THEME -->
+    <style name="Theme.StudentRegistration" parent="Theme.Material3.Light.NoActionBar">
 
-        <!-- Material color roles -->
+        <!-- ✅ Correct Material3 system surface colors -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+
+        <!-- ✅ Your brand color -->
         <item name="colorPrimary">@color/clg_primary</item>
         <item name="colorOnPrimary">@android:color/white</item>
 
+        <!-- ✅ Correct Material3 text handling -->
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+
+        <!-- ✅ Smooth animation -->
         <item name="android:windowContentTransitions">true</item>
+
     </style>
 
 
-    <!-- ✅ Base Splash Theme (Material3 parent so app won't crash) -->
-    <style name="Theme.StudentReg.Splash.Legacy" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- ✅ LIGHT SPLASH THEME -->
+    <style name="Theme.StudentReg.Splash.Legacy" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:windowBackground">@color/splash_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 
-    <!-- ✅ Final Splash Theme used in Manifest -->
-    <style name="Theme.StudentReg.Splash" parent="Theme.StudentReg.Splash.Legacy" />
+    <style name="Theme.StudentReg.Splash" parent="Theme.StudentReg.Splash.Legacy"/>
 
 
-    <!-- ✅ No Animation Theme (used by CertificateActivity) -->
-    <style name="NoAnimTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- ✅ NO ANIMATION THEME (Light) -->
+    <style name="NoAnimTheme" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:windowIsTranslucent">false</item>
         <item name="android:windowActivityTransitions">false</item>
+        <item name="android:windowIsTranslucent">false</item>
     </style>
 
 </resources>

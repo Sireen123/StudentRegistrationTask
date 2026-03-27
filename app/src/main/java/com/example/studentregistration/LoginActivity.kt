@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -50,6 +51,16 @@ class LoginActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ APPLY THEME (SAFE — does not touch your logic)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
 
         WindowCompat.setDecorFitsSystemWindows(window, true)
         super.onCreate(savedInstanceState)
@@ -134,7 +145,7 @@ class LoginActivity : AppCompatActivity() {
                     .putString("real_uid", uid)
                     .apply()
 
-                // ✅ LOAD USER DATA FROM FIREBASE
+                // ✅ LOAD USER DETAILS
                 FirebaseRepo.rtdb.child("users").child(uid).get()
                     .addOnSuccessListener { snap ->
 
@@ -142,7 +153,7 @@ class LoginActivity : AppCompatActivity() {
                         val hasArr = snap.child("hasArrears").value as? Boolean ?: false
                         val arrCount = snap.child("arrearsCount").value?.toString()?.toIntOrNull() ?: 0
 
-                        // ✅ SAVE TO SESSION
+                        // ✅ SAVE SESSION
                         session.collegeName = college
                         session.hasArrears = hasArr
                         session.arrearsCount = arrCount
@@ -153,8 +164,8 @@ class LoginActivity : AppCompatActivity() {
                         finish()
                     }
                     .addOnFailureListener {
-                        showSafeToast("Error loading user details")
                         hasNavigated = false
+                        showSafeToast("Error loading user details")
                     }
             }
             .addOnFailureListener {

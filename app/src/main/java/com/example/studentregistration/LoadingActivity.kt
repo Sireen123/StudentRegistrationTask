@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.databinding.ActivityLoadingBinding
@@ -19,6 +20,16 @@ class LoadingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoadingBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ APPLY THEME (safe, same as other screens)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
         binding = ActivityLoadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -29,13 +40,14 @@ class LoadingActivity : AppCompatActivity() {
         })
 
         lifecycleScope.launch {
+
             delay(800)
 
             val studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             val navTarget = intent.getStringExtra(MainActivity.EXTRA_NAV_TARGET) ?: "DASHBOARD"
             val forceDashboard = intent.getBooleanExtra(MainActivity.EXTRA_FORCE_DASHBOARD, true)
 
-            // ✅ FIX: If studentId is missing → never continue
+            // ✅ FIX: If studentId missing → stop flow
             if (studentId.isNullOrEmpty()) {
                 Toast.makeText(
                     this@LoadingActivity,
@@ -62,17 +74,19 @@ class LoadingActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun checkDetailsSaved(studentId: String): Boolean = withContext(Dispatchers.IO) {
-        return@withContext try {
-            val snap = FirebaseRepo.rtdb.child("details").child(studentId).get().await()
-            snap.exists()
-        } catch (_: Exception) {
-            false
+    private suspend fun checkDetailsSaved(studentId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            return@withContext try {
+                val snap = FirebaseRepo.rtdb.child("details").child(studentId).get().await()
+                snap.exists()
+            } catch (_: Exception) {
+                false
+            }
         }
-    }
 
     // ✅ Forward ALL extras (user, arrears, collegeName)
     private fun goToDashboard(studentId: String, navTarget: String, forceDashboard: Boolean) {
+
         val newIntent = Intent(this, DashboardActivity::class.java).apply {
 
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

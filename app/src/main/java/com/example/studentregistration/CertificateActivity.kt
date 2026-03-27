@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
 import com.example.studentregistration.data.FirebaseRepo
 import com.example.studentregistration.data.User
@@ -33,6 +34,16 @@ class CertificateActivity : AppCompatActivity() {
     private var signedOn = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ APPLY THEME (safe & required)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_certificate)
 
@@ -51,7 +62,7 @@ class CertificateActivity : AppCompatActivity() {
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
-        // ✅ Back arrow → AcknowledgementActivity
+        // ✅ Back arrow → Acknowledgement
         val includeLayout = findViewById<LinearLayout>(R.id.includeBack)
         val btnBackArrow = includeLayout.findViewById<ImageView>(R.id.btnBack)
         btnBackArrow.setOnClickListener { goAcknowledgement() }
@@ -59,7 +70,7 @@ class CertificateActivity : AppCompatActivity() {
         // ✅ Back button → Dashboard
         findViewById<Button>(R.id.btnBackToDashboard).setOnClickListener { goDashboard() }
 
-        // ✅ Device back button → Dashboard
+        // ✅ Android back button → Dashboard
         onBackPressedDispatcher.addCallback(this) { goDashboard() }
 
         if (user == null) {
@@ -69,7 +80,7 @@ class CertificateActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) loadFragment()
 
-        // ✅ PDF buttons
+        // ✅ PDF actions
         findViewById<Button>(R.id.btnDownloadPdf).setOnClickListener { savePdf() }
         findViewById<Button>(R.id.btnSharePdf).setOnClickListener { sharePdf() }
     }
@@ -136,7 +147,6 @@ class CertificateActivity : AppCompatActivity() {
         )
     }
 
-    // ✅ CAPTURE FULL CERTIFICATE HEIGHT (IMPORTANT)
     private fun generateFullBitmap(): Bitmap {
         val fragmentView = supportFragmentManager.findFragmentById(R.id.fragmentContainer)?.view
             ?: return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
@@ -162,7 +172,6 @@ class CertificateActivity : AppCompatActivity() {
         return bitmap
     }
 
-    // ✅ SAVE PDF USING MediaStore (works on Android 11+)
     private fun savePdf() {
         try {
             val bitmap = generateFullBitmap()
@@ -197,7 +206,6 @@ class CertificateActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ SHARE PDF
     private fun sharePdf() {
         try {
             val bitmap = generateFullBitmap()

@@ -8,11 +8,13 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregistration.adapter.DashboardAdapter
 import com.example.studentregistration.adapter.FaqAdapter
 import com.example.studentregistration.data.FirebaseRepo
+import com.example.studentregistration.SessionPrefs
 import com.example.studentregistration.data.User
 import com.example.studentregistration.model.FaqItem
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -34,6 +36,17 @@ class DashboardActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // ✅ APPLY THEME (Only added code — safe, does not break anything)
+        val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+            .getString("app_theme", "light")
+
+        if (savedTheme == "dark") {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
@@ -57,25 +70,24 @@ class DashboardActivity : AppCompatActivity() {
         subtitle.text = "Loading..."
         progress.visibility = View.VISIBLE
 
-        // ✅ 2. LOAD SESSIONPREFS
+        // ✅ 2. LOAD SESSION
         val session = SessionPrefs(this)
         val sessionCollege = session.collegeName ?: ""
         val sessionArrears = session.hasArrears
         val sessionArrearCount = session.arrearsCount
 
-        // ✅ 3. READ FROM INTENT (REGISTRATION FLOW)
+        // ✅ 3. READ FROM INTENT
         val intentCollege = intent.getStringExtra("collegeName")
         val intentHasArrears = intent.getBooleanExtra("hasArrears", sessionArrears)
         val intentArrearCount = intent.getIntExtra("arrearsCount", sessionArrearCount)
 
-        // ✅ Final values
         collegeName = intentCollege ?: sessionCollege
         hasArrears = intentHasArrears
         arrearsCount = intentArrearCount
 
         user = intent.getParcelableExtra("user")
 
-        // ✅ If came from registration → ready
+        // ✅ If came from registration
         if (user != null) {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
@@ -85,14 +97,13 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        // ✅ Load from Firebase (login)
+        // ✅ Load from Firebase (Login flow)
         loadUserFromFirebase(studentId!!, progress, subtitle)
 
         setupGrid()
         setupLogout()
     }
 
-    // ✅ FETCH USER DATA
     private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
 
         FirebaseRepo.rtdb.child("users").child(uid).get()
@@ -138,7 +149,6 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
-    // ✅ GRID CLICK HANDLER
     private fun setupGrid() {
         val rv = findViewById<RecyclerView>(R.id.dashboardRecycler)
         rv.layoutManager = GridLayoutManager(this, 2)
@@ -159,7 +169,6 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ LOGOUT
     private fun setupLogout() {
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             FirebaseRepo.auth.signOut()
@@ -168,7 +177,6 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ OPEN DETAILS
     private fun openDetails() {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
             putExtra("user", user)
@@ -179,7 +187,6 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
-    // ✅ FIXED FAQ — SAME 5 ITEMS AS StartActivity
     private fun showFaq() {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)

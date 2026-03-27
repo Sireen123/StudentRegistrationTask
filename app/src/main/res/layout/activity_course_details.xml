@@ -3,7 +3,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFBFE"
+    android:background="?attr/colorSurface"
     android:fitsSystemWindows="true"
     android:fillViewport="true">
 
@@ -13,12 +13,12 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- ⭐ TOP BACK BUTTON BAR -->
+        <!-- ✅ BACK BAR -->
         <include
             android:id="@+id/includeBack"
             layout="@layout/include_back_bar" />
 
-        <!-- Title -->
+        <!-- ✅ TITLE -->
         <TextView
             android:id="@+id/tvCourseTitle"
             android:layout_width="wrap_content"
@@ -26,32 +26,34 @@
             android:text="Course Name"
             android:textStyle="bold"
             android:textSize="22sp"
-            android:textColor="#000000"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="8dp" />
 
-        <!-- Fees -->
+        <!-- ✅ FEES -->
         <TextView
             android:id="@+id/tvCourseFee"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Fees:"
             android:textSize="18sp"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="14dp" />
 
-        <!-- Divider -->
+        <!-- ✅ DIVIDER -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#DDDDDD"
+            android:background="?attr/colorOutline"
             android:layout_marginBottom="14dp" />
 
-        <!-- Description -->
+        <!-- ✅ DESCRIPTION -->
         <TextView
             android:id="@+id/tvCourseDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Course description will appear here."
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="?attr/colorOnSurface" />
 
     </LinearLayout>
 </ScrollView>
