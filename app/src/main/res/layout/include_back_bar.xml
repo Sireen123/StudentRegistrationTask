@@ -18,7 +18,7 @@
         android:contentDescription="@string/navigate_back"
         android:src="@drawable/arrow_back_24"
         android:padding="6dp"
-        app:tint="#333333" />
+        app:tint="?attr/colorOnBackground"/>
 
     <TextView
         android:id="@+id/tvScreenTitle"
