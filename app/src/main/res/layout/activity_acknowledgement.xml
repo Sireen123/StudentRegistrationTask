@@ -15,7 +15,8 @@
         <!-- ✅ BACK BAR -->
         <include
             android:id="@+id/includeBack"
-            layout="@layout/include_back_bar" />
+            layout="@layout/include_back_bar"
+            android:contentDescription="Go back" />
 
         <!-- ✅ SCREEN TITLE -->
         <TextView
@@ -37,7 +38,10 @@
             android:orientation="vertical"
             android:padding="14dp"
             android:background="?attr/colorSurfaceVariant"
-            android:elevation="2dp">
+            android:elevation="2dp"
+            android:focusable="true"
+            android:importantForAccessibility="yes"
+            android:contentDescription="Student details summary">
 
             <TextView
                 android:id="@+id/lblName"
@@ -167,7 +171,8 @@
             android:layout_height="wrap_content"
             android:text="I confirm these details are correct."
             android:textColor="?attr/colorOnSurface"
-            android:layout_marginTop="12dp" />
+            android:layout_marginTop="12dp"
+            android:contentDescription="Confirm details are correct" />
 
         <!-- ✅ SUBMIT BUTTON -->
         <LinearLayout
@@ -183,7 +188,8 @@
                 android:layout_height="wrap_content"
                 android:text="Submit"
                 style="@style/Widget.Material3.Button"
-                android:layout_marginStart="12dp" />
+                android:layout_marginStart="12dp"
+                android:contentDescription="Submit acknowledgement" />
         </LinearLayout>
 
     </LinearLayout>

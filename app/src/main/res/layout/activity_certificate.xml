@@ -7,12 +7,13 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <!-- Back Bar -->
+    <!-- ✅ Back Bar -->
     <include
         android:id="@+id/includeBack"
-        layout="@layout/include_back_bar" />
+        layout="@layout/include_back_bar"
+        android:contentDescription="Go back" />
 
-    <!-- Back to Dashboard Button -->
+    <!-- ✅ Back to Dashboard Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnBackToDashboard"
         android:layout_width="wrap_content"
@@ -25,18 +26,21 @@
         android:textAllCaps="false"
         android:textColor="?attr/colorPrimary"
         android:backgroundTint="?attr/colorSurfaceVariant"
-        style="@style/Widget.Material3.Button" />
+        style="@style/Widget.Material3.Button"
+        android:contentDescription="Go back to dashboard" />
 
-    <!-- Certificate Fragment Container -->
+    <!-- ✅ Certificate Fragment Container -->
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_margin="16dp"
-        android:foregroundGravity="center" />
+        android:foregroundGravity="center"
+        android:contentDescription="Certificate preview area"
+        android:importantForAccessibility="yes" />
 
-    <!-- DOWNLOAD PDF -->
+    <!-- ✅ DOWNLOAD PDF -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDownloadPdf"
         android:layout_width="match_parent"
@@ -48,9 +52,10 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="8dp"
         android:backgroundTint="?attr/colorPrimary"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:contentDescription="Download certificate as PDF" />
 
-    <!-- SHARE PDF -->
+    <!-- ✅ SHARE PDF -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSharePdf"
         android:layout_width="match_parent"
@@ -62,6 +67,7 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="16dp"
         android:backgroundTint="?attr/colorTertiary"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:contentDescription="Share certificate PDF file" />
 
 </LinearLayout>

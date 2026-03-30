@@ -16,7 +16,8 @@
         <!-- ✅ BACK BAR -->
         <include
             android:id="@+id/includeBack"
-            layout="@layout/include_back_bar" />
+            layout="@layout/include_back_bar"
+            android:contentDescription="Go back" />
 
         <!-- ✅ TITLE -->
         <TextView
@@ -44,7 +45,8 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="?attr/colorOutline"
-            android:layout_marginBottom="14dp" />
+            android:layout_marginBottom="14dp"
+            android:importantForAccessibility="no" />   <!-- Decorative line -->
 
         <!-- ✅ DESCRIPTION -->
         <TextView

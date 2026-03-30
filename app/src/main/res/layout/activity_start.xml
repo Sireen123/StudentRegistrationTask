@@ -20,24 +20,30 @@
             android:id="@+id/btnLight"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             android:gravity="center"
             android:text="🌞"
             android:textSize="32sp"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:contentDescription="Switch to light theme" />
 
         <TextView
             android:id="@+id/btnDark"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             android:gravity="center"
             android:text="🌙"
             android:textSize="32sp"
             android:layout_marginStart="12dp"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:contentDescription="Switch to dark theme" />
     </LinearLayout>
 
 
@@ -61,7 +67,6 @@
             android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="24dp" />
 
-        <!-- ✅ MATERIAL 3 BUTTON (WORKING) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExistingUser"
             android:layout_width="match_parent"
@@ -73,7 +78,6 @@
             android:layout_width="match_parent"
             android:layout_height="16dp" />
 
-        <!-- ✅ MATERIAL 3 BUTTON (WORKING) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewUser"
             android:layout_width="match_parent"
@@ -84,7 +88,7 @@
 
 
 
-    <!-- ✅ FAQ BLUE TILE (FIXED) -->
+    <!-- ✅ FAQ BLUE TILE (CORRECTED) -->
     <LinearLayout
         android:id="@+id/faqTileOutside"
         android:layout_width="wrap_content"
@@ -95,22 +99,20 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:paddingStart="18dp"
-        android:paddingEnd="18dp">
+        android:paddingEnd="18dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:importantForAccessibility="yes"
+        android:contentDescription="Open FAQ section">
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             android:src="@drawable/ic_faq_chat"
-            app:tint="@android:color/white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="FAQ"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:textSize="18sp" />
+            app:tint="@android:color/white"
+            android:importantForAccessibility="no"         android:textSize="18sp" />
     </LinearLayout>
 
 </FrameLayout>

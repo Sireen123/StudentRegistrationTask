@@ -18,7 +18,8 @@
             android:background="?attr/colorPrimary"
             app:title="Student Dashboard"
             app:titleCentered="true"
-            app:titleTextColor="?attr/colorOnPrimary" />
+            app:titleTextColor="?attr/colorOnPrimary"
+            android:contentDescription="Student dashboard top bar" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- ✅ Main Body -->
@@ -43,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:text="Welcome"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp"/>
+                android:textSize="14sp" />
 
             <!-- ✅ Logout button -->
             <com.google.android.material.button.MaterialButton
@@ -56,10 +57,11 @@
                 android:layout_gravity="end"
                 android:backgroundTint="#D32F2F"
                 android:textColor="@android:color/white"
-                style="@style/Widget.Material3.Button" />
+                style="@style/Widget.Material3.Button"
+                android:contentDescription="Log out from the student dashboard" />
         </LinearLayout>
 
-        <!-- ✅ Modern Dashboard Grid  -->
+        <!-- ✅ Modern Dashboard Grid -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/dashboardRecycler"
             android:layout_width="match_parent"
@@ -70,7 +72,9 @@
             android:paddingStart="16dp"
             android:paddingTop="12dp"
             android:paddingEnd="16dp"
-            android:paddingBottom="60dp" />
+            android:paddingBottom="60dp"
+            android:contentDescription="Dashboard items list"
+            android:importantForAccessibility="yes" />
 
     </LinearLayout>
 
@@ -81,6 +85,7 @@
         android:layout_height="55dp"
         android:visibility="gone"
         android:indeterminate="true"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:contentDescription="Loading, please wait" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

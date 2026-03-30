@@ -13,20 +13,25 @@
     app:cardElevation="3dp">
 
     <LinearLayout
+        android:id="@+id/cardContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:contentDescription="" >   <!-- ✅ SET BY ADAPTER -->
 
-        <!-- ✅ Emoji Icon -->
+        <!-- ✅ Emoji Icon (VISIBLE but NOT read by TalkBack) -->
         <TextView
             android:id="@+id/emojiIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="📚"
             android:textSize="36sp"
-            android:gravity="center" />
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:contentDescription="@null" />    <!-- ✅ SILENT -->
 
+        <!-- ✅ Title (Will be read by TalkBack) -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
@@ -34,7 +39,7 @@
             android:text="Option"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:layout_marginTop="6dp"/>
+            android:layout_marginTop="6dp" />
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -13,12 +13,13 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:contentDescription="Loading indicator"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ✅ Auto‑themed Loading Text -->
+    <!-- ✅ Loading text (accessible) -->
     <TextView
         android:id="@+id/tvLoading"
         android:layout_width="wrap_content"
@@ -27,8 +28,9 @@
         android:textColor="?attr/colorOnSurface"
         android:textAppearance="?attr/textAppearanceTitleSmall"
         android:layout_marginTop="16dp"
+        android:contentDescription="Loading content"
         app:layout_constraintTop_toBottomOf="@id/progress"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

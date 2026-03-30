@@ -10,7 +10,8 @@
     <!-- ✅ Reusable Material Back Bar -->
     <include
         android:id="@+id/backBar"
-        layout="@layout/include_back_bar" />
+        layout="@layout/include_back_bar"
+        android:contentDescription="Go back" />
 
     <!-- ✅ Student List -->
     <androidx.recyclerview.widget.RecyclerView
@@ -20,6 +21,8 @@
         android:clipToPadding="false"
         android:paddingTop="4dp"
         android:paddingBottom="12dp"
-        android:background="?attr/colorSurface" />
+        android:background="?attr/colorSurface"
+        android:contentDescription="List of students"
+        android:importantForAccessibility="yes" />
 
 </LinearLayout>

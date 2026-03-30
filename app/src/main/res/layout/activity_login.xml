@@ -11,7 +11,8 @@
     <!-- ✅ BACK BAR -->
     <include
         android:id="@+id/includeBack"
-        layout="@layout/include_back_bar" />
+        layout="@layout/include_back_bar"
+        android:contentDescription="Go back" />
 
     <!-- ✅ MAIN CONTENT -->
     <ScrollView
@@ -39,7 +40,8 @@
                 android:textStyle="bold"
                 android:textSize="22sp"
                 android:textColor="?attr/colorOnSurface"
-                android:layout_marginBottom="20dp" />
+                android:layout_marginBottom="20dp"
+                android:contentDescription="Login screen" />
 
             <!-- ✅ EMAIL -->
             <com.google.android.material.textfield.TextInputLayout
@@ -86,7 +88,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:ccp_defaultNameCode="IN"
-                    android:layout_marginEnd="8dp" />
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Select country code" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilPhone"
@@ -123,7 +126,8 @@
                 android:layout_height="wrap_content"
                 android:text="Send OTP"
                 style="@style/Widget.Material3.Button"
-                android:layout_marginTop="10dp" />
+                android:layout_marginTop="10dp"
+                android:contentDescription="Send OTP to phone number" />
 
             <!-- ✅ LOGIN BUTTON -->
             <com.google.android.material.button.MaterialButton
@@ -132,7 +136,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/hint_login"
                 style="@style/Widget.Material3.Button"
-                android:layout_marginTop="20dp" />
+                android:layout_marginTop="20dp"
+                android:contentDescription="Login" />
 
         </LinearLayout>
 

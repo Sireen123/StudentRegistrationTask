@@ -24,6 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:text="Student Details"
+            android:contentDescription="Student Details"
             android:textColor="?attr/colorOnSurface"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -38,6 +39,7 @@
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/imgProfile"
+                android:contentDescription="Student profile picture"
                 android:layout_width="110dp"
                 android:layout_height="110dp"
                 android:scaleType="centerCrop"
@@ -46,22 +48,23 @@
         </LinearLayout>
 
         <!-- ✅ STUDENT FIELDS -->
-        <TextView android:id="@+id/tvName" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Name:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvReg" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Register No:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvRoll" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Roll No:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Address:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Phone:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Email:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvDob" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Date of Birth:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvGender" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gender:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvParent" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent/Guardian:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvCollege" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="College:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvDept" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Department:" android:textColor="?attr/colorOnSurface"/>
-        <TextView android:id="@+id/tvSem" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Semester:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvName" android:contentDescription="Student Name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Name:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvReg" android:contentDescription="Student Register Number" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Register No:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvRoll" android:contentDescription="Student Roll Number" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Roll No:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvAddress" android:contentDescription="Student Address" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Address:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvPhone" android:contentDescription="Student Phone Number" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Phone:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvEmail" android:contentDescription="Student Email Address"  android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Email:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvDob" android:contentDescription="Student Date Of Birth"  android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Date of Birth:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvGender" android:contentDescription="Student Gender" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gender:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvParent" android:contentDescription=" Parent or Guardian" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent/Guardian:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvCollege" android:contentDescription="College Name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="College:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvDept" android:contentDescription="Student Department" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Department:" android:textColor="?attr/colorOnSurface"/>
+        <TextView android:id="@+id/tvSem" android:contentDescription="Semester" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Semester:" android:textColor="?attr/colorOnSurface"/>
 
         <!-- ✅ ARREARS -->
         <LinearLayout
             android:id="@+id/groupArrears"
+            android:contentDescription="Arrear Details Section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -69,6 +72,7 @@
 
             <TextView
                 android:id="@+id/tvHasArrears"
+                android:contentDescription="Arrear History"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Arrears History:"
@@ -76,6 +80,7 @@
 
             <TextView
                 android:id="@+id/tvArrearsCount"
+                android:contentDescription="Number of Arrears"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="No. of arrears:"
@@ -97,6 +102,7 @@
 
                 <ProgressBar
                     android:id="@+id/feesProgress"
+                    android:contentDescription="Fees Payment Progress"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="12dp"
@@ -107,6 +113,7 @@
 
             <LinearLayout
                 android:id="@+id/dotsContainer"
+                android:contentDescription="Payment Stage Indicators"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
@@ -121,6 +128,7 @@
 
                 <TextView
                     android:id="@+id/tvPaidAmount"
+                    android:contentDescription="Amount Paid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -131,6 +139,7 @@
 
                 <TextView
                     android:id="@+id/tvTotalAmount"
+                    android:contentDescription="Total Fee Amount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -143,6 +152,7 @@
 
         <TextView
             android:id="@+id/tvBalanceAmount"
+            android:contentDescription="Balance Amount Remaining"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Balance: ₹0"
@@ -155,6 +165,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Fee Structure"
+            android:contentDescription="Fee Structure"
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_marginTop="8dp"
@@ -170,18 +181,19 @@
             android:paddingVertical="4dp">
 
             <!-- ✅ ALL COURSE TEXTS AUTO THEME -->
-            <TextView android:id="@+id/tvCourseCSE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CSE — ₹75,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseECE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE ECE — ₹70,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CIVIL — ₹68,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseMECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE MECH — ₹72,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseBTECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTECH — ₹80,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseBARCH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BARCH — ₹85,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvCourseBCA" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BCA — ₹65,000" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseCSE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CSE — ₹75,000"  android:contentDescription="Bachelor of Engineering Computer Science Engineering fee seventy five thousand rupees"  android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseECE" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE ECE — ₹70,000" android:contentDescription="Bachelor of Engineering Electronics and Communication Engineering fee seventy thousand rupees"  android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseCIVIL" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE CIVIL — ₹68,000" android:contentDescription="Bachelor of Engineering Civil Engineering fee sixty eight thousand rupees" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseMECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BE MECH — ₹72,000" android:contentDescription="Bachelor of Engineering Mechanical Engineering fee seventy two thousand rupees"  android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBTECH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTECH — ₹80,000" android:contentDescription="Bachelor of Technology fee eighty thousand rupees" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBARCH" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BARCH — ₹85,000" android:contentDescription="Bachelor of Architecture fee eighty five thousand rupees"  android:padding="8dp" android:textColor="?attr/colorPrimary"/>
+            <TextView android:id="@+id/tvCourseBCA" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BCA — ₹65,000" android:contentDescription="Bachelor of Computer Applications fee sixty five thousand rupees" android:padding="8dp" android:textColor="?attr/colorPrimary"/>
         </LinearLayout>
 
         <!-- ✅ SIGNATURE SECTION -->
         <LinearLayout
             android:id="@+id/sectionSignature"
+            android:contentDescription="Signature"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -212,6 +224,7 @@
 
                 <com.github.gcacace.signaturepad.views.SignaturePad
                     android:id="@+id/signPad"
+                    android:contentDescription="Signature pad. Draw here."
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:padding="14dp"
@@ -229,6 +242,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnClearSign"
+                android:contentDescription="Clear signature"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Clear"
@@ -238,6 +252,7 @@
 
             <TextView
                 android:id="@+id/tvSignDate"
+                android:contentDescription="Signature date"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:gravity="center_vertical"
@@ -253,6 +268,7 @@
         <!-- ✅ SUBMIT BUTTON -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmit"
+            android:contentDescription="Submit student details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit"

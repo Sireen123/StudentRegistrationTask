@@ -34,6 +34,7 @@
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:text="Get Started"
+        android:contentDescription="Get started with the application"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
