@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -35,7 +34,7 @@ class CertificateActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        // ✅ APPLY THEME (safe & required)
+        // ✅ APPLY THEME
         val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
             .getString("app_theme", "light")
         if (savedTheme == "dark") {
@@ -62,15 +61,15 @@ class CertificateActivity : AppCompatActivity() {
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
-        // ✅ Back arrow → Acknowledgement
+        // ✅ FIXED CRASH: btnBack is NOT an ImageView now
         val includeLayout = findViewById<LinearLayout>(R.id.includeBack)
-        val btnBackArrow = includeLayout.findViewById<ImageView>(R.id.btnBack)
+        val btnBackArrow = includeLayout.findViewById<android.view.View>(R.id.btnBack)
         btnBackArrow.setOnClickListener { goAcknowledgement() }
 
         // ✅ Back button → Dashboard
         findViewById<Button>(R.id.btnBackToDashboard).setOnClickListener { goDashboard() }
 
-        // ✅ Android back button → Dashboard
+        // ✅ Android back → Dashboard
         onBackPressedDispatcher.addCallback(this) { goDashboard() }
 
         if (user == null) {

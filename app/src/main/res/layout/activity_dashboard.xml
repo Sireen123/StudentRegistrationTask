@@ -21,14 +21,14 @@
             app:titleTextColor="?attr/colorOnPrimary" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- ✅ MAIN BODY AREA -->
+    <!-- ✅ Main Body -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- ✅ Header section under toolbar -->
+        <!-- ✅ Header Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"/>
 
-            <!-- ✅ Logout button — FIXED -->
+            <!-- ✅ Logout button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"
                 android:layout_width="wrap_content"
@@ -59,7 +59,7 @@
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>
 
-        <!-- ✅ Dashboard grid -->
+        <!-- ✅ Modern Dashboard Grid  -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/dashboardRecycler"
             android:layout_width="match_parent"
@@ -74,7 +74,7 @@
 
     </LinearLayout>
 
-    <!-- ✅ Loading progress -->
+    <!-- ✅ Loading Spinner -->
     <ProgressBar
         android:id="@+id/progressLoading"
         android:layout_width="55dp"
