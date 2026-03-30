@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.airbnb.lottie.LottieAnimationView
 import com.example.studentregistration.R
 
 class DashboardAdapter(
@@ -28,7 +27,7 @@ class DashboardAdapter(
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.tvTitle)
-        val icon: LottieAnimationView = itemView.findViewById(R.id.imgIcon)
+        val emoji: TextView = itemView.findViewById(R.id.emojiIcon)
 
         init {
             itemView.setOnClickListener {
@@ -51,7 +50,6 @@ class DashboardAdapter(
 
         val ctx = holder.itemView.context
         val colorRes = colorCycle[position % colorCycle.size]
-
         holder.itemView.setBackgroundColor(ContextCompat.getColor(ctx, colorRes))
         holder.title.setTextColor(ContextCompat.getColor(ctx, android.R.color.black))
 
@@ -62,27 +60,28 @@ class DashboardAdapter(
             holder.title.text = "Daily\nAttendance"
         }
 
-        val animRes = when (position) {
-            0 -> R.raw.anim_fees
-            1 -> R.raw.anim_faq
-            2 -> R.raw.anim_details
-            3 -> R.raw.anim_refer
-            4 -> R.raw.anim_calendar
-            5 -> R.raw.anim_daily_attendance
-            6 -> R.raw.anim_hourly_attendance
-            7 -> R.raw.anim_cae
-            8 -> R.raw.anim_ese
-            9 -> R.raw.anim_lms
-            10 -> R.raw.anim_library
-            11 -> R.raw.anim_timetable
-            12 -> R.raw.anim_transport
-            13 -> R.raw.anim_outing
-            else -> R.raw.anim_default
+        // ✅ Emoji Mapping
+        val emojiChar = when (position) {
+            0 -> "💰"   // Fees
+            1 -> "❓"   // FAQ
+            2 -> "🧍"   // Details
+            3 -> "👥"   // Refer
+            4 -> "📅"   // Calendar
+            5 -> "✅"   // Daily Attendance
+            6 -> "🕒"   // Hourly Attendance
+            7 -> "📝"   // CAE
+            8 -> "🧾"   // ESE
+            9 -> "📘"   // LMS
+            10 -> "📚"  // Library
+            11 -> "🗓️" // Timetable
+            12 -> "🚌"  // Transport
+            13 -> "🚶"  // Outing
+            else -> "⭐"
         }
 
-        holder.icon.setAnimation(animRes)
-        holder.icon.playAnimation()
+        holder.emoji.text = emojiChar
 
+        // ✅ Tile Animation
         holder.itemView.scaleX = 0.85f
         holder.itemView.scaleY = 0.85f
         holder.itemView.alpha = 0f
