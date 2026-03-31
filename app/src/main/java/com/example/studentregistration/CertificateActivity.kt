@@ -61,12 +61,12 @@ class CertificateActivity : AppCompatActivity() {
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
             ?: FirebaseRepo.auth.currentUser?.uid
 
-        // ✅ FIXED CRASH: btnBack is NOT an ImageView now
+        // ✅ FIXED CRASH: btnBack now view inside includeBack
         val includeLayout = findViewById<LinearLayout>(R.id.includeBack)
         val btnBackArrow = includeLayout.findViewById<android.view.View>(R.id.btnBack)
         btnBackArrow.setOnClickListener { goAcknowledgement() }
 
-        // ✅ Back button → Dashboard
+        // ✅ Back → Dashboard
         findViewById<Button>(R.id.btnBackToDashboard).setOnClickListener { goDashboard() }
 
         // ✅ Android back → Dashboard
@@ -79,7 +79,7 @@ class CertificateActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) loadFragment()
 
-        // ✅ PDF actions
+        // ✅ PDF actions remain same
         findViewById<Button>(R.id.btnDownloadPdf).setOnClickListener { savePdf() }
         findViewById<Button>(R.id.btnSharePdf).setOnClickListener { sharePdf() }
     }
@@ -109,8 +109,29 @@ class CertificateActivity : AppCompatActivity() {
         val u = user!!
         val isArrear = hasArrears || arrearsCount > 0
 
+        // ✅ First update Firebase workflow
         updateWorkflow(isArrear)
 
+        // ✅ Certificate Ready Notification Added (Opens CertificateActivity)
+        val certIntent = Intent(this, CertificateActivity::class.java).apply {
+            putExtra("user", user)
+            putExtra("hasArrears", hasArrears)
+            putExtra("arrearsCount", arrearsCount)
+            putExtra("collegeName", collegeName)
+            putExtra("signature_uri", signatureUri)
+            putExtra("signed_on", signedOn)
+            putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+
+        NotificationHelper.showNotification(
+            this,
+            "Certificate Generated 🎉",
+            "Your certificate is ready — click Download PDF to save it!",
+            certIntent
+        )
+
+        // ✅ Load correct certificate fragment
         val args = Bundle().apply {
             putParcelable("user", u)
             putString("collegeName", collegeName)

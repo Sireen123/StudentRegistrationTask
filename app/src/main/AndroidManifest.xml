@@ -6,29 +6,30 @@
     <!-- ===== Permissions ===== -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- ✅ CAMERA Permission -->
+    <!-- ✅ Notification Permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
+        tools:targetApi="33" />
+
+    <!-- ✅ Camera Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- ✅ Camera hardware optional -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
 
-    <!-- ✅ Android 13+ -->
+    <!-- ✅ Android 13+ read images -->
     <uses-permission
         android:name="android.permission.READ_MEDIA_IMAGES"
         tools:targetApi="33" />
 
-    <!-- ✅ <= Android 12 -->
+    <!-- ✅ Older Android versions -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <!-- ✅ <= Android 9 -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-
 
     <application
         android:allowBackup="true"
@@ -39,6 +40,15 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentRegistration">
+
+        <!-- ✅ Firebase Messaging Service -->
+        <service
+            android:name=".MyFirebaseService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- ✅ Splash Activity -->
         <activity
@@ -51,24 +61,12 @@
             </intent-filter>
         </activity>
 
-        <!-- ✅ Start Activity -->
-        <activity
-            android:name=".StartActivity"
-            android:exported="false" />
+        <!-- ✅ Other Activities (unchanged) -->
+        <activity android:name=".StartActivity" android:exported="false" />
+        <activity android:name=".ReferStudentActivity" android:exported="false" />
+        <activity android:name=".DashboardActivity" android:exported="false" />
+        <activity android:name=".AcknowledgementActivity" android:exported="false" />
 
-        <activity
-            android:name=".ReferStudentActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".DashboardActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".AcknowledgementActivity"
-            android:exported="false" />
-
-        <!-- ✅ No animation theme -->
         <activity
             android:name=".CertificateActivity"
             android:exported="false"
@@ -79,33 +77,15 @@
             android:exported="false"
             android:theme="@style/Theme.StudentRegistration" />
 
-        <activity
-            android:name=".StudentTaskActivity"
-            android:exported="true" />
-
-        <activity
-            android:name=".FeesListActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false"
+        <activity android:name=".StudentTaskActivity" android:exported="true" />
+        <activity android:name=".FeesListActivity" android:exported="false" />
+        <activity android:name=".LoginActivity" android:exported="false"
             android:launchMode="singleTop"
             android:theme="@style/Theme.StudentRegistration" />
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="false"
+        <activity android:name=".MainActivity" android:exported="false"
             android:windowSoftInputMode="stateHidden|adjustResize" />
-
-        <activity
-            android:name=".DetailsActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".CourseDetailsActivity"
-            android:exported="false" />
-
+        <activity android:name=".DetailsActivity" android:exported="false" />
+        <activity android:name=".CourseDetailsActivity" android:exported="false" />
 
         <!-- ✅ FileProvider -->
         <provider

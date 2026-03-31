@@ -37,7 +37,7 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        // ✅ APPLY THEME (Only added code — safe, does not break anything)
+        // ✅ APPLY THEME
         val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
             .getString("app_theme", "light")
 
@@ -92,6 +92,20 @@ class DashboardActivity : AppCompatActivity() {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
             isDashboardReady = true
+
+            // ✅ Dashboard Welcome Notification (Opens DashboardActivity)
+            val dashIntent = Intent(this, DashboardActivity::class.java).apply {
+                putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+
+            NotificationHelper.showNotification(
+                this,
+                "Welcome to Dashboard",
+                "Hello ${user!!.name}, your dashboard is ready!",
+                dashIntent
+            )
+
             setupGrid()
             setupLogout()
             return
@@ -141,6 +155,19 @@ class DashboardActivity : AppCompatActivity() {
                 subtitle.text = user!!.name
                 progress.visibility = View.GONE
                 isDashboardReady = true
+
+                // ✅ Dashboard Welcome Notification (Login Case)
+                val dashIntent = Intent(this, DashboardActivity::class.java).apply {
+                    putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+
+                NotificationHelper.showNotification(
+                    this,
+                    "Welcome to Dashboard",
+                    "Hello ${user!!.name}, your dashboard is ready!",
+                    dashIntent
+                )
             }
             .addOnFailureListener {
                 progress.visibility = View.GONE

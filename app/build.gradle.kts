@@ -58,7 +58,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity-ktx:1.9.3")
 
-    // ✅ MATERIAL 3
+    // ✅ Material
     implementation("com.google.android.material:material:1.12.0")
 
     // ✅ Lifecycle
@@ -82,10 +82,10 @@ dependencies {
     // ✅ Country Code Picker
     implementation("com.hbb20:ccp:2.7.3")
 
-    // ✅ Phone number utilities
+    // ✅ Phone Number Utils
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.36")
 
-    // ✅ Signature Pad
+    // ✅ Signature pad
     implementation("com.github.gcacace:signature-pad:1.3.1")
 
     // ✅ Firebase (BoM)
@@ -94,6 +94,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
+
+    // ✅ ✅ ✅ FIREBASE MESSAGING (PUSH NOTIFICATION)
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     // ✅ QR Code
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
@@ -110,7 +113,7 @@ dependencies {
     // ✅ Shimmer
     implementation("com.facebook.shimmer:shimmer:0.5.0")
 
-
+    // ✅ Lottie
     implementation("com.airbnb.android:lottie:5.2.0")
 
     // ✅ Testing

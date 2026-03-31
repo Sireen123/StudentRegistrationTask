@@ -5,11 +5,13 @@ import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
@@ -28,8 +30,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.studentregistration.data.*
 import com.example.studentregistration.databinding.ActivityMainBinding
 import com.facebook.shimmer.ShimmerFrameLayout
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,7 +93,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ APPLY THEME (only new line added — does NOT break logic)
+        // ✅ APPLY THEME
         val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
             .getString("app_theme", "light")
 
@@ -104,10 +106,21 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // ✅ FCM Topic Subscription
+        FirebaseMessaging.getInstance().subscribeToTopic("all")
+
         session = SessionPrefs(this)
         userRepo = UserRepository(AppDatabase.getDatabase(this).userDao())
 
         shimmer = findViewById(R.id.shimmerLayout)
+
+        // ✅ Android 13+ notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), 100)
+            }
+        }
 
         binding.includeBack.btnBack.setOnClickListener {
             startActivity(Intent(this, StartActivity::class.java))
@@ -260,6 +273,18 @@ class MainActivity : AppCompatActivity() {
                 val finishFlow: (String) -> Unit = { uid ->
                     stopShimmer()
                     showSuccessPopup()
+
+                    // ✅ Registration Success Notification (Opens DashboardActivity)
+                    val intent = Intent(this, DashboardActivity::class.java).apply {
+                        putExtra(EXTRA_STUDENT_ID, uid)
+                    }
+                    NotificationHelper.showNotification(
+                        this,
+                        "Registration Successful",
+                        "Welcome ${user.name}!",
+                        intent
+                    )
+
                     upsertUser(uid, user, hasArrears, arrearsCount)
                 }
 
