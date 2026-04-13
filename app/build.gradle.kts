@@ -103,6 +103,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("com.google.zxing:core:3.5.1")
+    implementation(libs.androidx.activity)
 
     // ✅ ROOM (KSP)
     val room_version = "2.8.4"

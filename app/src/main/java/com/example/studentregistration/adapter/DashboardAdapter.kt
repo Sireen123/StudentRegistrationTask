@@ -60,28 +60,28 @@ class DashboardAdapter(
             holder.title.text = "Daily\nAttendance"
         }
 
-        // ✅ Emoji Mapping
+        // ✅ UPDATED EMOJI MAPPING
         val emojiChar = when (position) {
-            0 -> "💰"   // Fees
-            1 -> "❓"   // FAQ
-            2 -> "🧍"   // Details
-            3 -> "👥"   // Refer
-            4 -> "📅"   // Calendar
-            5 -> "✅"   // Daily Attendance
-            6 -> "🕒"   // Hourly Attendance
-            7 -> "📝"   // CAE
-            8 -> "🧾"   // ESE
-            9 -> "📘"   // LMS
-            10 -> "📚"  // Library
-            11 -> "🗓️" // Timetable
-            12 -> "🚌"  // Transport
-            13 -> "🚶"  // Outing
+            0 -> "🧑➕"   // Referral Details (Tile 1)
+            1 -> "❓"     // FAQ
+            2 -> "🧍"     // My Details
+            3 -> "👥"     // ✅ Refer a Student (Tile 4)
+            4 -> "📅"     // Event Calendar
+            5 -> "✅"     // Daily Attendance
+            6 -> "🕒"     // Hourly Attendance
+            7 -> "📝"     // CAE Result
+            8 -> "🧾"     // ESE Result
+            9 -> "📘"     // LMS
+            10 -> "📚"    // Library
+            11 -> "🗓️"   // Timetable
+            12 -> "🚌"    // Transport
+            13 -> "🚶"    // Outing
             else -> "⭐"
         }
 
         holder.emoji.text = emojiChar
 
-        // ✅ Tile Animation
+        // ✅ Smooth tile animation
         holder.itemView.scaleX = 0.85f
         holder.itemView.scaleY = 0.85f
         holder.itemView.alpha = 0f

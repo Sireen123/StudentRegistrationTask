@@ -29,7 +29,7 @@ class DashboardActivity : AppCompatActivity() {
     private var isDashboardReady = false
 
     private val items = listOf(
-        "Fees", "FAQ", "My Details", "Refer a Student",
+        "Referral Details", "FAQ", "My Details", "Refer a Student",
         "Event Calendar", "Daily Attendance", "Hourly Attendance",
         "CAE Result", "ESE Result", "LMS", "Library",
         "Time Table", "Transport", "Outing"
@@ -37,7 +37,6 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        // ✅ APPLY THEME
         val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
             .getString("app_theme", "light")
 
@@ -53,7 +52,6 @@ class DashboardActivity : AppCompatActivity() {
         val subtitle = findViewById<TextView>(R.id.tvSubtitle)
         val progress = findViewById<ProgressBar>(R.id.progressLoading)
 
-        // ✅ 1. GET UID
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
         if (studentId.isNullOrEmpty()) {
             val sp = getSharedPreferences("user_session", MODE_PRIVATE)
@@ -70,13 +68,11 @@ class DashboardActivity : AppCompatActivity() {
         subtitle.text = "Loading..."
         progress.visibility = View.VISIBLE
 
-        // ✅ 2. LOAD SESSION
         val session = SessionPrefs(this)
         val sessionCollege = session.collegeName ?: ""
         val sessionArrears = session.hasArrears
         val sessionArrearCount = session.arrearsCount
 
-        // ✅ 3. READ FROM INTENT
         val intentCollege = intent.getStringExtra("collegeName")
         val intentHasArrears = intent.getBooleanExtra("hasArrears", sessionArrears)
         val intentArrearCount = intent.getIntExtra("arrearsCount", sessionArrearCount)
@@ -87,13 +83,11 @@ class DashboardActivity : AppCompatActivity() {
 
         user = intent.getParcelableExtra("user")
 
-        // ✅ If came from registration
         if (user != null) {
             subtitle.text = user!!.name
             progress.visibility = View.GONE
             isDashboardReady = true
 
-            // ✅ Dashboard Welcome Notification (Opens DashboardActivity)
             val dashIntent = Intent(this, DashboardActivity::class.java).apply {
                 putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -111,7 +105,6 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        // ✅ Load from Firebase (Login flow)
         loadUserFromFirebase(studentId!!, progress, subtitle)
 
         setupGrid()
@@ -156,7 +149,6 @@ class DashboardActivity : AppCompatActivity() {
                 progress.visibility = View.GONE
                 isDashboardReady = true
 
-                // ✅ Dashboard Welcome Notification (Login Case)
                 val dashIntent = Intent(this, DashboardActivity::class.java).apply {
                     putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -188,9 +180,21 @@ class DashboardActivity : AppCompatActivity() {
             }
 
             when (pos) {
-                0 -> startActivity(Intent(this, FeesListActivity::class.java))
+
+                // ✅ Updated Fees → Referral Details
+                0 -> startActivity(
+                    Intent(this, ReferralDetailsActivity::class.java)
+                )
+
                 1 -> showFaq()
                 2 -> openDetails()
+
+                // ✅ Refer Student
+                3 -> startActivity(
+                    Intent(this, ReferStudentActivity::class.java)
+                        .putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
+                )
+
                 else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
             }
         }
