@@ -60,28 +60,24 @@ class DashboardAdapter(
             holder.title.text = "Daily\nAttendance"
         }
 
-        // ✅ UPDATED EMOJI MAPPING
-        val emojiChar = when (position) {
-            0 -> "🧑➕"   // Referral Details (Tile 1)
-            1 -> "❓"     // FAQ
-            2 -> "🧍"     // My Details
-            3 -> "👥"     // ✅ Refer a Student (Tile 4)
-            4 -> "📅"     // Event Calendar
-            5 -> "✅"     // Daily Attendance
-            6 -> "🕒"     // Hourly Attendance
-            7 -> "📝"     // CAE Result
-            8 -> "🧾"     // ESE Result
-            9 -> "📘"     // LMS
-            10 -> "📚"    // Library
-            11 -> "🗓️"   // Timetable
-            12 -> "🚌"    // Transport
-            13 -> "🚶"    // Outing
+        // ✅ CORRECT EMOJI MAP FOR NEW GRID
+        holder.emoji.text = when (label) {
+            "FAQ" -> "❓"
+            "My Details" -> "🧍"
+            "Event Calendar" -> "📅"
+            "Daily Attendance" -> "✅"
+            "Hourly Attendance" -> "🕒"
+            "CAE Result" -> "📝"
+            "ESE Result" -> "🧾"
+            "LMS" -> "📘"
+            "Library" -> "📚"
+            "Time Table" -> "🗓️"
+            "Transport" -> "🚌"
+            "Outing" -> "🚶"
             else -> "⭐"
         }
 
-        holder.emoji.text = emojiChar
-
-        // ✅ Smooth tile animation
+        // ✅ Smooth animation
         holder.itemView.scaleX = 0.85f
         holder.itemView.scaleY = 0.85f
         holder.itemView.alpha = 0f

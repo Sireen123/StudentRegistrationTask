@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregistration.adapter.DashboardAdapter
 import com.example.studentregistration.adapter.FaqAdapter
 import com.example.studentregistration.data.FirebaseRepo
-import com.example.studentregistration.SessionPrefs
 import com.example.studentregistration.data.User
 import com.example.studentregistration.model.FaqItem
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -28,8 +27,9 @@ class DashboardActivity : AppCompatActivity() {
     private var studentId: String? = null
     private var isDashboardReady = false
 
+    // ✅ Referral Details & Refer Student REMOVED
     private val items = listOf(
-        "Referral Details", "FAQ", "My Details", "Refer a Student",
+        "FAQ", "My Details",
         "Event Calendar", "Daily Attendance", "Hourly Attendance",
         "CAE Result", "ESE Result", "LMS", "Library",
         "Time Table", "Transport", "Outing"
@@ -40,11 +40,12 @@ class DashboardActivity : AppCompatActivity() {
         val savedTheme = getSharedPreferences("theme_prefs", MODE_PRIVATE)
             .getString("app_theme", "light")
 
-        if (savedTheme == "dark") {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
+        AppCompatDelegate.setDefaultNightMode(
+            if (savedTheme == "dark")
+                AppCompatDelegate.MODE_NIGHT_YES
+            else
+                AppCompatDelegate.MODE_NIGHT_NO
+        )
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
@@ -53,10 +54,8 @@ class DashboardActivity : AppCompatActivity() {
         val progress = findViewById<ProgressBar>(R.id.progressLoading)
 
         studentId = intent.getStringExtra(MainActivity.EXTRA_STUDENT_ID)
-        if (studentId.isNullOrEmpty()) {
-            val sp = getSharedPreferences("user_session", MODE_PRIVATE)
-            studentId = sp.getString("real_uid", null)
-        }
+            ?: getSharedPreferences("user_session", MODE_PRIVATE)
+                .getString("real_uid", null)
 
         if (studentId.isNullOrEmpty()) {
             Toast.makeText(this, "Session expired.", Toast.LENGTH_SHORT).show()
@@ -68,47 +67,10 @@ class DashboardActivity : AppCompatActivity() {
         subtitle.text = "Loading..."
         progress.visibility = View.VISIBLE
 
-        val session = SessionPrefs(this)
-        val sessionCollege = session.collegeName ?: ""
-        val sessionArrears = session.hasArrears
-        val sessionArrearCount = session.arrearsCount
-
-        val intentCollege = intent.getStringExtra("collegeName")
-        val intentHasArrears = intent.getBooleanExtra("hasArrears", sessionArrears)
-        val intentArrearCount = intent.getIntExtra("arrearsCount", sessionArrearCount)
-
-        collegeName = intentCollege ?: sessionCollege
-        hasArrears = intentHasArrears
-        arrearsCount = intentArrearCount
-
-        user = intent.getParcelableExtra("user")
-
-        if (user != null) {
-            subtitle.text = user!!.name
-            progress.visibility = View.GONE
-            isDashboardReady = true
-
-            val dashIntent = Intent(this, DashboardActivity::class.java).apply {
-                putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            }
-
-            NotificationHelper.showNotification(
-                this,
-                "Welcome to Dashboard",
-                "Hello ${user!!.name}, your dashboard is ready!",
-                dashIntent
-            )
-
-            setupGrid()
-            setupLogout()
-            return
-        }
-
-        loadUserFromFirebase(studentId!!, progress, subtitle)
-
         setupGrid()
         setupLogout()
+
+        loadUserFromFirebase(studentId!!, progress, subtitle)
     }
 
     private fun loadUserFromFirebase(uid: String, progress: ProgressBar, subtitle: TextView) {
@@ -141,25 +103,14 @@ class DashboardActivity : AppCompatActivity() {
                     profilePhoto = snap.child("profilePhoto").value as? String
                 )
 
-                collegeName = snap.child("collegeName").value as? String ?: collegeName
-                hasArrears = snap.child("hasArrears").value as? Boolean ?: hasArrears
-                arrearsCount = (snap.child("arrearsCount").value as? Long)?.toInt() ?: arrearsCount
+                collegeName = snap.child("collegeName").value as? String ?: ""
+                hasArrears = snap.child("hasArrears").value as? Boolean ?: false
+                arrearsCount =
+                    (snap.child("arrearsCount").value as? Long)?.toInt() ?: 0
 
                 subtitle.text = user!!.name
                 progress.visibility = View.GONE
                 isDashboardReady = true
-
-                val dashIntent = Intent(this, DashboardActivity::class.java).apply {
-                    putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                }
-
-                NotificationHelper.showNotification(
-                    this,
-                    "Welcome to Dashboard",
-                    "Hello ${user!!.name}, your dashboard is ready!",
-                    dashIntent
-                )
             }
             .addOnFailureListener {
                 progress.visibility = View.GONE
@@ -175,26 +126,13 @@ class DashboardActivity : AppCompatActivity() {
         rv.adapter = DashboardAdapter(items) { pos ->
 
             if (!isDashboardReady) {
-                Toast.makeText(this, "Loading your profile...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Loading profile...", Toast.LENGTH_SHORT).show()
                 return@DashboardAdapter
             }
 
             when (pos) {
-
-                // ✅ Updated Fees → Referral Details
-                0 -> startActivity(
-                    Intent(this, ReferralDetailsActivity::class.java)
-                )
-
-                1 -> showFaq()
-                2 -> openDetails()
-
-                // ✅ Refer Student
-                3 -> startActivity(
-                    Intent(this, ReferStudentActivity::class.java)
-                        .putExtra(MainActivity.EXTRA_STUDENT_ID, studentId)
-                )
-
+                0 -> showFaq()
+                1 -> openDetails()
                 else -> Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
             }
         }
@@ -223,10 +161,13 @@ class DashboardActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.faq_bottom_sheet, null)
         dialog.setContentView(view)
 
-        view.findViewById<View>(R.id.btnClose)?.setOnClickListener { dialog.dismiss() }
+        view.findViewById<View>(R.id.btnClose)?.setOnClickListener {
+            dialog.dismiss()
+        }
 
         val rv = view.findViewById<RecyclerView>(R.id.rvFaq)
-        rv.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        rv.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this)
 
         rv.adapter = FaqAdapter(
             listOf(
